@@ -1,4 +1,6 @@
 /.cabal-sandbox
 /cabal.sandbox.config
+/dist
 /.ghci
 /log
+/site_key.txt
