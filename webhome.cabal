@@ -17,4 +17,5 @@ Executable webhome
   Build-depends:
     base >= 4.4 && < 5,
     happstack == 7.0.*,
-    happstack-server
+    happstack-server,
+    time >= 1.4 && < 1.6
