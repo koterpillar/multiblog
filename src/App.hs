@@ -11,17 +11,21 @@ import Happstack.Server
 import Models
 
 
+data AppState = AppState { appArticles :: [Article]
+                         }
+
 type App = StateT AppState IO
 
 runApp :: App a -> IO a
-runApp a = evalStateT a initialState
-    where initialState = AppState [ someArticle
-                                  ]
-          someArticle = Article "test" "test article" someDate
+runApp a = do
+    let initialState = AppState { appArticles = [someArticle]
+                                }
+    evalStateT a initialState
+    where someArticle = Article "test" "test article" someDate
           someDate = UTCTime (fromGregorian 2014 11 08) 0
 
-data AppState = AppState { appArticles :: [Article]
-                         }
+getApp :: MonadState AppState m => m AppState
+getApp = get
 
 getFiltered :: MonadState AppState m => (Article -> Bool) -> m [Article]
 getFiltered articleFilter = gets $ filter articleFilter . appArticles
