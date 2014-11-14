@@ -5,34 +5,46 @@ import Control.Monad
 import Control.Monad.State
 
 import Data.ByteString.Char8 (ByteString)
+import Data.Monoid
 import Data.String
 
 import Happstack.Server
 
+import Text.Blaze.Html (Markup)
 import Text.Blaze.Html.Renderer.String (renderHtml)
 import Text.Hamlet (shamlet)
 
 import App
 import Models
 
-articleListDisplay :: [Article] -> ServerPartT App Response
-articleListDisplay articles = ok $ toResponse $ [shamlet|
+data PageContent = PageContent { pcTitle :: String
+                               , pcContent :: Markup
+                               }
+
+defaultPage :: PageContent
+defaultPage = PageContent { pcTitle = "", pcContent = mempty }
+
+page :: String -> Markup -> PageContent
+page title content = defaultPage { pcTitle = title, pcContent = content }
+
+template :: PageContent -> ServerPartT App Response
+template page = ok $ toResponse $ [shamlet|
     <html>
         <head>
-            <title>List
+            <title>#{pcTitle page}
         <body>
-            <h1>List
-            $forall article <- articles
-                <h2>#{arTitle article}
-                <p>#{arContent article}
+            <h1>#{pcTitle page}
+            #{pcContent page}
+|]
+
+articleListDisplay :: [Article] -> ServerPartT App Response
+articleListDisplay articles = template $ page "List" [shamlet|
+    $forall article <- articles
+        <h2>#{arTitle article}
+        <p>#{arContent article}
 |]
 
 articleDisplay :: Article -> ServerPartT App Response
-articleDisplay article = ok $ toResponse $ [shamlet|
-    <html>
-        <head>
-            <title>#{arTitle article}
-        <body>
-            <h1>#{arTitle article}
-            <p>#{arContent article}
+articleDisplay article = template $ page (arTitle article) [shamlet|
+    <p>#{arContent article}
 |]
