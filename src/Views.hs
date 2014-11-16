@@ -13,6 +13,7 @@ import Happstack.Server
 import Text.Blaze.Html (Markup)
 import Text.Blaze.Html.Renderer.String (renderHtml)
 import Text.Hamlet (shamlet)
+import Text.Pandoc
 
 import App
 import Models
@@ -41,10 +42,10 @@ articleListDisplay :: [Article] -> ServerPartT App Response
 articleListDisplay articles = template $ page "List" [shamlet|
     $forall article <- articles
         <h2>#{arTitle article}
-        <p>#{arContent article}
+        <p>#{writeHtml def $ arContent article}
 |]
 
 articleDisplay :: Article -> ServerPartT App Response
 articleDisplay article = template $ page (arTitle article) [shamlet|
-    <p>#{arContent article}
+    <p>#{writeHtml def $ arContent article}
 |]

@@ -18,11 +18,10 @@ type App = StateT AppState IO
 
 runApp :: App a -> IO a
 runApp a = do
-    let initialState = AppState { appArticles = [someArticle]
+    articles <- fromDirectory "content"
+    let initialState = AppState { appArticles = articles
                                 }
     evalStateT a initialState
-    where someArticle = Article "test" "test article" someDate
-          someDate = UTCTime (fromGregorian 2014 11 08) 0
 
 getApp :: MonadState AppState m => m AppState
 getApp = get

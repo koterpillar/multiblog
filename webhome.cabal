@@ -15,12 +15,14 @@ Executable webhome
   main-is: Main.hs
 
   Build-depends:
-    blaze-builder >= 0.3,
     blaze-html >= 0.7,
     bytestring >= 0.10,
+    directory >= 1.2,
+    filepath >= 1.3,
     happstack == 7.0.*,
     happstack-server >= 7.3,
     mtl >= 2.1 && < 2.3,
+    pandoc >= 1.13,
     shakespeare >= 2.0,
     time >= 1.4 && < 1.6,
     base >= 4.4 && < 5
