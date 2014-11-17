@@ -1,0 +1,7 @@
+$doctype 5
+<html>
+  <head>
+    <title>#{pcTitle page}
+  <body>
+    <h1>#{pcTitle page}
+    #{pcContent page}
