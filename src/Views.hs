@@ -9,20 +9,15 @@ import Data.Maybe
 import Data.Monoid
 import Data.String
 
-import Happstack.Server
-
 import Text.Blaze.Html (Markup)
-import Text.Blaze.Html.Renderer.String (renderHtml)
 import Text.Hamlet (shamletFile)
 import Text.Pandoc
 import Text.Pandoc.Walk
 
-import Web.Routes
-import Web.Routes.Happstack
+import Web.Scotty
 
 import App
 import Models
-import Routes
 
 data PageContent = PageContent { pcTitle :: String
                                , pcContent :: Markup
@@ -34,14 +29,14 @@ defaultPage = PageContent { pcTitle = "", pcContent = mempty }
 page :: String -> Markup -> PageContent
 page title content = defaultPage { pcTitle = title, pcContent = content }
 
-template :: PageContent -> RouteT Sitemap (ServerPartT App) Response
-template page = ok $ toResponse $ $(shamletFile "templates/base.hamlet")
+template :: PageContent -> Markup
+template page = $(shamletFile "templates/base.hamlet")
 
-articleListDisplay :: [Article] -> RouteT Sitemap (ServerPartT App) Response
+articleListDisplay :: [Article] -> Markup
 articleListDisplay articles = template $
     page "List" $(shamletFile "templates/list.hamlet")
 
-articleDisplay :: Article -> RouteT Sitemap (ServerPartT App) Response
+articleDisplay :: Article -> Markup
 articleDisplay article = template $
     page (arTitle article) $(shamletFile "templates/article.hamlet")
 

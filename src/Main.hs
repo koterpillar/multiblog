@@ -1,55 +1,70 @@
+{-# Language OverloadedStrings #-}
 module Main where
 
 import Control.Monad
-import Control.Monad.State
+import Control.Monad.State hiding (get)
 
+import Data.Text.Lazy (Text)
 import Data.Time
 
-import Happstack.Server
+import Text.Blaze.Html.Renderer.Text (renderHtml)
 
-import Web.Routes
+import Web.Scotty.Trans
+import Web.Scotty.Internal.Types
 
 import App
 import Models
-import Routes
 import Views
 
+type AppAction a = ActionT Text App a
 
 main :: IO ()
-main = simpleHTTP' runApp nullConf $ msum [ mzero
-                                          , index
-                                          , yearlyIndex
-                                          , monthlyIndex
-                                          , dailyIndex
-                                          , article
-                                          ]
+main = scottyT 8000 runApp runApp $ do
+    get "/" index
+    get "/:year" yearlyIndex
+    get "/:year/:month" monthlyIndex
+    get "/:year/:month/:day" dailyIndex
+    get "/:year/:month/:day/:slug" article
 
-route :: Sitemap -> RouteT Sitemap (ServerPartT App) Response
-route url = case url of
-    VHome -> index
-    VYearly y -> yearlyIndex y
-    VMonthly y m -> monthlyIndex y m
-    VDaily day -> dailyIndex day
-    VArticle day slug -> article day slug
-
-index :: RouteT Sitemap (ServerPartT App) Response
+index :: AppAction ()
 index = articleList $ const True
 
-yearlyIndex :: Integer -> RouteT Sitemap (ServerPartT App) Response
-yearlyIndex year = articleList $ byYear year
+yearlyIndex :: AppAction ()
+yearlyIndex = do
+    year <- param "year"
+    articleList $ byYear year
 
-monthlyIndex :: Integer -> Int -> RouteT Sitemap (ServerPartT App) Response
-monthlyIndex year month = articleList $ byYearMonth year month
+monthlyIndex :: AppAction ()
+monthlyIndex = do
+    year <- param "year"
+    month <- param "month"
+    articleList $ byYearMonth year month
 
-dailyIndex :: Day -> RouteT Sitemap (ServerPartT App) Response
-dailyIndex day = articleList $ byDate undefined
+dateParam :: AppAction Day
+dateParam = do
+    year <- param "year"
+    month <- param "month"
+    day <- param "day"
+    case fromGregorianValid year month day of
+        Just date -> return date
+        Nothing -> next
 
-article :: Day -> String -> RouteT Sitemap (ServerPartT App) Response
-article day slug = do
-    article <- getOne $ byDateSlug undefined slug
-    articleDisplay article
+dailyIndex :: AppAction ()
+dailyIndex = do
+    date <- dateParam
+    articleList $ byDate date
 
-articleList :: (Article -> Bool) -> RouteT Sitemap (ServerPartT App) Response
+article :: AppAction ()
+article = do
+    date <- dateParam
+    slug <- param "slug"
+    -- TODO: getOne
+    articles <- lift $ getFiltered $ byDateSlug date slug
+    case articles of
+        [article] -> html $ renderHtml $ articleDisplay article
+        _ -> next
+
+articleList :: (Article -> Bool) -> AppAction ()
 articleList articleFilter = do
-    articles <- getFiltered articleFilter
-    articleListDisplay articles
+    articles <- lift $ getFiltered articleFilter
+    html $ renderHtml $ articleListDisplay articles

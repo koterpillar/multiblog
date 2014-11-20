@@ -6,7 +6,7 @@ import Control.Monad.State
 
 import Data.Time
 
-import Happstack.Server
+import qualified Web.Scotty as S
 
 import Models
 
