@@ -4,6 +4,8 @@ import Control.Monad
 import Control.Monad.Writer
 
 import Data.Maybe
+import Data.List
+import Data.List.Split
 import Data.Time
 
 import Text.Pandoc
@@ -12,12 +14,10 @@ import System.Directory
 import System.FilePath.Posix
 
 
-data Article = Article { arTitle :: String
-                       , arContent :: Content
+data Article = Article { arSlug :: String
+                       , arContent :: Pandoc
                        , arAuthored :: UTCTime
                        }
-
-type Content = Pandoc
 
 byDate :: Day -> Article -> Bool
 byDate d = (== d) . utctDay . arAuthored
@@ -31,29 +31,48 @@ byYearMonth y m a = y == y' && m == m'
     where (y', m', _) = toGregorian $ utctDay $ arAuthored a
 
 bySlug :: String -> Article -> Bool
-bySlug slug = (== slug) . slugify . arTitle
+bySlug slug = (== slug) . arSlug
 
 byDateSlug :: Day -> String -> Article -> Bool
 byDateSlug d s a = byDate d a && bySlug s a
 
--- TODO
-slugify :: String -> String
-slugify = id
+readM :: (Monad m, Read a) => String -> m a
+readM s = case reads s of
+    [(v, "")] -> return v
+    _ -> fail "No parse"
 
-fromPandoc :: Pandoc -> Article
-fromPandoc p = Article { arTitle = pandocTitle p
-                       , arContent = p
-                       -- TODO
-                       , arAuthored = UTCTime (fromGregorian 2014 11 08) 0
-                       }
-    where pandocTitle (Pandoc _ blocks) = fromMaybe "" $
-              msum $ map getHeader blocks
-          getHeader (Header _ _ [Str text]) = Just text
-          getHeader _ = Nothing
+readDate :: String -> Maybe UTCTime
+readDate s = readM s >>= \date -> Just $ UTCTime date 0
 
+filenameData :: FilePath -> Maybe (UTCTime, String)
+filenameData fn = case splitOn "-" fn of
+    [ys, ms, ds, title] -> do
+        date <- readDate $ intercalate "-" [ys, ms, ds]
+        return (date, title)
+    _ -> fail "No parse"
+
+maybeSum :: a -> [Maybe a] -> a
+maybeSum v = fromMaybe v . msum
+
+fromPandoc :: FilePath -> Pandoc -> Article
+fromPandoc fn p = Article { arSlug = maybeSum ""
+                                [pandocSlug m, filenameSlug fn]
+                          , arContent = p
+                          , arAuthored = maybeSum (error "No date")
+                                [pandocDate m, filenameDate fn]
+                          }
+    where (Pandoc m _) = p
+          pandocSlug m = lookupMeta "slug" m >>= metaText
+          pandocDate m = lookupMeta "date" m >>= metaText >>= readDate
+          filenameDate = liftM fst . filenameData
+          filenameSlug = liftM snd . filenameData
+          metaText (MetaInlines [Str text]) = Just text
+          metaText (MetaString text) = Just text
+          metaText _ = Nothing
 
 fromFile :: FilePath -> IO Article
-fromFile = liftM (fromPandoc . readMarkdown def) . readFile
+fromFile fp = liftM (fromPandoc fn . readMarkdown def) $ readFile fp
+    where fn = takeFileName fp
 
 fromDirectory :: FilePath -> IO [Article]
 fromDirectory = execWriterT . fromDirectory'

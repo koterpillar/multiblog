@@ -23,6 +23,11 @@ Executable webhome
     happstack-server >= 7.3,
     mtl >= 2.1 && < 2.3,
     pandoc >= 1.13,
+    pandoc-types >= 1.12,
     shakespeare >= 2.0,
+    split >= 0.2,
     time >= 1.4 && < 1.6,
+    web-routes >= 0.27,
+    web-routes-happstack >= 0.23,
+    web-routes-th >= 0.22,
     base >= 4.4 && < 5

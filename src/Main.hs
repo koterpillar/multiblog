@@ -7,8 +7,11 @@ import Data.Time
 
 import Happstack.Server
 
+import Web.Routes
+
 import App
 import Models
+import Routes
 import Views
 
 
@@ -21,54 +24,32 @@ main = simpleHTTP' runApp nullConf $ msum [ mzero
                                           , article
                                           ]
 
--- A route that matches on multiple path segments
-class Route a where
-    route :: (ServerMonad m, MonadPlus m) => (a -> m b) -> m b
+route :: Sitemap -> RouteT Sitemap (ServerPartT App) Response
+route url = case url of
+    VHome -> index
+    VYearly y -> yearlyIndex y
+    VMonthly y m -> monthlyIndex y m
+    VDaily day -> dailyIndex day
+    VArticle day slug -> article day slug
 
-newtype Path p = Path p
+index :: RouteT Sitemap (ServerPartT App) Response
+index = articleList $ const True
 
-instance FromReqURI a => Route (Path a) where
-    route h = path $ h . Path
+yearlyIndex :: Integer -> RouteT Sitemap (ServerPartT App) Response
+yearlyIndex year = articleList $ byYear year
 
-instance (Route a, Route b) => Route (a, b) where
-    route handler = route $ \a -> route $ \b -> handler (a, b)
+monthlyIndex :: Integer -> Int -> RouteT Sitemap (ServerPartT App) Response
+monthlyIndex year month = articleList $ byYearMonth year month
 
-instance (Route a, Route b, Route c) => Route (a, b, c) where
-    route handler = route $ \a -> route $ \b -> route $ \c -> handler (a, b, c)
+dailyIndex :: Day -> RouteT Sitemap (ServerPartT App) Response
+dailyIndex day = articleList $ byDate undefined
 
-instance Route Day where
-    route handler = route $ \(Path y, Path m, Path d) ->
-        case fromGregorianValid y m d of
-            Nothing -> mzero
-            Just date -> handler date
-
-index :: ServerPartT App Response
-index = do
-    nullDir
-    articleList $ const True
-
-yearlyIndex :: ServerPartT App Response
-yearlyIndex = route $ \(Path year) -> do
-    nullDir
-    articleList $ byYear year
-
-monthlyIndex :: ServerPartT App Response
-monthlyIndex = route $ \(Path year, Path month) -> do
-    nullDir
-    articleList $ byYearMonth year month
-
-dailyIndex :: ServerPartT App Response
-dailyIndex = route $ \date -> do
-    nullDir
-    articleList $ byDate date
-
-article :: ServerPartT App Response
-article = route $ \(date , Path slug) -> do
-    nullDir
-    article <- getOne $ byDateSlug date slug
+article :: Day -> String -> RouteT Sitemap (ServerPartT App) Response
+article day slug = do
+    article <- getOne $ byDateSlug undefined slug
     articleDisplay article
 
-articleList :: (Article -> Bool) -> ServerPartT App Response
+articleList :: (Article -> Bool) -> RouteT Sitemap (ServerPartT App) Response
 articleList articleFilter = do
     articles <- getFiltered articleFilter
     articleListDisplay articles

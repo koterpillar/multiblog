@@ -3,5 +3,4 @@ $doctype 5
   <head>
     <title>#{pcTitle page}
   <body>
-    <h1>#{pcTitle page}
     #{pcContent page}

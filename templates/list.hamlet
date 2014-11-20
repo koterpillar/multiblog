@@ -1,3 +1,2 @@
 $forall article <- articles
-  <h2>#{arTitle article}
-  <p>#{writeHtml def $ arContent article}
+  <p>#{writeHtml def $ arPreview article}
