@@ -1,2 +1,2 @@
 $forall article <- articles
-  <p>#{writeHtml def $ arPreview article}
+  <p>#{writeHtml def $ arPreview lang article}

@@ -61,10 +61,14 @@ article = do
     -- TODO: getOne
     articles <- lift $ getFiltered $ byDateSlug date slug
     case articles of
-        [article] -> html $ renderHtml $ articleDisplay article
+        -- TODO: language
+        [article] -> case articleDisplay "en" article of
+            Just markup -> html $ renderHtml markup
+            Nothing -> next
         _ -> next
 
 articleList :: (Article -> Bool) -> AppAction ()
 articleList articleFilter = do
     articles <- lift $ getFiltered articleFilter
-    html $ renderHtml $ articleListDisplay articles
+    -- TODO: language
+    html $ renderHtml $ articleListDisplay "en" articles

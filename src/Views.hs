@@ -14,8 +14,6 @@ import Text.Hamlet (shamletFile)
 import Text.Pandoc
 import Text.Pandoc.Walk
 
-import Web.Scotty
-
 import App
 import Models
 
@@ -32,18 +30,20 @@ page title content = defaultPage { pcTitle = title, pcContent = content }
 template :: PageContent -> Markup
 template page = $(shamletFile "templates/base.hamlet")
 
-articleListDisplay :: [Article] -> Markup
-articleListDisplay articles = template $
-    page "List" $(shamletFile "templates/list.hamlet")
+articleListDisplay :: Language -> [Article] -> Markup
+articleListDisplay = undefined
+-- articleListDisplay lang articles = template $
+--     page "List" $(shamletFile "templates/list.hamlet")
 
-articleDisplay :: Article -> Markup
-articleDisplay article = template $
-    page (arTitle article) $(shamletFile "templates/article.hamlet")
+articleDisplay :: Language -> Article -> Maybe Markup
+articleDisplay = undefined
+-- articleDisplay lang article = template $
+--     page (arTitle lang article) $(shamletFile "templates/article.hamlet")
 
-arTitle :: Article -> String
-arTitle = fromMaybe "Article" . listToMaybe . query extractTitle . arContent
+arTitle :: Language -> Article -> String
+arTitle lang = fromMaybe "Article" . listToMaybe . query extractTitle . arLangContent lang
     where extractTitle (Header _ _ [Str title]) = [title]
           extractTitle _ = []
 
-arPreview :: Article -> Pandoc
-arPreview = arContent -- TODO
+arPreview :: Language -> Article -> Maybe Pandoc
+arPreview = arLangContent -- TODO
