@@ -2,6 +2,6 @@
 
 import Test.Framework
 
-import {-@ HTF_TESTS @-} TestModels
+import {-@ HTF_TESTS @-} TestImport
 
 main = htfMain htf_importedTests
