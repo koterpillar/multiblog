@@ -5,18 +5,13 @@ import Data.Time
 
 import Text.Pandoc hiding (readers)
 
-
--- TODO: builtin?
-type Language = String
+import Language
 
 data Article = Article { arSlug :: String
                        , arContent :: M.Map Language Pandoc
                        , arAuthored :: UTCTime
                        }
     deriving (Eq, Show)
-
-arLangContent :: Language -> Article -> Maybe Pandoc
-arLangContent lang = M.lookup lang . arContent
 
 mkDate :: Integer -> Int -> Int -> UTCTime
 mkDate y m d = atMidnight $ fromGregorian y m d

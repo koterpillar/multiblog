@@ -4,7 +4,8 @@ module Main where
 import Control.Monad
 import Control.Monad.State hiding (get)
 
-import Data.Text.Lazy (Text)
+import qualified Data.Map as M
+import Data.Text.Lazy (Text, unpack)
 import Data.Time
 
 import Text.Blaze.Html.Renderer.Text (renderHtml)
@@ -13,6 +14,7 @@ import Web.Scotty.Trans
 import Web.Scotty.Internal.Types
 
 import App
+import Language
 import Models
 import Views
 
@@ -54,21 +56,22 @@ dailyIndex = do
     date <- dateParam
     articleList $ byDate date
 
+languageHeaderM :: AppAction LanguagePreference
+languageHeaderM = liftM (languageHeader . liftM unpack) $ header "Accept-Language"
+
 article :: AppAction ()
 article = do
     date <- dateParam
     slug <- param "slug"
+    language <- languageHeaderM
     -- TODO: getOne
     articles <- lift $ getFiltered $ byDateSlug date slug
     case articles of
-        -- TODO: language
-        [article] -> case articleDisplay "en" article of
-            Just markup -> html $ renderHtml markup
-            Nothing -> next
+        [article] -> html $ renderHtml $ articleDisplay language article
         _ -> next
 
 articleList :: (Article -> Bool) -> AppAction ()
 articleList articleFilter = do
     articles <- lift $ getFiltered articleFilter
-    -- TODO: language
-    html $ renderHtml $ articleListDisplay "en" articles
+    language <- languageHeaderM
+    html $ renderHtml $ articleListDisplay language articles
