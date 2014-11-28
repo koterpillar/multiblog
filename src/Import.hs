@@ -87,18 +87,38 @@ isSpecial "." = True
 isSpecial ".." = True
 isSpecial _ = False
 
-fromDirectory :: FilePath -> IO [Article]
+fromDirectory :: FilePath -> IO (Either String [Article])
 fromDirectory = liftM groupArticles . sourcesFromDirectory
 
-groupArticles :: [ArticleSource] -> [Article]
-groupArticles = M.elems . M.map makeArticle . groupSources
+mapAllRight :: M.Map k (Either e v) -> Either e (M.Map k v)
+mapAllRight m = let (bad, good) = M.mapEither id m in case M.toList bad of
+    [] -> Right good
+    (_, err):_ -> Left err
 
-makeArticle :: [ArticleSource] -> Article
-makeArticle [] = error "at least one source is required"
-makeArticle ss@(s:_) = Article { arSlug = fromJust $ stringMeta "slug" s
-                               , arContent = M.fromList [(fromJust $ stringMeta "lang" s, asContent s) | s <- ss]
-                               , arAuthored = fromJust $ dateMeta s
-                               }
+groupArticles :: [ArticleSource] -> Either String [Article]
+groupArticles = liftM M.elems . mapAllRight . M.map makeArticle . groupSources
+
+-- TODO: better name
+mfes :: ArticleSource -> String -> Maybe a -> Either String a
+mfes as err = mfe (err ++ " in " ++ asPath as)
+
+mfe :: String -> Maybe a -> Either String a
+mfe _ (Just v) = Right v
+mfe err Nothing = Left err
+
+makeArticle :: [ArticleSource] -> Either String Article
+makeArticle [] = fail "at least one source is required"
+makeArticle ss@(s:_) = do
+    slug <- mfes s "Slug is required" $ stringMeta "slug" s
+    date <- mfes s "Date is required" $ dateMeta s
+    content <- liftM M.fromList $ forM ss $ \s -> do
+        lang <- mfes s "Language is required" $ stringMeta "lang" s
+        let pandoc = asContent s
+        return (lang, pandoc)
+    Right Article { arSlug = slug
+                  , arContent = content
+                  , arAuthored = date
+                  }
 
 groupSources :: [ArticleSource] -> M.Map (String, UTCTime) [ArticleSource]
 groupSources = M.fromListWith (++) . map sourceKey

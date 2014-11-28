@@ -2,6 +2,8 @@
 
 module TestImport where
 
+import Control.Monad
+
 import qualified Data.Map as M
 
 import Text.Pandoc
@@ -38,12 +40,12 @@ test_groupArticles = do
                   , testArticle "2011-02-03/snsd-zh.md" [slug "snsd", langZh] "韩国音乐组合"
                   ]
     assertEqual
-        [ Article { arSlug = "snsd"
-                  , arContent = M.fromList [ ("en", readMarkdown def "Korean group")
-                                           , ("ru", readMarkdown def "Корейская группа")
-                                           , ("zh", readMarkdown def "韩国音乐组合")
-                                           ]
-                  , arAuthored = mkDate 2011 02 03
-                  }
-        ]
-        (map textOnlyContent $ groupArticles sources)
+        (Right [ Article { arSlug = "snsd"
+                        , arContent = M.fromList [ ("en", readMarkdown def "Korean group")
+                                                 , ("ru", readMarkdown def "Корейская группа")
+                                                 , ("zh", readMarkdown def "韩国音乐组合")
+                                                 ]
+                        , arAuthored = mkDate 2011 02 03
+                        }
+              ])
+        (liftM (map textOnlyContent) $ groupArticles sources)

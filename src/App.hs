@@ -19,10 +19,14 @@ type App = StateT AppState IO
 
 runApp :: App a -> IO a
 runApp a = do
-    articles <- fromDirectory "content"
-    let initialState = AppState { appArticles = articles
-                                }
-    evalStateT a initialState
+    loaded <- fromDirectory "content"
+    case loaded of
+        Left err -> error err
+        Right articles -> do
+            print articles
+            let initialState = AppState { appArticles = articles
+                                        }
+            evalStateT a initialState
 
 getApp :: MonadState AppState m => m AppState
 getApp = get
