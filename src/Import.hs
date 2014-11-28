@@ -24,7 +24,7 @@ data ArticleSource = ArticleSource { asPath :: FilePath
 
 readM :: (Monad m, Read a) => String -> m a
 readM s = case reads s of
-    [(v, "")] -> return v
+    [(v, _)] -> return v
     _ -> fail "No parse"
 
 readDate :: String -> Maybe UTCTime
