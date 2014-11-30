@@ -8,9 +8,11 @@ import Data.ByteString.Char8 (ByteString)
 import Data.Maybe
 import Data.Monoid
 import Data.String
+import Data.Text.Lazy (Text, pack)
+import Data.Time
 
 import Text.Blaze.Html (Markup)
-import Text.Hamlet (shamletFile)
+import Text.Hamlet (hamletFile)
 import Text.Pandoc
 import Text.Pandoc.Walk
 
@@ -22,22 +24,41 @@ data PageContent = PageContent { pcTitle :: String
                                , pcContent :: Markup
                                }
 
+data Route = RIndex
+           | RYearly Integer
+           | RMonthly Integer Int
+           | RDaily Day
+           | RArticle Article
+
+type Router = Route -> [(Text, Text)] -> Text
+
+router :: Router
+router RIndex _ = pack "/"
+-- TODO: yearly, monthly, daily
+router (RArticle article) _ = pack $ "/" ++ show y
+                                  ++ "/" ++ show m
+                                  ++ "/" ++ show d
+                                  ++ "/" ++ slug
+    where slug = arSlug article
+          (y, m, d) = toGregorian $ utctDay $ arAuthored article
+
 defaultPage :: PageContent
 defaultPage = PageContent { pcTitle = "", pcContent = mempty }
 
-page :: String -> Markup -> PageContent
-page title content = defaultPage { pcTitle = title, pcContent = content }
+page :: String -> (Router -> Markup) -> PageContent
+page title content = defaultPage { pcTitle = title
+                                 , pcContent = content router }
 
 template :: PageContent -> Markup
-template page = $(shamletFile "templates/base.hamlet")
+template page = $(hamletFile "templates/base.hamlet") router
 
 articleListDisplay :: LanguagePreference -> [Article] -> Markup
 articleListDisplay lang articles = template $
-    page "List" $(shamletFile "templates/list.hamlet")
+    page "List" $(hamletFile "templates/list.hamlet")
 
 articleDisplay :: LanguagePreference -> Article -> Markup
 articleDisplay lang article = template $
-    page (arTitle lang article) $(shamletFile "templates/article.hamlet")
+    page (arTitle lang article) $(hamletFile "templates/article.hamlet")
 
 arTitle :: LanguagePreference -> Article -> String
 arTitle lang = fromMaybe "Article" . listToMaybe . query extractTitle . arLangContent lang
