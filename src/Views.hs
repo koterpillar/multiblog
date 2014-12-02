@@ -24,6 +24,7 @@ data PageContent = PageContent { pcTitle :: String
                                , pcContent :: Markup
                                }
 
+-- TODO: this has to be kept in sync with the routes in Main
 data Route = RIndex
            | RYearly Integer
            | RMonthly Integer Int
