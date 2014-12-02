@@ -69,4 +69,11 @@ arLangContent :: LanguagePreference -> Article -> Pandoc
 arLangContent lang = fromJust . matchLanguage lang . arContent
 
 arPreview :: LanguagePreference -> Article -> Pandoc
-arPreview = arLangContent -- TODO
+arPreview lang = pandocFilter (take 2 . filter isTextual) . arLangContent lang
+
+pandocFilter :: ([Block] -> [Block]) -> Pandoc -> Pandoc
+pandocFilter f (Pandoc m bs) = Pandoc m (f bs)
+
+isTextual :: Block -> Bool
+isTextual Header{} = False
+isTextual _ = True
