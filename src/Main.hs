@@ -4,13 +4,11 @@ module Main where
 import Control.Monad
 import Control.Monad.State hiding (get)
 
-import qualified Data.Map as M
 import Data.Text.Lazy (Text, unpack)
 import Data.Time
 
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 
-import Web.Scotty.Internal.Types
 import Web.Scotty.Trans
 
 import App
@@ -67,7 +65,7 @@ article = do
     -- TODO: getOne
     articles <- lift $ getFiltered $ byDateSlug date slug
     case articles of
-        [article] -> html $ renderHtml $ articleDisplay language article
+        [a] -> html $ renderHtml $ articleDisplay language a
         _ -> next
 
 articleList :: (Article -> Bool) -> AppAction ()

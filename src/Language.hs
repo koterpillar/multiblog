@@ -28,7 +28,8 @@ matchLanguageFunc quality pref values = liftM fst $ M.maxView ranked
 -- TODO: Parsec or library
 languageHeader :: Maybe String -> LanguagePreference
 languageHeader Nothing = M.singleton defaultLanguage 1
-languageHeader (Just str) = M.fromList $ map parsePref $ splitOn "," str
+languageHeader (Just str) = M.fromList $ mapMaybe parsePref $ splitOn "," str
     where parsePref pref = case splitOn ";q=" pref of
-                               [lang] -> (lang, 1)
-                               [lang, qvalue] -> (lang, read qvalue)
+                               [lang] -> Just (lang, 1)
+                               [lang, qvalue] -> Just (lang, read qvalue)
+                               _ -> Nothing

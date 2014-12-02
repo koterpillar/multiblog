@@ -69,6 +69,7 @@ fromFile fp = case takeExtension fp of
         Just reader -> do
             content <- liftM reader $ liftIO $ readFile fp
             tell [ArticleSource fp content]
+    ext -> fail $ "Invalid extension " ++ ext
 
 sourcesFromDirectory :: FilePath -> IO [ArticleSource]
 sourcesFromDirectory = execWriterT . sourcesFromDirectory'
@@ -83,6 +84,7 @@ sourcesFromDirectory' d = do
     isFile <- liftIO $ doesFileExist d
     when isFile $ fromFile d
 
+isSpecial :: FilePath -> Bool
 isSpecial "." = True
 isSpecial ".." = True
 isSpecial _ = False
@@ -108,9 +110,9 @@ mfe err Nothing = Left err
 
 makeArticle :: [ArticleSource] -> Either String Article
 makeArticle [] = fail "at least one source is required"
-makeArticle ss@(s:_) = do
-    slug <- mfes s "Slug is required" $ stringMeta "slug" s
-    date <- mfes s "Date is required" $ dateMeta s
+makeArticle ss@(s1:_) = do
+    slug <- mfes s1 "Slug is required" $ stringMeta "slug" s1
+    date <- mfes s1 "Date is required" $ dateMeta s1
     content <- liftM M.fromList $ forM ss $ \s -> do
         lang <- mfes s "Language is required" $ stringMeta "lang" s
         let pandoc = asContent s
