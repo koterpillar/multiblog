@@ -7,8 +7,8 @@ import Text.Pandoc hiding (readers)
 
 import Language
 
-data Article = Article { arSlug :: String
-                       , arContent :: M.Map Language Pandoc
+data Article = Article { arSlug     :: String
+                       , arContent  :: M.Map Language Pandoc
                        , arAuthored :: UTCTime
                        }
     deriving (Eq, Show)

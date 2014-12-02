@@ -1,4 +1,4 @@
-{-# Language TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Views where
 
 import Control.Monad
@@ -20,7 +20,7 @@ import App
 import Language
 import Models
 
-data PageContent = PageContent { pcTitle :: String
+data PageContent = PageContent { pcTitle   :: String
                                , pcContent :: Markup
                                }
 

@@ -4,9 +4,9 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Writer
 
-import qualified Data.Map as M
 import Data.List
 import Data.List.Split
+import qualified Data.Map as M
 import Data.Maybe
 import Data.Time
 
@@ -18,7 +18,7 @@ import System.FilePath.Posix
 import Models
 
 
-data ArticleSource = ArticleSource { asPath :: FilePath
+data ArticleSource = ArticleSource { asPath    :: FilePath
                                    , asContent :: Pandoc
                                    }
 

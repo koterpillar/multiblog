@@ -1,4 +1,4 @@
-{-# Language OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import Control.Monad
@@ -10,8 +10,8 @@ import Data.Time
 
 import Text.Blaze.Html.Renderer.Text (renderHtml)
 
-import Web.Scotty.Trans
 import Web.Scotty.Internal.Types
+import Web.Scotty.Trans
 
 import App
 import Language

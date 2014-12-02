@@ -1,12 +1,11 @@
-{-# Language FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module App where
 
 import Control.Monad
 import Control.Monad.State
 
 import Data.Time
-
-import qualified Web.Scotty as S
 
 import Import
 import Models
