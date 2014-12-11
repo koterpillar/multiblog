@@ -3,8 +3,6 @@ module Views where
 
 import Data.Maybe
 import Data.Monoid
-import Data.Text.Lazy (Text, pack)
-import Data.Time
 
 import Text.Blaze.Html (Markup)
 import Text.Hamlet (hamletFile)
@@ -18,40 +16,18 @@ data PageContent = PageContent { pcTitle   :: String
                                , pcContent :: Markup
                                }
 
--- TODO: this has to be kept in sync with the routes in Main
-data Route = RIndex
-           | RYearly Integer
-           | RMonthly Integer Int
-           | RDaily Day
-           | RArticle Article
-
-type Router = Route -> [(Text, Text)] -> Text
-
-router :: Router
-router RIndex _ = pack "/"
-router (RYearly y) _ = pack $ "/" ++ show y
-router (RMonthly y m) _ = pack $ "/" ++ show y
-                              ++ "/" ++ show m
-router (RDaily day) _ = pack $ "/" ++ show y
-                            ++ "/" ++ show m
-                            ++ "/" ++ show d
-    where (y, m, d) = toGregorian day
-router (RArticle article) _ = pack $ "/" ++ show y
-                                  ++ "/" ++ show m
-                                  ++ "/" ++ show d
-                                  ++ "/" ++ slug
-    where slug = arSlug article
-          (y, m, d) = toGregorian $ utctDay $ arAuthored article
+-- TODO
+data ZZRouter = ZZRouter ZZRouter
 
 defaultPage :: PageContent
 defaultPage = PageContent { pcTitle = "", pcContent = mempty }
 
-mkPage :: String -> (Router -> Markup) -> PageContent
+mkPage :: String -> (ZZRouter -> Markup) -> PageContent
 mkPage title content = defaultPage { pcTitle = title
-                                 , pcContent = content router }
+                                 , pcContent = content undefined }
 
 template :: PageContent -> Markup
-template page = $(hamletFile "templates/base.hamlet") router
+template page = $(hamletFile "templates/base.hamlet") undefined
 
 articleListDisplay :: LanguagePreference -> [Article] -> Markup
 articleListDisplay lang articles = template $

@@ -1,75 +1,105 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeOperators #-}
 module Main where
 
-import Control.Monad
-import Control.Monad.State hiding (get)
+import Prelude hiding ((.))
 
-import Data.Text.Lazy (Text, unpack)
+import Control.Category (Category((.)))
+import Control.Monad
+import Control.Monad.State
+
+import Data.Monoid
+import qualified Data.Text as T
 import Data.Time
 
-import Text.Blaze.Html.Renderer.Text (renderHtml)
+import Happstack.Server
 
-import Web.Scotty.Trans
+import Text.Boomerang.TH (makeBoomerangs)
+
+import Web.Routes
+import Web.Routes.Boomerang
+import Web.Routes.Happstack
 
 import App
 import Language
 import Models
 import Views
 
-type AppAction a = ActionT Text App a
+data Sitemap = Index
+           | Yearly Integer
+           | Monthly Integer Int
+           | Daily Day
+           | ArticleView Day String
+           deriving (Eq, Show)
+
+makeBoomerangs ''Sitemap
+
+rDay :: Boomerang TextsError [T.Text] r (Day :- r)
+rDay = xpure mkDay parseDay . (integer </> int </> int)
+    where mkDay (y :- m :- d :- x) = fromGregorian y m d :- x
+          parseDay (day :- x) = let (y, m, d) = toGregorian day in Just $ y :- m :- d :- x
+
+rString :: Boomerang e tok i (T.Text :- o) -> Boomerang e tok i (String :- o)
+rString = xmaph T.unpack (Just . T.pack)
+
+sitemap :: Boomerang TextsError [T.Text] r (Sitemap :- r)
+sitemap = mconcat
+    [ rIndex
+    , rYearly . integer
+    , rMonthly . integer </> int
+    , rDaily . rDay
+    , rArticleView . rDay </> rString anyText
+    ]
+
+type AppPart a = RouteT Sitemap (ServerPartT App) a
+
+handler :: Sitemap -> AppPart Response
+handler route = case route of
+    Index -> index
+    Yearly y -> yearlyIndex y
+    Monthly y m -> monthlyIndex y m
+    Daily d -> dailyIndex d
+    ArticleView d s -> article d s
+
+site :: Site Sitemap (ServerPartT App Response)
+site = boomerangSiteRouteT handler sitemap
 
 main :: IO ()
-main = scottyT 8000 runApp runApp $ do
-    get "/" index
-    get "/:year" yearlyIndex
-    get "/:year/:month" monthlyIndex
-    get "/:year/:month/:day" dailyIndex
-    get "/:year/:month/:day/:slug" article
+main = simpleHTTP' runApp nullConf $
+    implSite "http://example.org" "" site
 
-index :: AppAction ()
+index :: AppPart Response
 index = articleList $ const True
 
-yearlyIndex :: AppAction ()
-yearlyIndex = do
-    year <- param "year"
-    articleList $ byYear year
+yearlyIndex :: Integer -> AppPart Response
+yearlyIndex = articleList . byYear
 
-monthlyIndex :: AppAction ()
-monthlyIndex = do
-    year <- param "year"
-    month <- param "month"
-    articleList $ byYearMonth year month
+monthlyIndex :: Integer -> Int -> AppPart Response
+monthlyIndex year month = articleList $ byYearMonth year month
 
-dateParam :: AppAction Day
-dateParam = do
-    year <- param "year"
-    month <- param "month"
-    day <- param "day"
-    case fromGregorianValid year month day of
-        Just date -> return date
-        Nothing -> next
+dailyIndex :: Day -> AppPart Response
+dailyIndex date = articleList $ byDate date
 
-dailyIndex :: AppAction ()
-dailyIndex = do
-    date <- dateParam
-    articleList $ byDate date
+languageHeaderM :: AppPart LanguagePreference
+-- TODO
+-- languageHeaderM = liftM (languageHeader . liftM unpack) $ header "Accept-Language"
+languageHeaderM = return $ languageHeader Nothing
 
-languageHeaderM :: AppAction LanguagePreference
-languageHeaderM = liftM (languageHeader . liftM unpack) $ header "Accept-Language"
+-- TODO
+renderHtml = undefined
 
-article :: AppAction ()
-article = do
-    date <- dateParam
-    slug <- param "slug"
+article :: Day -> String -> AppPart Response
+article date slug = do
     language <- languageHeaderM
     -- TODO: getOne
     articles <- lift $ getFiltered $ byDateSlug date slug
     case articles of
-        [a] -> html $ renderHtml $ articleDisplay language a
-        _ -> next
+        [a] -> renderHtml $ articleDisplay language a
+        _ -> mzero
 
-articleList :: (Article -> Bool) -> AppAction ()
+articleList :: (Article -> Bool) -> AppPart Response
 articleList articleFilter = do
     articles <- lift $ getFiltered articleFilter
     language <- languageHeaderM
-    html $ renderHtml $ articleListDisplay language articles
+    renderHtml $ articleListDisplay language articles
