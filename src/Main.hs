@@ -9,6 +9,7 @@ import Control.Category (Category((.)))
 import Control.Monad
 import Control.Monad.State
 
+import qualified Data.ByteString.Char8 as B
 import Data.Monoid
 import qualified Data.Text as T
 import Data.Time
@@ -82,12 +83,13 @@ dailyIndex :: Day -> AppPart Response
 dailyIndex date = articleList $ byDate date
 
 languageHeaderM :: AppPart LanguagePreference
--- TODO
--- languageHeaderM = liftM (languageHeader . liftM unpack) $ header "Accept-Language"
-languageHeaderM = return $ languageHeader Nothing
+languageHeaderM = do
+    request <- askRq
+    let header = getHeader "Accept-Language" request
+    return $ languageHeader $ liftM B.unpack header
 
--- TODO
-renderHtml = undefined
+html :: ToMessage a => a -> AppPart Response
+html = ok . toResponse
 
 article :: Day -> String -> AppPart Response
 article date slug = do
@@ -95,11 +97,11 @@ article date slug = do
     -- TODO: getOne
     articles <- lift $ getFiltered $ byDateSlug date slug
     case articles of
-        [a] -> renderHtml $ articleDisplay language a
+        [a] -> html $ articleDisplay language a
         _ -> mzero
 
 articleList :: (Article -> Bool) -> AppPart Response
 articleList articleFilter = do
     articles <- lift $ getFiltered articleFilter
     language <- languageHeaderM
-    renderHtml $ articleListDisplay language articles
+    html $ articleListDisplay language articles
