@@ -6,9 +6,13 @@ import Control.Monad
 import Control.Monad.State
 
 import qualified Data.ByteString.Char8 as B
+import Data.Maybe
+import qualified Data.Text as T
 import Data.Time
 
 import Happstack.Server
+
+import System.Environment
 
 import Web.Routes
 import Web.Routes.Boomerang
@@ -33,9 +37,15 @@ handler route = case route of
 site :: Site Sitemap (ServerPartT App Response)
 site = boomerangSiteRouteT handler sitemap
 
+siteAddress :: IO String
+siteAddress = do
+    addr <- lookupEnv "SITE_URL"
+    return $ fromMaybe "http://localhost:8000" addr
+
 main :: IO ()
-main = simpleHTTP' runApp nullConf $
-    implSite "http://example.org" "" site
+main = do
+    address <- siteAddress
+    simpleHTTP' runApp nullConf $ implSite (T.pack address) "" site
 
 index :: AppPart Response
 index = articleList $ const True
