@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
 module Main where
 
@@ -65,11 +64,11 @@ article date slug = do
     -- TODO: getOne
     articles <- lift $ getFiltered $ byDateSlug date slug
     case articles of
-        [a] -> html $ articleDisplay language a
+        [a] -> articleDisplay language a >>= html
         _ -> mzero
 
 articleList :: (Article -> Bool) -> AppPart Response
 articleList articleFilter = do
     articles <- lift $ getFiltered articleFilter
     language <- languageHeaderM
-    html $ articleListDisplay language articles
+    articleListDisplay language articles >>= html
