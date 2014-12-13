@@ -1,10 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeOperators   #-}
 module Routes where
 
 import Prelude hiding ((.))
 
-import Control.Category (Category((.)))
+import Control.Category (Category ((.)))
 
 import Data.Monoid
 import qualified Data.Text as T
