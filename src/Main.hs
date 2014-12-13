@@ -3,20 +3,13 @@
 {-# LANGUAGE TypeOperators #-}
 module Main where
 
-import Prelude hiding ((.))
-
-import Control.Category (Category((.)))
 import Control.Monad
 import Control.Monad.State
 
 import qualified Data.ByteString.Char8 as B
-import Data.Monoid
-import qualified Data.Text as T
 import Data.Time
 
 import Happstack.Server
-
-import Text.Boomerang.TH (makeBoomerangs)
 
 import Web.Routes
 import Web.Routes.Boomerang
@@ -25,33 +18,8 @@ import Web.Routes.Happstack
 import App
 import Language
 import Models
+import Routes
 import Views
-
-data Sitemap = Index
-           | Yearly Integer
-           | Monthly Integer Int
-           | Daily Day
-           | ArticleView Day String
-           deriving (Eq, Show)
-
-makeBoomerangs ''Sitemap
-
-rDay :: Boomerang TextsError [T.Text] r (Day :- r)
-rDay = xpure mkDay parseDay . (integer </> int </> int)
-    where mkDay (y :- m :- d :- x) = fromGregorian y m d :- x
-          parseDay (day :- x) = let (y, m, d) = toGregorian day in Just $ y :- m :- d :- x
-
-rString :: Boomerang e tok i (T.Text :- o) -> Boomerang e tok i (String :- o)
-rString = xmaph T.unpack (Just . T.pack)
-
-sitemap :: Boomerang TextsError [T.Text] r (Sitemap :- r)
-sitemap = mconcat
-    [ rIndex
-    , rYearly . integer
-    , rMonthly . integer </> int
-    , rDaily . rDay
-    , rArticleView . rDay </> rString anyText
-    ]
 
 type AppPart a = RouteT Sitemap (ServerPartT App) a
 
