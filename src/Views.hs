@@ -1,63 +1,56 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies    #-}
 module Views where
+
+import qualified Control.Arrow as A
+import Control.Monad
 
 import Data.Maybe
 import Data.Monoid
-import Data.Text.Lazy (Text, pack)
 import Data.Time
 
 import Text.Blaze.Html (Markup)
-import Text.Hamlet (hamletFile)
+import Text.Hamlet
 import Text.Pandoc
 import Text.Pandoc.Walk
 
+import Web.Routes
+
 import Language
 import Models
+import Routes
 
-data PageContent = PageContent { pcTitle   :: String
-                               , pcContent :: Markup
-                               }
+data PageContent a = PageContent { pcTitle   :: String
+                                 , pcContent :: HtmlUrl a
+                                 }
 
--- TODO: this has to be kept in sync with the routes in Main
-data Route = RIndex
-           | RYearly Integer
-           | RMonthly Integer Int
-           | RDaily Day
-           | RArticle Article
+articleLink :: Article -> Sitemap
+articleLink a = ArticleView (utctDay $ arAuthored a) (arSlug a)
 
-type Router = Route -> [(Text, Text)] -> Text
-
-router :: Router
-router RIndex _ = pack "/"
-router (RYearly y) _ = pack $ "/" ++ show y
-router (RMonthly y m) _ = pack $ "/" ++ show y
-                              ++ "/" ++ show m
-router (RDaily day) _ = pack $ "/" ++ show y
-                            ++ "/" ++ show m
-                            ++ "/" ++ show d
-    where (y, m, d) = toGregorian day
-router (RArticle article) _ = pack $ "/" ++ show y
-                                  ++ "/" ++ show m
-                                  ++ "/" ++ show d
-                                  ++ "/" ++ slug
-    where slug = arSlug article
-          (y, m, d) = toGregorian $ utctDay $ arAuthored article
-
-defaultPage :: PageContent
+defaultPage :: PageContent a
 defaultPage = PageContent { pcTitle = "", pcContent = mempty }
 
-mkPage :: String -> (Router -> Markup) -> PageContent
+mkPage :: String -> HtmlUrl a -> PageContent a
 mkPage title content = defaultPage { pcTitle = title
-                                 , pcContent = content router }
+                                   , pcContent = content
+                                   }
 
-template :: PageContent -> Markup
-template page = $(hamletFile "templates/base.hamlet") router
+convRender :: (url -> [(a, Maybe b)] -> c)  -> url -> [(a, b)] -> c
+convRender maybeF url params = maybeF url $ map (A.second Just) params
 
-articleListDisplay :: LanguagePreference -> [Article] -> Markup
+render :: MonadRoute m => HtmlUrl (URL m) -> m Markup
+render html = do
+    route <- liftM convRender askRouteFn
+    return $ html route
+
+template :: (MonadRoute m, URL m ~ Sitemap) => PageContent (URL m) -> m Markup
+template page = render $(hamletFile "templates/base.hamlet")
+
+articleListDisplay :: (MonadRoute m, URL m ~ Sitemap) => LanguagePreference -> [Article] -> m Markup
 articleListDisplay lang articles = template $
     mkPage "List" $(hamletFile "templates/list.hamlet")
 
-articleDisplay :: LanguagePreference -> Article -> Markup
+articleDisplay :: (MonadRoute m, URL m ~ Sitemap) => LanguagePreference -> Article -> m Markup
 articleDisplay lang article = template $
     mkPage (arTitle lang article) $(hamletFile "templates/article.hamlet")
 

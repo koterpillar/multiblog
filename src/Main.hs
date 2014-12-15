@@ -1,75 +1,84 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeOperators     #-}
 module Main where
 
 import Control.Monad
-import Control.Monad.State hiding (get)
+import Control.Monad.State
 
-import Data.Text.Lazy (Text, unpack)
+import qualified Data.ByteString.Char8 as B
+import Data.Maybe
+import qualified Data.Text as T
 import Data.Time
 
-import Text.Blaze.Html.Renderer.Text (renderHtml)
+import Happstack.Server
 
-import Web.Scotty.Trans
+import System.Environment
+
+import Web.Routes
+import Web.Routes.Boomerang
+import Web.Routes.Happstack
 
 import App
 import Language
 import Models
+import Routes
 import Views
 
-type AppAction a = ActionT Text App a
+type AppPart a = RouteT Sitemap (ServerPartT App) a
+
+handler :: Sitemap -> AppPart Response
+handler route = case route of
+    Index -> index
+    Yearly y -> yearlyIndex y
+    Monthly y m -> monthlyIndex y m
+    Daily d -> dailyIndex d
+    ArticleView d s -> article d s
+
+site :: Site Sitemap (ServerPartT App Response)
+site = boomerangSiteRouteT handler sitemap
+
+siteAddress :: IO String
+siteAddress = do
+    addr <- lookupEnv "SITE_URL"
+    return $ fromMaybe "http://localhost:8000" addr
 
 main :: IO ()
-main = scottyT 8000 runApp runApp $ do
-    get "/" index
-    get "/:year" yearlyIndex
-    get "/:year/:month" monthlyIndex
-    get "/:year/:month/:day" dailyIndex
-    get "/:year/:month/:day/:slug" article
+main = do
+    address <- siteAddress
+    simpleHTTP' runApp nullConf $ implSite (T.pack address) "" site
 
-index :: AppAction ()
+index :: AppPart Response
 index = articleList $ const True
 
-yearlyIndex :: AppAction ()
-yearlyIndex = do
-    year <- param "year"
-    articleList $ byYear year
+yearlyIndex :: Integer -> AppPart Response
+yearlyIndex = articleList . byYear
 
-monthlyIndex :: AppAction ()
-monthlyIndex = do
-    year <- param "year"
-    month <- param "month"
-    articleList $ byYearMonth year month
+monthlyIndex :: Integer -> Int -> AppPart Response
+monthlyIndex year month = articleList $ byYearMonth year month
 
-dateParam :: AppAction Day
-dateParam = do
-    year <- param "year"
-    month <- param "month"
-    day <- param "day"
-    case fromGregorianValid year month day of
-        Just date -> return date
-        Nothing -> next
+dailyIndex :: Day -> AppPart Response
+dailyIndex date = articleList $ byDate date
 
-dailyIndex :: AppAction ()
-dailyIndex = do
-    date <- dateParam
-    articleList $ byDate date
+languageHeaderM :: AppPart LanguagePreference
+languageHeaderM = do
+    request <- askRq
+    let header = getHeader "Accept-Language" request
+    return $ languageHeader $ liftM B.unpack header
 
-languageHeaderM :: AppAction LanguagePreference
-languageHeaderM = liftM (languageHeader . liftM unpack) $ header "Accept-Language"
+html :: ToMessage a => a -> AppPart Response
+html = ok . toResponse
 
-article :: AppAction ()
-article = do
-    date <- dateParam
-    slug <- param "slug"
+article :: Day -> String -> AppPart Response
+article date slug = do
     language <- languageHeaderM
     -- TODO: getOne
     articles <- lift $ getFiltered $ byDateSlug date slug
     case articles of
-        [a] -> html $ renderHtml $ articleDisplay language a
-        _ -> next
+        [a] -> articleDisplay language a >>= html
+        _ -> mzero
 
-articleList :: (Article -> Bool) -> AppAction ()
+articleList :: (Article -> Bool) -> AppPart Response
 articleList articleFilter = do
     articles <- lift $ getFiltered articleFilter
     language <- languageHeaderM
-    html $ renderHtml $ articleListDisplay language articles
+    articleListDisplay language articles >>= html
