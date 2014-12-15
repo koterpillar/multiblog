@@ -1,4 +1,4 @@
-Name:                webhome
+Name:                multiblog
 Version:             0.1
 Synopsis:            Home page of koterpillar.com
 Description:         Project Description Here
@@ -10,7 +10,7 @@ Category:            Web
 Build-type:          Simple
 Cabal-version:       >=1.2
 
-Executable webhome
+Executable multiblog
   hs-source-dirs: src
   main-is: Main.hs
   ghc-options: -Wall -Werror
