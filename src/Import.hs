@@ -1,35 +1,36 @@
+-- Import the application data (articles and meta) from a set of files.
 module Import where
 
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Writer
 
+import Data.Either
 import Data.List
 import Data.List.Split
 import qualified Data.Map as M
 import Data.Maybe
 import Data.Time
 
-import Text.Pandoc hiding (readers)
+import Text.Pandoc hiding (Meta, readers)
 
 import System.Directory
 import System.FilePath.Posix
 
 import Models
+import Utils
 
 
-data ArticleSource = ArticleSource { asPath    :: FilePath
-                                   , asContent :: Pandoc
+data ContentSource = ContentSource { csPath    :: FilePath
+                                   , csContent :: Pandoc
                                    }
+    deriving (Eq, Ord, Show)
 
-readM :: (Monad m, Read a) => String -> m a
-readM s = case reads s of
-    [(v, _)] -> return v
-    _ -> fail "No parse"
-
+-- Parse a date from string
 readDate :: String -> Maybe UTCTime
 readDate = liftM atMidnight . readM
 
+-- Extract a date and a slug from a filename
 filenameData :: FilePath -> Maybe (UTCTime, String)
 filenameData fn = case splitOn "-" fn of
     [ys, ms, ds, slug] -> do
@@ -37,44 +38,56 @@ filenameData fn = case splitOn "-" fn of
         return (date, slug)
     _ -> fail "No parse"
 
+-- Split file path into chunks which data can be extracted from
+-- For example, "some/directory/file.md" will be split into
+-- ["some", "directory", "file"]
 chunks :: FilePath -> [String]
 chunks = reverse . dropFirstExtension . reverse . splitDirectories
     where dropFirstExtension [] = []
           dropFirstExtension (x:xs) = dropExtension x:xs
 
+-- Extract a text value from Pandoc Meta
 metaText :: MetaValue -> Maybe String
 metaText (MetaInlines [Str text]) = Just text
 metaText (MetaString text) = Just text
 metaText _ = Nothing
 
-metaValues :: String -> Bool -> ArticleSource -> [String]
+-- Extract all meta values of a specific name from a content source
+metaValues :: String -- The meta attribute name to extract
+           -> Bool -- Whether to also extract from the file path
+           -> ContentSource -- Content source
+           -> [String] -- Extracted list of values
 metaValues name matchPath source = maybeToList (lookupMeta name m >>= metaText) ++ fpChunks
-    where (Pandoc m _) = asContent source
-          fpChunks = if matchPath then chunks $ asPath source else []
+    where (Pandoc m _) = csContent source
+          fpChunks = if matchPath then chunks $ csPath source else []
 
-stringMeta :: String -> ArticleSource -> Maybe String
+-- Extract a string attribute from a content source
+stringMeta :: String -- Attribute name
+           -> ContentSource -- Content source
+           -> Maybe String -- Attribute value
 stringMeta name = listToMaybe . metaValues name False
 
-dateMeta :: ArticleSource -> Maybe UTCTime
+-- Extract a date attribute from a content source
+-- The file path chunks will be considered as well
+dateMeta :: ContentSource -> Maybe UTCTime
 dateMeta s = msum $ readDate <$> metaValues "date" True s
 
+-- A map of supported file formats and corresponding Pandoc readers
 readers :: M.Map String (String -> Pandoc)
 readers = M.fromList [("md", readMarkdown def)]
 
-fromFile :: FilePath -> WriterT [ArticleSource] IO ()
-fromFile fp = case takeExtension fp of
-    "" -> return ()
-    '.':ext -> case M.lookup ext readers of
-        Nothing -> return ()
-        Just reader -> do
-            content <- liftM reader $ liftIO $ readFile fp
-            tell [ArticleSource fp content]
-    ext -> fail $ "Invalid extension " ++ ext
+-- Load the application state from a directory
+loadFromDirectory :: FilePath -> IO (Either String AppState)
+loadFromDirectory path = do
+    sources <- sourcesFromDirectory path
+    return $ fromSources sources
 
-sourcesFromDirectory :: FilePath -> IO [ArticleSource]
+-- All content sources from a directory
+sourcesFromDirectory :: FilePath -> IO [ContentSource]
 sourcesFromDirectory = execWriterT . sourcesFromDirectory'
 
-sourcesFromDirectory' :: FilePath -> WriterT [ArticleSource] IO ()
+-- Read all content sources from a directory
+sourcesFromDirectory' :: FilePath -> WriterT [ContentSource] IO ()
 sourcesFromDirectory' d = do
     isDir <- liftIO $ doesDirectoryExist d
     when isDir $ do
@@ -82,46 +95,74 @@ sourcesFromDirectory' d = do
         let toTraverse = map (d </>) $ filter (not . isSpecial) files
         mapM_ sourcesFromDirectory' toTraverse
     isFile <- liftIO $ doesFileExist d
-    when isFile $ fromFile d
+    when isFile $ sourceFromFile d
 
+-- Read a content source from a file
+sourceFromFile :: FilePath -> WriterT [ContentSource] IO ()
+sourceFromFile fp = case takeExtension fp of
+    "" -> return ()
+    '.':ext -> case M.lookup ext readers of
+        Nothing -> return ()
+        Just reader -> do
+            content <- liftM reader $ liftIO $ readFile fp
+            tell [ContentSource fp content]
+    ext -> fail $ "Invalid extension " ++ ext
+
+-- Whether a file path is special, to avoid infinite recursion
 isSpecial :: FilePath -> Bool
 isSpecial "." = True
 isSpecial ".." = True
 isSpecial _ = False
 
-fromDirectory :: FilePath -> IO (Either String [Article])
-fromDirectory = liftM groupArticles . sourcesFromDirectory
+fromSources :: [ContentSource] -> Either String AppState
+fromSources sources = do
+    let grouped = M.elems $ groupSources sources
+    extracted <- mapM makeArticle grouped
+    let (articles, meta) = partitionEithers extracted
+    return AppState { appArticles = articles
+                    , appMeta = meta
+                    }
 
-mapAllRight :: M.Map k (Either e v) -> Either e (M.Map k v)
-mapAllRight m = let (bad, good) = M.mapEither id m in case M.toList bad of
-    [] -> Right good
-    (_, err):_ -> Left err
-
-groupArticles :: [ArticleSource] -> Either String [Article]
-groupArticles = liftM M.elems . mapAllRight . M.map makeArticle . groupSources
-
+-- Convert Maybe to Either, appending a content source's file name
+-- to an error message
 -- TODO: better name
-mfes :: ArticleSource -> String -> Maybe a -> Either String a
-mfes as err = mfe (err ++ " in " ++ asPath as)
+mfes :: ContentSource -> String -> Maybe a -> Either String a
+mfes as err = mfe (err ++ " in " ++ csPath as)
 
-mfe :: String -> Maybe a -> Either String a
-mfe _ (Just v) = Right v
-mfe err Nothing = Left err
-
-makeArticle :: [ArticleSource] -> Either String Article
+-- Merge content sources into an article
+makeArticle :: [ContentSource] -> Either String (Either Article Meta)
 makeArticle [] = fail "at least one source is required"
 makeArticle ss@(s1:_) = do
+    content <- mergeLanguageContent ss
     slug <- mfes s1 "Slug is required" $ stringMeta "slug" s1
-    date <- mfes s1 "Date is required" $ dateMeta s1
-    content <- liftM M.fromList $ forM ss $ \s -> do
-        lang <- mfes s "Language is required" $ stringMeta "lang" s
-        let pandoc = asContent s
-        return (lang, pandoc)
-    Right Article { arSlug = slug
-                  , arContent = content
-                  , arAuthored = date
-                  }
+    return $ case dateMeta s1 of
+        Just dt -> Left Article { arSlug = slug
+                                , arContent = content
+                                , arAuthored = dt
+                                }
+        Nothing -> Right Meta { mtSlug = slug
+                              , mtContent = content
+                              }
 
-groupSources :: [ArticleSource] -> M.Map (String, UTCTime) [ArticleSource]
-groupSources = M.fromListWith (++) . map sourceKey
-    where sourceKey s = ((fromJust $ stringMeta "slug" s, fromJust $ dateMeta s), [s])
+-- Merge language content from a group of sources
+mergeLanguageContent :: [ContentSource] -> Either String LanguageContent
+mergeLanguageContent ss = liftM M.fromList $ forM ss $ \s -> do
+    lang <- mfes s "Language is required" $ stringMeta "lang" s
+    let pandoc = csContent s
+    return (lang, pandoc)
+
+-- Group items from content sources
+groupSources :: [ContentSource] -> M.Map ContentSourceIndex [ContentSource]
+groupSources = M.fromListWith (++) . map sourceKeyVal
+    where sourceKeyVal s = (sourceKey s, [s])
+
+data ContentSourceIndex = ArticleContentSource String UTCTime
+                        | MetaContentSource String
+    deriving (Eq, Ord)
+
+-- Whether two content sources belong to the same item (article/meta)
+sourceKey :: ContentSource -> ContentSourceIndex
+sourceKey s = case dateMeta s of
+                  Just dt -> ArticleContentSource slug dt
+                  Nothing -> MetaContentSource slug
+    where slug = fromJust $ stringMeta "slug" s

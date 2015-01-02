@@ -33,6 +33,7 @@ handler route = case route of
     Monthly y m -> monthlyIndex y m
     Daily d -> dailyIndex d
     ArticleView d s -> article d s
+    MetaView s -> meta s
 
 site :: Site Sitemap (ServerPartT App Response)
 site = boomerangSiteRouteT handler sitemap
@@ -68,17 +69,28 @@ languageHeaderM = do
 html :: ToMessage a => a -> AppPart Response
 html = ok . toResponse
 
+onlyOne :: MonadPlus m => m [a] -> m a
+onlyOne action = do
+    ms <- action
+    case ms of
+        [m] -> return m
+        _ -> mzero
+
 article :: Day -> String -> AppPart Response
 article date slug = do
     language <- languageHeaderM
-    -- TODO: getOne
-    articles <- lift $ getFiltered $ byDateSlug date slug
-    case articles of
-        [a] -> articleDisplay language a >>= html
-        _ -> mzero
+    -- TODO: onlyOne
+    a <- onlyOne $ lift $ getFiltered $ byDateSlug date slug
+    articleDisplay language a >>= html
 
 articleList :: (Article -> Bool) -> AppPart Response
 articleList articleFilter = do
     articles <- lift $ getFiltered articleFilter
     language <- languageHeaderM
     articleListDisplay language articles >>= html
+
+meta :: String -> AppPart Response
+meta slug = do
+    language <- languageHeaderM
+    m <- onlyOne $ lift $ gets $ filter (bySlug slug) . appMeta
+    metaDisplay language m >>= html

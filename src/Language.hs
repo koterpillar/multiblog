@@ -9,7 +9,9 @@ import Data.Maybe
 
 type Language = String
 
-type LanguagePreference = M.Map Language Float
+type LanguageMap = M.Map Language
+
+type LanguagePreference = LanguageMap Float
 
 defaultLanguage :: Language
 defaultLanguage = "en"

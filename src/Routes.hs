@@ -19,6 +19,7 @@ data Sitemap = Index
            | Monthly Integer Int
            | Daily Day
            | ArticleView Day String
+           | MetaView String
            deriving (Eq, Show)
 
 makeBoomerangs ''Sitemap
@@ -31,11 +32,15 @@ rDay = xpure mkDay parseDay . (integer </> int </> int)
 rString :: Boomerang e tok i (T.Text :- o) -> Boomerang e tok i (String :- o)
 rString = xmaph T.unpack (Just . T.pack)
 
+anyString :: Boomerang TextsError [T.Text] o (String :- o)
+anyString = rString anyText
+
 sitemap :: Boomerang TextsError [T.Text] r (Sitemap :- r)
 sitemap = mconcat
     [ rIndex
     , rYearly . integer
     , rMonthly . integer </> int
     , rDaily . rDay
-    , rArticleView . rDay </> rString anyText
+    , rArticleView . rDay </> anyString
+    , rMetaView . anyString
     ]

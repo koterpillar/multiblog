@@ -1,1 +1,1 @@
-<p>#{writeHtml def $ arLangContent lang article}
+<p>#{writeHtml def $ langContent lang article}

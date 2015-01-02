@@ -9,21 +9,16 @@ import Import
 import Models
 
 
-data AppState = AppState { appArticles :: [Article]
-                         }
-
 type App = StateT AppState IO
 
 runApp :: App a -> IO a
 runApp a = do
-    loaded <- fromDirectory "content"
+    loaded <- loadFromDirectory "content"
     case loaded of
         Left err -> error err
-        Right articles -> do
-            print articles
-            let initialState = AppState { appArticles = articles
-                                        }
-            evalStateT a initialState
+        Right appState -> do
+            print appState
+            evalStateT a appState
 
 getApp :: MonadState AppState m => m AppState
 getApp = get

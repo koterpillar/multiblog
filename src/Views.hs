@@ -11,7 +11,7 @@ import Data.Time
 
 import Text.Blaze.Html (Markup)
 import Text.Hamlet
-import Text.Pandoc
+import Text.Pandoc hiding (Meta)
 import Text.Pandoc.Walk
 
 import Web.Routes
@@ -52,18 +52,22 @@ articleListDisplay lang articles = template $
 
 articleDisplay :: (MonadRoute m, URL m ~ Sitemap) => LanguagePreference -> Article -> m Markup
 articleDisplay lang article = template $
-    mkPage (arTitle lang article) $(hamletFile "templates/article.hamlet")
+    mkPage (langTitle lang article) $(hamletFile "templates/article.hamlet")
 
-arTitle :: LanguagePreference -> Article -> String
-arTitle lang = fromMaybe "Article" . listToMaybe . query extractTitle . arLangContent lang
+metaDisplay :: (MonadRoute m, URL m ~ Sitemap) => LanguagePreference -> Meta -> m Markup
+metaDisplay lang meta = template $
+    mkPage (langTitle lang meta) $(hamletFile "templates/meta.hamlet")
+
+langTitle :: HasContent a => LanguagePreference -> a -> String
+langTitle lang = fromMaybe "Article" . listToMaybe . query extractTitle . langContent lang
     where extractTitle (Header _ _ [Str title]) = [title]
           extractTitle _ = []
 
-arLangContent :: LanguagePreference -> Article -> Pandoc
-arLangContent lang = fromJust . matchLanguage lang . arContent
+langContent :: HasContent a => LanguagePreference -> a -> Pandoc
+langContent lang = fromJust . matchLanguage lang . getContent
 
 arPreview :: LanguagePreference -> Article -> Pandoc
-arPreview lang = pandocFilter (take 2 . filter isTextual) . arLangContent lang
+arPreview lang = pandocFilter (take 2 . filter isTextual) . langContent lang
 
 pandocFilter :: ([Block] -> [Block]) -> Pandoc -> Pandoc
 pandocFilter f (Pandoc m bs) = Pandoc m (f bs)
