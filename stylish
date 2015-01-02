@@ -1,0 +1,6 @@
+#!/bin/sh
+
+for i in $(find src testsuite -name \*.hs | grep -v TestMain)
+do
+	stylish-haskell -i $i
+done
