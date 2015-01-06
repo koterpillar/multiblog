@@ -1,8 +1,5 @@
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 module App where
 
-import Control.Monad
 import Control.Monad.State
 
 import Import
@@ -19,17 +16,3 @@ runApp a = do
         Right appState -> do
             print appState
             evalStateT a appState
-
-getApp :: MonadState AppState m => m AppState
-getApp = get
-
-getFiltered :: MonadState AppState m => (Article -> Bool) -> m [Article]
-getFiltered articleFilter = gets $ filter articleFilter . appArticles
-
-getOne :: (MonadState AppState m, MonadPlus m) =>
-    (Article -> Bool) -> m Article
-getOne articleFilter = do
-    articles <- getFiltered articleFilter
-    case articles of
-        [article] -> return article
-        _ -> mzero

@@ -1,6 +1,16 @@
 $doctype 5
 <html>
   <head>
+    <meta charset="utf-8">
     <title>#{pcTitle page}
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
   <body>
-    ^{pcContent page}
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <a href="@{metaLink about}">#{langTitle lang about}
+        <div class="col-md-8">
+          ^{pcContent page}
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js">

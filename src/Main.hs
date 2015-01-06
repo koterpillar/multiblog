@@ -22,6 +22,7 @@ import App
 import Language
 import Models
 import Routes
+import Utils
 import Views
 
 type AppPart a = RouteT Sitemap (ServerPartT App) a
@@ -69,13 +70,6 @@ languageHeaderM = do
 html :: ToMessage a => a -> AppPart Response
 html = ok . toResponse
 
-onlyOne :: MonadPlus m => m [a] -> m a
-onlyOne action = do
-    ms <- action
-    case ms of
-        [m] -> return m
-        _ -> mzero
-
 article :: Day -> String -> AppPart Response
 article date slug = do
     language <- languageHeaderM
@@ -92,5 +86,5 @@ articleList articleFilter = do
 meta :: String -> AppPart Response
 meta slug = do
     language <- languageHeaderM
-    m <- onlyOne $ lift $ gets $ filter (bySlug slug) . appMeta
+    m <- getMeta slug
     metaDisplay language m >>= html

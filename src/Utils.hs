@@ -1,5 +1,7 @@
 module Utils where
 
+import Control.Monad
+
 import qualified Data.Map as M
 
 
@@ -19,3 +21,11 @@ mapAllRight :: M.Map k (Either e v) -> Either e (M.Map k v)
 mapAllRight m = let (bad, good) = M.mapEither id m in case M.toList bad of
     [] -> Right good
     (_, err):_ -> Left err
+
+-- Extract the single value from a list, or return mzero
+onlyOne :: MonadPlus m => m [a] -> m a
+onlyOne action = do
+    ms <- action
+    case ms of
+        [m] -> return m
+        _ -> mzero

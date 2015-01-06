@@ -1,9 +1,12 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies    #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TypeFamilies          #-}
 module Views where
 
 import qualified Control.Arrow as A
 import Control.Monad
+import Control.Monad.State
 
 import Data.Maybe
 import Data.Monoid
@@ -27,6 +30,9 @@ data PageContent a = PageContent { pcTitle   :: String
 articleLink :: Article -> Sitemap
 articleLink a = ArticleView (utctDay $ arAuthored a) (arSlug a)
 
+metaLink :: Meta -> Sitemap
+metaLink = MetaView . mtSlug
+
 defaultPage :: PageContent a
 defaultPage = PageContent { pcTitle = "", pcContent = mempty }
 
@@ -43,25 +49,36 @@ render html = do
     route <- liftM convRender askRouteFn
     return $ html route
 
-template :: (MonadRoute m, URL m ~ Sitemap) => PageContent (URL m) -> m Markup
-template page = render $(hamletFile "templates/base.hamlet")
+template :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
+    LanguagePreference -> PageContent (URL m) -> m Markup
+template lang page = do
+    -- TODO: need to be able to get any meta inside
+    about <- getMeta "about"
+    render $(hamletFile "templates/base.hamlet")
 
-articleListDisplay :: (MonadRoute m, URL m ~ Sitemap) => LanguagePreference -> [Article] -> m Markup
-articleListDisplay lang articles = template $
+articleListDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
+    LanguagePreference -> [Article] -> m Markup
+articleListDisplay lang articles = template lang $
     mkPage "List" $(hamletFile "templates/list.hamlet")
 
-articleDisplay :: (MonadRoute m, URL m ~ Sitemap) => LanguagePreference -> Article -> m Markup
-articleDisplay lang article = template $
+articleDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
+    LanguagePreference -> Article -> m Markup
+articleDisplay lang article = template lang $
     mkPage (langTitle lang article) $(hamletFile "templates/article.hamlet")
 
-metaDisplay :: (MonadRoute m, URL m ~ Sitemap) => LanguagePreference -> Meta -> m Markup
-metaDisplay lang meta = template $
+metaDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
+    LanguagePreference -> Meta -> m Markup
+metaDisplay lang meta = template lang $
     mkPage (langTitle lang meta) $(hamletFile "templates/meta.hamlet")
 
 langTitle :: HasContent a => LanguagePreference -> a -> String
-langTitle lang = fromMaybe "Article" . listToMaybe . query extractTitle . langContent lang
-    where extractTitle (Header _ _ [Str title]) = [title]
+langTitle lang = fromMaybe "untitled" . listToMaybe . query extractTitle . langContent lang
+    where extractTitle (Header _ _ title) = [inlineToStr title]
           extractTitle _ = []
+
+-- TODO: Might be a better way to do this in Pandoc
+inlineToStr :: [Inline] -> String
+inlineToStr inline = writePlain def $ Pandoc undefined [Plain inline]
 
 langContent :: HasContent a => LanguagePreference -> a -> Pandoc
 langContent lang = fromJust . matchLanguage lang . getContent

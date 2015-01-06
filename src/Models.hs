@@ -1,10 +1,16 @@
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Models where
+
+import Control.Monad
+import Control.Monad.State
 
 import Data.Time
 
 import Text.Pandoc hiding (Meta, readers)
 
 import Language
+import Utils
 
 type LanguageContent = LanguageMap Pandoc
 
@@ -69,3 +75,16 @@ bySlug slug = (== slug) . getSlug
 
 byDateSlug :: Day -> String -> Article -> Bool
 byDateSlug d s a = byDate d a && bySlug s a
+
+getApp :: MonadState AppState m => m AppState
+getApp = get
+
+getFiltered :: MonadState AppState m => (Article -> Bool) -> m [Article]
+getFiltered articleFilter = gets $ filter articleFilter . appArticles
+
+getOne :: (MonadState AppState m, MonadPlus m) =>
+    (Article -> Bool) -> m Article
+getOne articleFilter = onlyOne $ getFiltered articleFilter
+
+getMeta :: (MonadState AppState m, MonadPlus m) => String -> m Meta
+getMeta slug = onlyOne $ gets $ filter (bySlug slug) . appMeta
