@@ -1,0 +1,13 @@
+language: haskell
+
+before_install:
+  - cabal install hlint
+
+install:
+  - cabal configure -flib-Werror --enable-tests
+  - cabal build
+
+script:
+  - cabal test
+
+sudo: false
