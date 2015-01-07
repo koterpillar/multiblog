@@ -1,0 +1,23 @@
+language: haskell
+
+ghc:
+  - 7.8
+
+before_install:
+  - cabal install happy
+  - cabal install hlint
+
+install:
+  - cabal install --enable-tests --only-dependencies
+  - cabal configure --enable-tests
+  - cabal build
+
+script:
+  - hlint src testsuite
+  - cabal test
+
+cache:
+  directories:
+    - $HOME/.cabal
+
+sudo: false
