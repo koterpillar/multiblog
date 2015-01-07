@@ -27,11 +27,14 @@ data PageContent a = PageContent { pcTitle   :: String
                                  , pcContent :: HtmlUrl a
                                  }
 
-articleLink :: Article -> Sitemap
-articleLink a = ArticleView (utctDay $ arAuthored a) (arSlug a)
+class Linkable a where
+    link :: a -> Sitemap
 
-metaLink :: Meta -> Sitemap
-metaLink = MetaView . mtSlug
+instance Linkable Article where
+    link a = ArticleView (utctDay $ arAuthored a) (arSlug a)
+
+instance Linkable Meta where
+    link = MetaView . mtSlug
 
 defaultPage :: PageContent a
 defaultPage = PageContent { pcTitle = "", pcContent = mempty }

@@ -1,5 +1,5 @@
 $forall article <- articles
   <div>
     <h2>
-      <a href="@{articleLink article}">#{langTitle lang article}
+      <a href="@{link article}">#{langTitle lang article}
     <p>#{writeHtml def $ arPreview lang article}
