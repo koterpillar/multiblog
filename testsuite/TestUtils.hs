@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
+{-# ANN module "HLint: ignore Use camelCase" #-}
 
 module TestUtils where
 
