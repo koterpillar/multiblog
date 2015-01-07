@@ -12,6 +12,7 @@ install:
   - cabal build
 
 script:
+  - hlint src testsuite
   - cabal test
 
 cache:
