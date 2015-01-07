@@ -5,7 +5,6 @@ ghc:
 
 before_install:
   - cabal install hlint
-  - cabal sandbox init
 
 install:
   - cabal configure --enable-tests
@@ -17,6 +16,6 @@ script:
 
 cache:
   directories:
-    - .cabal-sandbox
+    - $HOME/.cabal
 
 sudo: false
