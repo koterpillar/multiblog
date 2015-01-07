@@ -1,6 +1,5 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE RankNTypes #-}
-{-# ANN module "HLint: ignore Use camelCase" #-}
 
 module TestImport where
 
