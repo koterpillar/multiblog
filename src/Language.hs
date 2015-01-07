@@ -19,10 +19,10 @@ defaultLanguage = "en"
 rankLanguage :: Language -> LanguagePreference -> Float
 rankLanguage lang = fromMaybe 0 . M.lookup lang
 
-matchLanguage :: LanguagePreference -> M.Map Language a -> Maybe a
+matchLanguage :: LanguagePreference -> LanguageMap a -> Maybe a
 matchLanguage = matchLanguageFunc (const 1)
 
-matchLanguageFunc :: (a -> Float) -> LanguagePreference -> M.Map Language a -> Maybe a
+matchLanguageFunc :: (a -> Float) -> LanguagePreference -> LanguageMap a -> Maybe a
 matchLanguageFunc quality pref values = liftM fst $ M.maxView ranked
     where ranked = M.fromList $ M.elems $ M.mapWithKey rank values
           rank lang value = (rankLanguage lang pref * quality value, value)
