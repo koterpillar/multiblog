@@ -5,12 +5,14 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Writer
 
+import qualified Data.ByteString.Char8 as C8
 import Data.Either
 import Data.List
 import Data.List.Split
 import qualified Data.Map as M
 import Data.Maybe
 import Data.Time
+import qualified Data.Yaml as Y
 
 import Text.Pandoc hiding (Meta, readers)
 
@@ -164,5 +166,5 @@ sourceKey s = case dateMeta s of
     where slug = fromJust $ stringMeta "slug" s
 
 -- Load translations from a YAML file
-loadStrings :: String -> M.Map String (LanguageMap String)
-loadStrings = undefined
+loadStrings :: String -> Either String (M.Map String (LanguageMap String))
+loadStrings = Y.decodeEither . C8.pack

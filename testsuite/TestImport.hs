@@ -5,7 +5,7 @@ module TestImport where
 
 import Control.Monad
 
-import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Char8 as C8
 import Data.List
 import qualified Data.Map as M
 import Data.Text (pack)
@@ -69,10 +69,10 @@ test_loadStrings = do
                                   , pack "about" .= object [ pack "zh" .= jstring "关于" ]
                                   ]
     assertEqual
-        (loadStrings $ BS.unpack strings)
-        (M.fromList [ ("title", M.fromList [("en", "Title"), ("ru", "Заголовок")])
-                    , ("about", M.fromList [("zh", "关于")])
-                    ])
+        (loadStrings $ C8.unpack strings)
+        (Right $ M.fromList [ ("title", M.fromList [("en", "Title"), ("ru", "Заголовок")])
+                            , ("about", M.fromList [("zh", "关于")])
+                            ])
 
 sort2 :: Ord a => [[a]] -> [[a]]
 sort2 = sort . map sort
