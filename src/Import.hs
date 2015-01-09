@@ -17,6 +17,7 @@ import Text.Pandoc hiding (Meta, readers)
 import System.Directory
 import System.FilePath.Posix
 
+import Language
 import Models
 import Utils
 
@@ -108,12 +109,6 @@ sourceFromFile fp = case takeExtension fp of
             tell [ContentSource fp content]
     ext -> fail $ "Invalid extension " ++ ext
 
--- Whether a file path is special, to avoid infinite recursion
-isSpecial :: FilePath -> Bool
-isSpecial "." = True
-isSpecial ".." = True
-isSpecial _ = False
-
 fromSources :: [ContentSource] -> Either String AppState
 fromSources sources = do
     let grouped = M.elems $ groupSources sources
@@ -121,6 +116,7 @@ fromSources sources = do
     let (articles, meta) = partitionEithers extracted
     return AppState { appArticles = articles
                     , appMeta = meta
+                    , appStrings = M.empty
                     }
 
 -- Convert Maybe to Either, appending a content source's file name
@@ -166,3 +162,7 @@ sourceKey s = case dateMeta s of
                   Just dt -> ArticleContentSource slug dt
                   Nothing -> MetaContentSource slug
     where slug = fromJust $ stringMeta "slug" s
+
+-- Load translations from a YAML file
+loadStrings :: String -> M.Map String (LanguageMap String)
+loadStrings = undefined

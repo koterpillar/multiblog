@@ -35,6 +35,7 @@ Executable multiblog
     web-routes-boomerang >= 0.26,
     web-routes-happstack >= 0.23,
     web-routes-th >= 0.22,
+    yaml >= 0.8,
     base >= 4.4 && < 5
 
 Test-Suite tests
