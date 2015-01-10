@@ -19,6 +19,7 @@ script:
 cache:
   directories:
     - $HOME/.cabal
+    - $HOME/.ghc
 
 deploy:
   provider: releases

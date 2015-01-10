@@ -29,3 +29,9 @@ onlyOne action = do
     case ms of
         [m] -> return m
         _ -> mzero
+
+-- Whether a file path is special, to avoid infinite recursion
+isSpecial :: FilePath -> Bool
+isSpecial "." = True
+isSpecial ".." = True
+isSpecial _ = False

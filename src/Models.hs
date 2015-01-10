@@ -5,6 +5,7 @@ module Models where
 import Control.Monad
 import Control.Monad.State
 
+import qualified Data.Map as M
 import Data.Time
 
 import Text.Pandoc hiding (Meta, readers)
@@ -50,6 +51,7 @@ instance HasSlug Meta where
 
 data AppState = AppState { appArticles :: [Article]
                          , appMeta     :: [Meta]
+                         , appStrings  :: M.Map String (LanguageMap String)
                          }
     deriving (Eq, Show)
 

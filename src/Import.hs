@@ -5,18 +5,21 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Writer
 
+import qualified Data.ByteString.UTF8 as U
 import Data.Either
 import Data.List
 import Data.List.Split
 import qualified Data.Map as M
 import Data.Maybe
 import Data.Time
+import qualified Data.Yaml as Y
 
 import Text.Pandoc hiding (Meta, readers)
 
 import System.Directory
 import System.FilePath.Posix
 
+import Language
 import Models
 import Utils
 
@@ -80,7 +83,11 @@ readers = M.fromList [("md", readMarkdown def)]
 loadFromDirectory :: FilePath -> IO (Either String AppState)
 loadFromDirectory path = do
     sources <- sourcesFromDirectory path
-    return $ fromSources sources
+    stringsFile <- readFile $ path </> "strings.yaml"
+    return $ do
+        state <- fromSources sources
+        strings <- loadStrings stringsFile
+        return $ state { appStrings = strings }
 
 -- All content sources from a directory
 sourcesFromDirectory :: FilePath -> IO [ContentSource]
@@ -108,12 +115,6 @@ sourceFromFile fp = case takeExtension fp of
             tell [ContentSource fp content]
     ext -> fail $ "Invalid extension " ++ ext
 
--- Whether a file path is special, to avoid infinite recursion
-isSpecial :: FilePath -> Bool
-isSpecial "." = True
-isSpecial ".." = True
-isSpecial _ = False
-
 fromSources :: [ContentSource] -> Either String AppState
 fromSources sources = do
     let grouped = M.elems $ groupSources sources
@@ -121,6 +122,7 @@ fromSources sources = do
     let (articles, meta) = partitionEithers extracted
     return AppState { appArticles = articles
                     , appMeta = meta
+                    , appStrings = M.empty
                     }
 
 -- Convert Maybe to Either, appending a content source's file name
@@ -166,3 +168,7 @@ sourceKey s = case dateMeta s of
                   Just dt -> ArticleContentSource slug dt
                   Nothing -> MetaContentSource slug
     where slug = fromJust $ stringMeta "slug" s
+
+-- Load translations from a YAML file
+loadStrings :: String -> Either String (M.Map String (LanguageMap String))
+loadStrings = Y.decodeEither . U.fromString
