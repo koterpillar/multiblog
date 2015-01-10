@@ -17,7 +17,7 @@ $doctype 5
         <div .col-md-4 .col-md-pull-8>
           <ul .nav .nav-pills .nav-stacked>
             <li>
-              <a href=@{Index}>/
+              <a href=@{Index}>#{langString "home"}
             <li>
               <a href=@{link about}>#{langTitle lang about}
             $# TODO: externalize

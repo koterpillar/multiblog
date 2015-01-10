@@ -8,6 +8,7 @@ import qualified Control.Arrow as A
 import Control.Monad
 import Control.Monad.State
 
+import qualified Data.Map as M
 import Data.Maybe
 import Data.Monoid
 import Data.Time
@@ -57,6 +58,8 @@ template :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) 
 template lang page = do
     -- TODO: need to be able to get any meta inside
     about <- getMeta "about"
+    strings <- gets appStrings
+    let langString str = fromMaybe str $ M.lookup str strings >>= matchLanguage lang
     render $(hamletFile "templates/base.hamlet")
 
 articleListDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>

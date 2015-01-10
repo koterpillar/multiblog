@@ -83,7 +83,11 @@ readers = M.fromList [("md", readMarkdown def)]
 loadFromDirectory :: FilePath -> IO (Either String AppState)
 loadFromDirectory path = do
     sources <- sourcesFromDirectory path
-    return $ fromSources sources
+    stringsFile <- readFile $ path </> "strings.yaml"
+    return $ do
+        state <- fromSources sources
+        strings <- loadStrings stringsFile
+        return $ state { appStrings = strings }
 
 -- All content sources from a directory
 sourcesFromDirectory :: FilePath -> IO [ContentSource]
