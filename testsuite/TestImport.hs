@@ -63,13 +63,14 @@ jstring :: String -> Value
 jstring = String . pack
 
 test_loadStrings = do
-    let strings = encode $ object [ pack "title" .= object [ pack "en" .= jstring "Title"
-                                                           , pack "ru" .= jstring "Заголовок"
-                                                           ]
-                                  , pack "about" .= object [ pack "zh" .= jstring "关于" ]
-                                  ]
+    let strings = unlines [ "title:"
+                          , "  en: Title"
+                          , "  ru: Заголовок"
+                          , "about:"
+                          , "  zh: 关于"
+                          ]
     assertEqual
-        (loadStrings $ C8.unpack strings)
+        (loadStrings strings)
         (Right $ M.fromList [ ("title", M.fromList [("en", "Title"), ("ru", "Заголовок")])
                             , ("about", M.fromList [("zh", "关于")])
                             ])

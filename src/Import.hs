@@ -5,7 +5,7 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Writer
 
-import qualified Data.ByteString.Char8 as C8
+import qualified Data.ByteString.UTF8 as U
 import Data.Either
 import Data.List
 import Data.List.Split
@@ -167,4 +167,4 @@ sourceKey s = case dateMeta s of
 
 -- Load translations from a YAML file
 loadStrings :: String -> Either String (M.Map String (LanguageMap String))
-loadStrings = Y.decodeEither . C8.pack
+loadStrings = Y.decodeEither . U.fromString
