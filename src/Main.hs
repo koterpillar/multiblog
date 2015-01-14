@@ -47,7 +47,9 @@ siteAddress = do
 main :: IO ()
 main = do
     address <- siteAddress
-    simpleHTTP' runApp nullConf $ implSite (T.pack address) "" site
+    listenPort <- lookupEnv "LISTEN_PORT"
+    let conf = nullConf { port = read $ fromMaybe "8000" listenPort }
+    simpleHTTP' runApp conf $ implSite (T.pack address) "" site
 
 index :: AppPart Response
 index = articleList $ const True
