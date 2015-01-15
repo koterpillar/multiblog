@@ -24,7 +24,7 @@ import Language
 import Models
 import Routes
 
-data PageContent a = PageContent { pcTitle   :: String
+data PageContent a = PageContent { pcTitle   :: Maybe String
                                  , pcContent :: HtmlUrl a
                                  }
 
@@ -38,9 +38,9 @@ instance Linkable Meta where
     link = MetaView . mtSlug
 
 defaultPage :: PageContent a
-defaultPage = PageContent { pcTitle = "", pcContent = mempty }
+defaultPage = PageContent { pcTitle = Nothing, pcContent = mempty }
 
-mkPage :: String -> HtmlUrl a -> PageContent a
+mkPage :: Maybe String -> HtmlUrl a -> PageContent a
 mkPage title content = defaultPage { pcTitle = title
                                    , pcContent = content
                                    }
@@ -65,17 +65,17 @@ template lang page = do
 articleListDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
     LanguagePreference -> [Article] -> m Markup
 articleListDisplay lang articles = template lang $
-    mkPage "List" $(hamletFile "templates/list.hamlet")
+    mkPage Nothing $(hamletFile "templates/list.hamlet")
 
 articleDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
     LanguagePreference -> Article -> m Markup
 articleDisplay lang article = template lang $
-    mkPage (langTitle lang article) $(hamletFile "templates/article.hamlet")
+    mkPage (Just $ langTitle lang article) $(hamletFile "templates/article.hamlet")
 
 metaDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
     LanguagePreference -> Meta -> m Markup
 metaDisplay lang meta = template lang $
-    mkPage (langTitle lang meta) $(hamletFile "templates/meta.hamlet")
+    mkPage (Just $ langTitle lang meta) $(hamletFile "templates/meta.hamlet")
 
 langTitle :: HasContent a => LanguagePreference -> a -> String
 langTitle lang = fromMaybe "untitled" . listToMaybe . query extractTitle . langContent lang
