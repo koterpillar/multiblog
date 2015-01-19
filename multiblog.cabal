@@ -36,6 +36,7 @@ Executable multiblog
     web-routes-happstack >= 0.23,
     web-routes-th >= 0.22,
     utf8-string >= 0.3,
+    unix >= 2.7,
     yaml >= 0.8,
     base >= 4.4 && < 5
 

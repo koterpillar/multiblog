@@ -8,18 +8,35 @@ import qualified Data.Text as T
 import Happstack.Server
 
 import System.Environment
+import System.Posix.Process
+import System.Posix.Signals
 
 import Web.Routes.Happstack
 
 import App
+
+-- Run the site, handling SIGHUP
+main :: IO ()
+main = do
+    _ <- installHandler lostConnection (CatchOnce reloadExecutable) Nothing
+    runSite
+
+-- Replace the process with a (possibly updated) executable
+reloadExecutable :: IO ()
+reloadExecutable = do
+    -- TODO: This traverses symlinks, which is not what should happen
+    -- (a user must be able to replace the symlinked file)
+    ownPath <- getExecutablePath
+    -- TODO: Need to close the listening socket before executing again
+    executeFile ownPath False [] Nothing
 
 siteAddress :: IO String
 siteAddress = do
     addr <- lookupEnv "SITE_URL"
     return $ fromMaybe "http://localhost:8000" addr
 
-main :: IO ()
-main = do
+runSite :: IO ()
+runSite = do
     address <- siteAddress
     listenPort <- lookupEnv "LISTEN_PORT"
     let conf = nullConf { port = read $ fromMaybe "8000" listenPort }
