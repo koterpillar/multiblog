@@ -25,6 +25,7 @@ Executable multiblog
     happstack >= 7.0,
     happstack-server >= 7.3,
     mtl >= 2.1 && < 2.3,
+    network >= 2.6,
     pandoc >= 1.13,
     pandoc-types >= 1.12,
     shakespeare >= 2.0,
