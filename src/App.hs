@@ -1,15 +1,17 @@
+{-# LANGUAGE OverloadedStrings #-}
 module App where
 
 import Control.Monad.State
 
 import qualified Data.ByteString.Char8 as B
+import qualified Data.Text as T
 import Data.Time
 
 import Happstack.Server
 
 import Web.Routes
 import Web.Routes.Boomerang
-import Web.Routes.Happstack ()
+import Web.Routes.Happstack
 
 import Import
 import Language
@@ -34,6 +36,9 @@ runApp a = do
 
 site :: Site Sitemap (ServerPartT App Response)
 site = boomerangSiteRouteT handler sitemap
+
+siteHandler :: String -> ServerPartT App Response
+siteHandler address = implSite (T.pack address) "" site
 
 handler :: Sitemap -> AppPart Response
 handler route = case route of

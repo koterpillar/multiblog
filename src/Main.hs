@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE OverloadedStrings  #-}
 {-# LANGUAGE TypeOperators      #-}
 module Main where
 
@@ -8,7 +7,6 @@ import Control.Exception
 import Control.Monad
 
 import Data.Maybe
-import qualified Data.Text as T
 import Data.Typeable
 
 import Filesystem.Path.CurrentOS
@@ -21,8 +19,6 @@ import System.Argv0
 import System.Environment
 import System.Posix.Process
 import System.Posix.Signals
-
-import Web.Routes.Happstack
 
 import App
 
@@ -40,6 +36,8 @@ main = do
     runSite
 
 -- Replace the process with a (possibly updated) executable
+-- Throw a "Reload" exception to the main thread so it releases
+-- its socket first
 reloadExecutable :: ThreadId -> IO ()
 reloadExecutable mainThread = do
     throwTo mainThread Reload
@@ -51,12 +49,17 @@ siteAddress = do
     addr <- lookupEnv "SITE_URL"
     return $ fromMaybe "http://localhost:8000" addr
 
+listenPort :: IO Int
+listenPort = liftM (read . fromMaybe "8000") (lookupEnv "LISTEN_PORT")
+
+-- Run the actual site
 runSite :: IO ()
 runSite = do
     address <- siteAddress
-    listenPort <- lookupEnv "LISTEN_PORT"
-    let conf = nullConf { port = read $ fromMaybe "8000" listenPort }
+    lport <- listenPort
+    let conf = nullConf { port = lport }
+    -- Manually bind the socket to close it on exception
     bracket
         (bindPort conf)
         close
-        (\sock -> simpleHTTPWithSocket' runApp sock conf $ implSite (T.pack address) "" site)
+        (\sock -> simpleHTTPWithSocket' runApp sock conf $ siteHandler address)
