@@ -2,11 +2,16 @@
 {-# LANGUAGE TypeOperators     #-}
 module Main where
 
+import Control.Monad
+
 import Data.Maybe
 import qualified Data.Text as T
 
+import Filesystem.Path.CurrentOS
+
 import Happstack.Server
 
+import System.Argv0
 import System.Environment
 import System.Posix.Process
 import System.Posix.Signals
@@ -24,9 +29,7 @@ main = do
 -- Replace the process with a (possibly updated) executable
 reloadExecutable :: IO ()
 reloadExecutable = do
-    -- TODO: This traverses symlinks, which is not what should happen
-    -- (a user must be able to replace the symlinked file)
-    ownPath <- getExecutablePath
+    ownPath <- liftM encodeString getArgv0
     -- TODO: Need to close the listening socket before executing again
     executeFile ownPath False [] Nothing
 

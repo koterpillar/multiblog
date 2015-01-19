@@ -29,6 +29,8 @@ Executable multiblog
     pandoc-types >= 1.12,
     shakespeare >= 2.0,
     split >= 0.2,
+    system-argv0 >= 0.1,
+    system-filepath >= 0.4,
     text >= 1.1,
     time >= 1.4 && < 1.6,
     web-routes >= 0.27,
