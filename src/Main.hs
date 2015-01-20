@@ -1,92 +1,65 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeOperators     #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE TypeOperators      #-}
 module Main where
 
+import Control.Concurrent
+import Control.Exception
 import Control.Monad
-import Control.Monad.State
 
-import qualified Data.ByteString.Char8 as B
 import Data.Maybe
-import qualified Data.Text as T
-import Data.Time
+import Data.Typeable
+
+import Filesystem.Path.CurrentOS
 
 import Happstack.Server
 
-import System.Environment
+import Network.Socket
 
-import Web.Routes
-import Web.Routes.Boomerang
-import Web.Routes.Happstack
+import System.Argv0
+import System.Environment
+import System.Posix.Process
+import System.Posix.Signals
 
 import App
-import Language
-import Models
-import Routes
-import Utils
-import Views
 
-type AppPart a = RouteT Sitemap (ServerPartT App) a
+data Reload = Reload
+    deriving (Show, Typeable)
 
-handler :: Sitemap -> AppPart Response
-handler route = case route of
-    Index -> index
-    Yearly y -> yearlyIndex y
-    Monthly y m -> monthlyIndex y m
-    Daily d -> dailyIndex d
-    ArticleView d s -> article d s
-    MetaView s -> meta s
+instance Exception Reload
 
-site :: Site Sitemap (ServerPartT App Response)
-site = boomerangSiteRouteT handler sitemap
+-- Run the site, handling SIGHUP
+main :: IO ()
+main = do
+    mainThread <- myThreadId
+    _ <- installHandler lostConnection
+        (CatchOnce $ reloadExecutable mainThread) Nothing
+    runSite
+
+-- Replace the process with a (possibly updated) executable
+-- Throw a "Reload" exception to the main thread so it releases
+-- its socket first
+reloadExecutable :: ThreadId -> IO ()
+reloadExecutable mainThread = do
+    throwTo mainThread Reload
+    ownPath <- liftM encodeString getArgv0
+    executeFile ownPath False [] Nothing
 
 siteAddress :: IO String
 siteAddress = do
     addr <- lookupEnv "SITE_URL"
     return $ fromMaybe "http://localhost:8000" addr
 
-main :: IO ()
-main = do
+listenPort :: IO Int
+listenPort = liftM (read . fromMaybe "8000") (lookupEnv "LISTEN_PORT")
+
+-- Run the actual site
+runSite :: IO ()
+runSite = do
     address <- siteAddress
-    listenPort <- lookupEnv "LISTEN_PORT"
-    let conf = nullConf { port = read $ fromMaybe "8000" listenPort }
-    simpleHTTP' runApp conf $ implSite (T.pack address) "" site
-
-index :: AppPart Response
-index = articleList $ const True
-
-yearlyIndex :: Integer -> AppPart Response
-yearlyIndex = articleList . byYear
-
-monthlyIndex :: Integer -> Int -> AppPart Response
-monthlyIndex year month = articleList $ byYearMonth year month
-
-dailyIndex :: Day -> AppPart Response
-dailyIndex date = articleList $ byDate date
-
-languageHeaderM :: AppPart LanguagePreference
-languageHeaderM = do
-    request <- askRq
-    let header = getHeader "Accept-Language" request
-    return $ languageHeader $ liftM B.unpack header
-
-html :: ToMessage a => a -> AppPart Response
-html = ok . toResponse
-
-article :: Day -> String -> AppPart Response
-article date slug = do
-    language <- languageHeaderM
-    -- TODO: onlyOne
-    a <- onlyOne $ lift $ getFiltered $ byDateSlug date slug
-    articleDisplay language a >>= html
-
-articleList :: (Article -> Bool) -> AppPart Response
-articleList articleFilter = do
-    articles <- lift $ getFiltered articleFilter
-    language <- languageHeaderM
-    articleListDisplay language articles >>= html
-
-meta :: String -> AppPart Response
-meta slug = do
-    language <- languageHeaderM
-    m <- getMeta slug
-    metaDisplay language m >>= html
+    lport <- listenPort
+    let conf = nullConf { port = lport }
+    -- Manually bind the socket to close it on exception
+    bracket
+        (bindPort conf)
+        close
+        (\sock -> simpleHTTPWithSocket' runApp sock conf $ siteHandler address)

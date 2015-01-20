@@ -25,10 +25,13 @@ Executable multiblog
     happstack >= 7.0,
     happstack-server >= 7.3,
     mtl >= 2.1 && < 2.3,
+    network >= 2.6,
     pandoc >= 1.13,
     pandoc-types >= 1.12,
     shakespeare >= 2.0,
     split >= 0.2,
+    system-argv0 >= 0.1,
+    system-filepath >= 0.4,
     text >= 1.1,
     time >= 1.4 && < 1.6,
     web-routes >= 0.27,
@@ -36,6 +39,7 @@ Executable multiblog
     web-routes-happstack >= 0.23,
     web-routes-th >= 0.22,
     utf8-string >= 0.3,
+    unix >= 2.7,
     yaml >= 0.8,
     base >= 4.4 && < 5
 
