@@ -89,12 +89,5 @@ inlineToStr inline = writePlain def $ Pandoc undefined [Plain inline]
 langContent :: HasContent a => LanguagePreference -> a -> Pandoc
 langContent lang = fromJust . matchLanguage lang . getContent
 
-arPreview :: LanguagePreference -> Article -> Pandoc
-arPreview lang = pandocFilter (take 2 . filter isTextual) . langContent lang
-
-pandocFilter :: ([Block] -> [Block]) -> Pandoc -> Pandoc
-pandocFilter f (Pandoc m bs) = Pandoc m (f bs)
-
-isTextual :: Block -> Bool
-isTextual Header{} = False
-isTextual _ = True
+linkedHeader :: Linkable a => a -> Pandoc -> Pandoc
+linkedHeader = undefined
