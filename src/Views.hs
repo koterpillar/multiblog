@@ -89,5 +89,17 @@ inlineToStr inline = writePlain def $ Pandoc undefined [Plain inline]
 langContent :: HasContent a => LanguagePreference -> a -> Pandoc
 langContent lang = fromJust . matchLanguage lang . getContent
 
+-- Modify the first header to be a link to a given place
+-- and remove all anchors from headers
 linkedHeader :: Linkable a => a -> Pandoc -> Markup
-linkedHeader _ = writeHtml def
+linkedHeader target doc = writeHtml def $ evalState (walkM linkHeader doc) 0
+    where linkHeader :: Block -> State Int Block
+          linkHeader (Header n _ text) = do
+              -- note if this is the first header
+              cnt <- get
+              modify (+ 1)
+              -- make the first header a link
+              let text' = if cnt == 0 then [Link text ("/", "")] else text
+              -- remove anchors
+              return $ Header n ("",[],[]) text'
+          linkHeader x = return x
