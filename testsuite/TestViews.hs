@@ -17,14 +17,17 @@ instance Linkable TestLink where
     link = const Index
 
 test_linkedHeader = do
-    let source = unlines $ [ "Header"
-                           , "======"
-                           , ""
-                           , "Text content"
-                           , ""
-                           , "Other header"
-                           , "============"
-                           ]
+    let source = unlines [ "Header"
+                         , "------"
+                         , ""
+                         , "Text content"
+                         , ""
+                         , "Other header"
+                         , "------------"
+                         ]
     assertEqual
-        "<h2><a href=\"/\">Header</a></h2><p>Text content</p><h2>Other header</h2>"
-        $ renderHtml $ writeHtml def $ linkedHeader TestLink $ readMarkdown def source
+        (unlines [ "<h2><a href=\"/\">Header</a></h2>"
+                 , "<p>Text content</p>"
+                 , "<h2>Other header</h2>"
+                 ])
+        $ renderHtml $ linkedHeader TestLink $ readMarkdown def source

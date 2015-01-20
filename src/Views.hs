@@ -89,5 +89,5 @@ inlineToStr inline = writePlain def $ Pandoc undefined [Plain inline]
 langContent :: HasContent a => LanguagePreference -> a -> Pandoc
 langContent lang = fromJust . matchLanguage lang . getContent
 
-linkedHeader :: Linkable a => a -> Pandoc -> Pandoc
-linkedHeader = undefined
+linkedHeader :: Linkable a => a -> Pandoc -> Markup
+linkedHeader _ = writeHtml def
