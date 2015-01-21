@@ -11,6 +11,7 @@ import Control.Monad.State
 import qualified Data.Map as M
 import Data.Maybe
 import Data.Monoid
+import qualified Data.Text as T
 import Data.Time
 
 import Text.Blaze.Html (Markup)
@@ -64,8 +65,10 @@ template lang page = do
 
 articleListDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
     LanguagePreference -> [Article] -> m Markup
-articleListDisplay lang articles = template lang $
-    mkPage Nothing $(hamletFile "templates/list.hamlet")
+articleListDisplay lang articles = do
+    articlesContent <- mapM (linkedContent lang) articles
+    template lang $
+        mkPage Nothing $(hamletFile "templates/list.hamlet")
 
 articleDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
     LanguagePreference -> Article -> m Markup
@@ -89,12 +92,27 @@ inlineToStr inline = writePlain def $ Pandoc undefined [Plain inline]
 langContent :: HasContent a => LanguagePreference -> a -> Pandoc
 langContent lang = fromJust . matchLanguage lang . getContent
 
-arPreview :: LanguagePreference -> Article -> Pandoc
-arPreview lang = pandocFilter (take 2 . filter isTextual) . langContent lang
+-- Modify the content to have a link to itself and have no anchors
+linkedContent :: (HasContent a, Linkable a, MonadRoute m, URL m ~ Sitemap)
+              => LanguagePreference
+              -> a
+              -> m Pandoc
+linkedContent lang a = do
+    routeFn <- askRouteFn
+    let target = T.unpack $ routeFn (link a) []
+    return $ linkedHeader target $ langContent lang a
 
-pandocFilter :: ([Block] -> [Block]) -> Pandoc -> Pandoc
-pandocFilter f (Pandoc m bs) = Pandoc m (f bs)
-
-isTextual :: Block -> Bool
-isTextual Header{} = False
-isTextual _ = True
+-- Modify the first header to be a link to a given place
+-- and remove all anchors from headers
+linkedHeader :: String -> Pandoc -> Pandoc
+linkedHeader target doc = evalState (walkM linkHeader doc) True
+    where linkHeader :: Block -> State Bool Block
+          linkHeader (Header n _ text) = do
+              -- note if this is the first header
+              isFirst <- get
+              put False
+              -- make the first header a link
+              let text' = if isFirst then [Link text (target, "")] else text
+              -- remove anchors
+              return $ Header n ("",[],[]) text'
+          linkHeader x = return x
