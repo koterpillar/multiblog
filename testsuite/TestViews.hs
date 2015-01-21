@@ -28,8 +28,8 @@ test_linkedHeader = do
                          , "------------"
                          ]
     assertEqual
-        (intercalate "\n" [ "<h2><a href=\"/test\">Header</a></h2>"
+        (intercalate "\n" [ "<h2><a href=\"http://test\">Header</a></h2>"
                           , "<p>Text content</p>"
                           , "<h2>Other header</h2>"
                           ])
-        $ renderHtml $ linkedHeader (TestLink "test") $ readMarkdown def source
+        $ renderHtml $ writeHtml def $ linkedHeader "http://test" $ readMarkdown def source
