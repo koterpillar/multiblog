@@ -20,19 +20,20 @@ import Routes
 import Utils
 import Views
 
-
+-- TODO: This should be a ReaderT
 type App = StateT AppState IO
 
 type AppPart a = RouteT Sitemap (ServerPartT App) a
 
-runApp :: App a -> IO a
-runApp a = do
-    loaded <- loadFromDirectory "content"
-    case loaded of
+loadApp :: IO AppState
+loadApp = do
+    app <- loadFromDirectory "content"
+    case app of
         Left err -> error err
-        Right appState -> do
-            print appState
-            evalStateT a appState
+        Right appState -> return appState
+
+runApp :: AppState -> App a -> IO a
+runApp app a = evalStateT a app
 
 site :: Site Sitemap (ServerPartT App Response)
 site = boomerangSiteRouteT handler sitemap
