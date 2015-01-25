@@ -6,6 +6,7 @@ module TestImport where
 import Control.Monad
 
 import qualified Data.ByteString.Char8 as C8
+import Data.LanguageCodes
 import Data.List
 import qualified Data.Map as M
 import Data.Text (pack)
@@ -52,7 +53,7 @@ test_loadMeta = do
                   ]
     assertEqual
         (Right $ nullState { appMeta = [ Meta { mtSlug = "about"
-                                       , mtContent = M.fromList [ ("en", readMarkdown def "This is meta")
+                                       , mtContent = M.fromList [ (EN, readMarkdown def "This is meta")
                                                                 ]
                                               }
                                        ]
@@ -71,8 +72,8 @@ test_loadStrings = do
                           ]
     assertEqual
         (loadStrings strings)
-        (Right $ M.fromList [ ("title", M.fromList [("en", "Title"), ("ru", "Заголовок")])
-                            , ("about", M.fromList [("zh", "关于")])
+        (Right $ M.fromList [ ("title", M.fromList [(EN, "Title"), (RU, "Заголовок")])
+                            , ("about", M.fromList [(ZH, "关于")])
                             ])
 
 sort2 :: Ord a => [[a]] -> [[a]]

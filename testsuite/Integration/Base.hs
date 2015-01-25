@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- Base functions for integration tests
 module Integration.Base where
@@ -20,6 +21,7 @@ import Test.HUnit
 
 import App
 import Import
+import Language
 
 
 -- Site handler with a test address
@@ -55,6 +57,11 @@ mkRequest rPath = do
                    , rqBody = rBody
                    , rqPeer = ("", 0)
                    }
+
+withLang :: LanguagePreference -> Request -> Request
+withLang lang req = req { rqHeaders = newHeaders }
+    where newHeaders = M.insert "accept-language" (HeaderPair "Accept-Language" [U.fromString pref]) (rqHeaders req)
+          pref = show lang
 
 -- Extract contents from a response
 responseContent :: Response -> String
