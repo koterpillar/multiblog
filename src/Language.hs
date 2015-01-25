@@ -17,14 +17,9 @@ type Language = ISO639_1
 
 type LanguageMap = M.Map Language
 
-
--- TODO: this is horrible, rewrite using proper operators
 mapKeysM :: (Monad m, Ord k1, Ord k2) => (k1 -> m k2) -> M.Map k1 a -> m (M.Map k2 a)
-mapKeysM kfunc = \mm -> do
-    let l = M.toList mm
-    l' <- mapM kvfunc l
-    return $ M.fromList l'
-        where kvfunc (k, v) = liftM (\k' -> (k', v)) $ kfunc k
+mapKeysM kfunc = liftM M.fromList . mapM kvfunc . M.toList
+    where kvfunc (k, v) = liftM (\k' -> (k', v)) $ kfunc k
 
 instance (Y.FromJSON v) => Y.FromJSON (M.Map Language v) where
     parseJSON v = Y.parseJSON v >>= mapKeysM parseLanguage
