@@ -63,4 +63,5 @@ Test-Suite tests
     split >= 0.2,
     time >= 1.4 && < 1.6,
     HTF >= 0.12,
+    HUnit >= 1.2,
     base >= 4.4 && < 5
