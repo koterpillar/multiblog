@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 
-module Integration.TestBase where
+module Integration.TestHome where
 
 import Integration.Base
 
