@@ -31,7 +31,7 @@ testHandler = siteHandler "http://test"
 -- Make a request to the application
 testRequest :: Request -> IO Response
 testRequest req = do
-    Right app <- loadFromDirectory "testsuite/Integration/test_content"
+    Right app <- loadFromDirectory "testsuite/Integration/content"
     runApp app $ simpleHTTP'' testHandler req
 
 assertContains :: (Eq a, Show a) => [a] -> [a] -> Assertion
