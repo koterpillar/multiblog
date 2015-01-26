@@ -34,9 +34,11 @@ testRequest req = do
     Right app <- loadFromDirectory "testsuite/Integration/test_content"
     runApp app $ simpleHTTP'' testHandler req
 
-assertContains :: Eq a => [a] -> [a] -> Assertion
-assertContains needle haystack = subAssert $ assertBool $
-    needle `isInfixOf` haystack
+assertContains :: (Eq a, Show a) => [a] -> [a] -> Assertion
+assertContains needle haystack =
+    subAssert $ assertBoolVerbose
+        (show needle ++ " not found in:\n" ++ show haystack)
+        (needle `isInfixOf` haystack)
 
 -- Create a request with a specified URL
 -- Happstack doesn't make it easy
@@ -46,7 +48,7 @@ mkRequest rPath = do
     rBody <- newMVar (Body LB.empty)
     return Request { rqSecure = False
                    , rqMethod = GET
-                   , rqPaths = drop 1 $ splitOn "/" $ drop 1 rPath
+                   , rqPaths = filter (/= "") $ splitOn "/" rPath
                    , rqUri = rPath
                    , rqQuery = ""
                    , rqInputsQuery = []

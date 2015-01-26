@@ -2,6 +2,7 @@
 
 import Test.Framework
 
+import {-@ HTF_TESTS @-} Integration.TestArticle
 import {-@ HTF_TESTS @-} Integration.TestHome
 import {-@ HTF_TESTS @-} TestImport
 import {-@ HTF_TESTS @-} TestLanguage
