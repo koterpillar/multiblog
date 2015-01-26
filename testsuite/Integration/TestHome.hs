@@ -10,4 +10,5 @@ import Test.Framework
 test_home = do
     req <- mkRequest "/"
     home <- testRequest req
-    assertContains "Test site" $ responseContent home
+    resp <- responseContent home
+    assertContains "Test site" resp

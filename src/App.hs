@@ -25,9 +25,9 @@ type App = StateT AppState IO
 
 type AppPart a = RouteT Sitemap (ServerPartT App) a
 
-loadApp :: IO AppState
-loadApp = do
-    app <- loadFromDirectory "content"
+loadApp :: String -> IO AppState
+loadApp dataDirectory = do
+    app <- loadFromDirectory dataDirectory
     case app of
         Left err -> error err
         Right appState -> return appState
@@ -35,11 +35,12 @@ loadApp = do
 runApp :: AppState -> App a -> IO a
 runApp app a = evalStateT a app
 
-site :: Site Sitemap (ServerPartT App Response)
-site = boomerangSiteRouteT handler sitemap
-
-siteHandler :: String -> ServerPartT App Response
-siteHandler address = implSite (T.pack address) "" site
+site :: String -> ServerPartT App Response
+site address = do
+    dir <- lift $ gets appDirectory
+    let routedSite = boomerangSiteRouteT handler sitemap
+    let staticSite = serveDirectory DisableBrowsing [] $ dir ++ "/static"
+    implSite (T.pack address) "" routedSite `mplus` staticSite
 
 handler :: Sitemap -> AppPart Response
 handler route = case route of

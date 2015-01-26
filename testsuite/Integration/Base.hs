@@ -26,12 +26,12 @@ import Language
 
 -- Site handler with a test address
 testHandler :: ServerPartT App Response
-testHandler = siteHandler "http://test"
+testHandler = site "http://test"
 
 -- Make a request to the application
 testRequest :: Request -> IO Response
 testRequest req = do
-    Right app <- loadFromDirectory "testsuite/Integration/content"
+    app <- loadApp "testsuite/Integration/content"
     runApp app $ simpleHTTP'' testHandler req
 
 assertContains :: (Eq a, Show a) => [a] -> [a] -> Assertion
@@ -66,6 +66,10 @@ withLang lang req = req { rqHeaders = newHeaders }
           pref = show lang
 
 -- Extract contents from a response
-responseContent :: Response -> String
-responseContent r@(Response _ _ _ _ _) = U.toString $ LB.toStrict $ rsBody r
-responseContent _ = undefined
+responseContent :: Response -> IO String
+responseContent r@(Response _ _ _ _ _) = return $ U.toString $ LB.toStrict $ rsBody r
+responseContent f@(SendFile _ _ _ _ _ _ _) = do
+    contents <- readFile $ sfFilePath f
+    let offset = fromIntegral $ sfOffset f
+    let count = fromIntegral $ sfCount f
+    return $ drop offset $ take count contents

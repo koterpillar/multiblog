@@ -100,7 +100,7 @@ loadFromDirectory path = do
     return $ do
         state <- fromSources sources
         strings <- loadStrings stringsFile
-        return $ state { appStrings = strings }
+        return $ state { appDirectory = path, appStrings = strings }
 
 -- All content sources from a directory
 sourcesFromDirectory :: FilePath -> IO [ContentSource]
@@ -133,7 +133,8 @@ fromSources sources = do
     let grouped = M.elems $ groupSources sources
     extracted <- mapM makeArticle grouped
     let (articles, meta) = partitionEithers extracted
-    return AppState { appArticles = articles
+    return AppState { appDirectory = ""
+                    , appArticles = articles
                     , appMeta = meta
                     , appStrings = M.empty
                     }

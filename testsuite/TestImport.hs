@@ -43,7 +43,7 @@ modifyAppState f st = st { appArticles = map f $ appArticles st
                          }
 
 nullState :: AppState
-nullState = AppState [] [] (M.empty)
+nullState = AppState "" [] [] (M.empty)
 
 testSource :: FilePath -> [(String, String)] -> String -> ContentSource
 testSource path meta content = ContentSource path $ readMarkdown def $ markdown meta content
