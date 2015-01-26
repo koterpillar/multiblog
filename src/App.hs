@@ -37,9 +37,9 @@ runApp app a = evalStateT a app
 
 site :: String -> ServerPartT App Response
 site address = do
-    dir <- lift $ gets appDirectory
+    appDir <- lift $ gets appDirectory
     let routedSite = boomerangSiteRouteT handler sitemap
-    let staticSite = serveDirectory DisableBrowsing [] $ dir ++ "/static"
+    let staticSite = serveDirectory DisableBrowsing [] $ appDir ++ "/static"
     implSite (T.pack address) "" routedSite `mplus` staticSite
 
 handler :: Sitemap -> AppPart Response
