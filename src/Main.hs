@@ -55,6 +55,8 @@ listenPort = liftM (read . fromMaybe "8000") (lookupEnv "LISTEN_PORT")
 -- Run the actual site
 runSite :: IO ()
 runSite = do
+    -- TODO: parametrise?
+    app <- loadApp "content"
     address <- siteAddress
     lport <- listenPort
     let conf = nullConf { port = lport }
@@ -62,4 +64,4 @@ runSite = do
     bracket
         (bindPort conf)
         close
-        (\sock -> simpleHTTPWithSocket' runApp sock conf $ siteHandler address)
+        (\sock -> simpleHTTPWithSocket' (runApp app) sock conf $ site address)

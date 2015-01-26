@@ -20,25 +20,27 @@ import Routes
 import Utils
 import Views
 
-
+-- TODO: This should be a ReaderT
 type App = StateT AppState IO
 
 type AppPart a = RouteT Sitemap (ServerPartT App) a
 
-runApp :: App a -> IO a
-runApp a = do
-    loaded <- loadFromDirectory "content"
-    case loaded of
+loadApp :: String -> IO AppState
+loadApp dataDirectory = do
+    app <- loadFromDirectory dataDirectory
+    case app of
         Left err -> error err
-        Right appState -> do
-            print appState
-            evalStateT a appState
+        Right appState -> return appState
 
-site :: Site Sitemap (ServerPartT App Response)
-site = boomerangSiteRouteT handler sitemap
+runApp :: AppState -> App a -> IO a
+runApp app a = evalStateT a app
 
-siteHandler :: String -> ServerPartT App Response
-siteHandler address = implSite (T.pack address) "" site
+site :: String -> ServerPartT App Response
+site address = do
+    appDir <- lift $ gets appDirectory
+    let routedSite = boomerangSiteRouteT handler sitemap
+    let staticSite = serveDirectory DisableBrowsing [] $ appDir ++ "/static"
+    implSite (T.pack address) "" routedSite `mplus` staticSite
 
 handler :: Sitemap -> AppPart Response
 handler route = case route of
@@ -59,7 +61,7 @@ monthlyIndex :: Integer -> Int -> AppPart Response
 monthlyIndex year month = articleList $ byYearMonth year month
 
 dailyIndex :: Day -> AppPart Response
-dailyIndex date = articleList $ byDate date
+dailyIndex = articleList . byDate
 
 languageHeaderM :: AppPart LanguagePreference
 languageHeaderM = do

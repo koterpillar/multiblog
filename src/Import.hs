@@ -64,16 +64,29 @@ metaValues name matchPath source = maybeToList (lookupMeta name m >>= metaText) 
     where (Pandoc m _) = csContent source
           fpChunks = if matchPath then chunks $ csPath source else []
 
+-- Extract a value of a specific type from a content source
+metaValue :: String -- The meta attribute name to extract
+          -> Bool -- Whether to also extract from the file path
+          -> (String -> Maybe a) -- A function to parse a value
+          -> ContentSource -- Content source
+          -> Maybe a -- Extracted value
+metaValue name matchPath readFunc source =
+    msum $ readFunc <$> metaValues name matchPath source
+
 -- Extract a string attribute from a content source
 stringMeta :: String -- Attribute name
            -> ContentSource -- Content source
            -> Maybe String -- Attribute value
 stringMeta name = listToMaybe . metaValues name False
 
+-- Extract a language from a content source
+langMeta :: ContentSource -> Maybe Language
+langMeta = metaValue "lang" False parseLanguage
+
 -- Extract a date attribute from a content source
 -- The file path chunks will be considered as well
 dateMeta :: ContentSource -> Maybe UTCTime
-dateMeta s = msum $ readDate <$> metaValues "date" True s
+dateMeta = metaValue "date" True readDate
 
 -- A map of supported file formats and corresponding Pandoc readers
 readers :: M.Map String (String -> Pandoc)
@@ -87,7 +100,7 @@ loadFromDirectory path = do
     return $ do
         state <- fromSources sources
         strings <- loadStrings stringsFile
-        return $ state { appStrings = strings }
+        return $ state { appDirectory = path, appStrings = strings }
 
 -- All content sources from a directory
 sourcesFromDirectory :: FilePath -> IO [ContentSource]
@@ -120,7 +133,8 @@ fromSources sources = do
     let grouped = M.elems $ groupSources sources
     extracted <- mapM makeArticle grouped
     let (articles, meta) = partitionEithers extracted
-    return AppState { appArticles = articles
+    return AppState { appDirectory = ""
+                    , appArticles = articles
                     , appMeta = meta
                     , appStrings = M.empty
                     }
@@ -149,7 +163,7 @@ makeArticle ss@(s1:_) = do
 -- Merge language content from a group of sources
 mergeLanguageContent :: [ContentSource] -> Either String LanguageContent
 mergeLanguageContent ss = liftM M.fromList $ forM ss $ \s -> do
-    lang <- mfes s "Language is required" $ stringMeta "lang" s
+    lang <- mfes s "Language is required" $ langMeta s
     let pandoc = csContent s
     return (lang, pandoc)
 

@@ -49,9 +49,10 @@ instance HasSlug Article where
 instance HasSlug Meta where
     getSlug = mtSlug
 
-data AppState = AppState { appArticles :: [Article]
-                         , appMeta     :: [Meta]
-                         , appStrings  :: M.Map String (LanguageMap String)
+data AppState = AppState { appDirectory :: String
+                         , appArticles  :: [Article]
+                         , appMeta      :: [Meta]
+                         , appStrings   :: M.Map String (LanguageMap String)
                          }
     deriving (Eq, Show)
 
