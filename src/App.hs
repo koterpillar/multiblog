@@ -60,7 +60,7 @@ monthlyIndex :: Integer -> Int -> AppPart Response
 monthlyIndex year month = articleList $ byYearMonth year month
 
 dailyIndex :: Day -> AppPart Response
-dailyIndex date = articleList $ byDate date
+dailyIndex = articleList . byDate
 
 languageHeaderM :: AppPart LanguagePreference
 languageHeaderM = do
