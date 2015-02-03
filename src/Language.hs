@@ -60,8 +60,10 @@ languageHeader (Just str) = LanguagePreference $ M.fromList $ mapMaybe parsePref
                                _ -> Nothing
           pairWith y x = (x, y)
 
+languageStr :: Language -> String
+languageStr = (\(a, b) -> a:b:[]) . toChars
+
 instance Show LanguagePreference where
     show = intercalate "," . map (uncurry showPref) . M.toList . unLanguagePreference
         where showPref lang 1 = languageStr lang
               showPref lang qvalue = languageStr lang ++ ";q=" ++ show qvalue
-              languageStr = (\(a, b) -> a:b:[]) . toChars
