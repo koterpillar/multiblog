@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module App where
 
+import Control.Applicative (optional)
 import Control.Monad.State
 
 import qualified Data.ByteString.Char8 as B
@@ -64,15 +65,16 @@ monthlyIndex year month = articleList $ byYearMonth year month
 dailyIndex :: Day -> AppPart Response
 dailyIndex = articleList . byDate
 
+-- Find the most relevant language preference in a request
+-- Includes: explicit GET parameter, cookie and Accept-Language header
 languageHeaderM :: AppPart LanguagePreference
 languageHeaderM = do
     request <- askRq
-    let header = B.unpack $ fromMaybe "" $ getHeader "Accept-Language" request
-    param <- looks "lang"
-    let langValue = listToMaybe $ catMaybes $ map notEmpty $ param ++ [header]
+    let header = liftM B.unpack $ getHeader "Accept-Language" request
+    param <- optional $ look "lang"
+    cookie <- optional $ lookCookieValue "lang"
+    let langValue = listToMaybe $ catMaybes [param, cookie, header]
     return $ languageHeader langValue
-    where notEmpty "" = Nothing
-          notEmpty x  = Just x
 
 html :: ToMessage a => a -> AppPart Response
 html = ok . toResponse
