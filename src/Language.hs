@@ -30,6 +30,9 @@ newtype LanguagePreference = LanguagePreference { unLanguagePreference :: Langua
 defaultLanguage :: Language
 defaultLanguage = EN
 
+singleLanguage :: Language -> LanguagePreference
+singleLanguage lang = LanguagePreference $ M.singleton lang 1
+
 rankLanguage :: Language -> LanguagePreference -> Float
 rankLanguage lang = fromMaybe 0 . M.lookup lang . unLanguagePreference
 

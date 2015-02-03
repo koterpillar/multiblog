@@ -2,9 +2,13 @@
 
 module Integration.TestHome where
 
-import Integration.Base
+import Control.Monad
+
+import Data.LanguageCodes
 
 import Test.Framework
+
+import Integration.Base
 
 
 test_home = do
@@ -12,3 +16,15 @@ test_home = do
     home <- testRequest req
     resp <- responseContent home
     assertContains "Test site" resp
+
+test_home_lang = do
+    req <- liftM (withLang1 RU) (mkRequest "/")
+    home <- testRequest req
+    resp <- responseContent home
+    assertContains "Главная" resp
+
+test_explicit_lang = do
+    req <- mkRequest "/?lang=ru"
+    home <- testRequest req
+    resp <- responseContent home
+    assertContains "Главная" resp

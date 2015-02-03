@@ -4,6 +4,7 @@ module App where
 import Control.Monad.State
 
 import qualified Data.ByteString.Char8 as B
+import Data.Maybe
 import qualified Data.Text as T
 import Data.Time
 
@@ -66,8 +67,12 @@ dailyIndex = articleList . byDate
 languageHeaderM :: AppPart LanguagePreference
 languageHeaderM = do
     request <- askRq
-    let header = getHeader "Accept-Language" request
-    return $ languageHeader $ liftM B.unpack header
+    let header = B.unpack $ fromMaybe "" $ getHeader "Accept-Language" request
+    param <- looks "lang"
+    let langValue = listToMaybe $ catMaybes $ map notEmpty $ param ++ [header]
+    return $ languageHeader langValue
+    where notEmpty "" = Nothing
+          notEmpty x  = Just x
 
 html :: ToMessage a => a -> AppPart Response
 html = ok . toResponse
