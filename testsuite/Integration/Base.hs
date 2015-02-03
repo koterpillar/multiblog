@@ -65,6 +65,9 @@ withLang lang req = req { rqHeaders = newHeaders }
     where newHeaders = M.insert "accept-language" (HeaderPair "Accept-Language" [U.fromString pref]) (rqHeaders req)
           pref = show lang
 
+withLang1 :: Language -> Request -> Request
+withLang1 lang = withLang $ singleLanguage lang
+
 -- Extract contents from a response
 responseContent :: Response -> IO String
 responseContent r@(Response _ _ _ _ _) = return $ U.toString $ LB.toStrict $ rsBody r
