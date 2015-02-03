@@ -44,14 +44,15 @@ assertContains needle haystack =
 -- Happstack doesn't make it easy
 mkRequest :: String -> IO Request
 mkRequest rPath = do
+    let (rUri, rParams) = splitUriParam rPath
     inputsBody <- newEmptyMVar
     rBody <- newMVar (Body LB.empty)
     return Request { rqSecure = False
                    , rqMethod = GET
-                   , rqPaths = filter (/= "") $ splitOn "/" rPath
+                   , rqPaths = filter (/= "") $ splitOn "/" rUri
                    , rqUri = rPath
-                   , rqQuery = ""
-                   , rqInputsQuery = []
+                   , rqQuery = "?" ++ rParams
+                   , rqInputsQuery = splitParams rParams
                    , rqInputsBody = inputsBody
                    , rqCookies = []
                    , rqVersion = HttpVersion 1 1
@@ -59,6 +60,19 @@ mkRequest rPath = do
                    , rqBody = rBody
                    , rqPeer = ("", 0)
                    }
+    where splitUriParam :: String -> (String, String)
+          splitUriParam rPath = case splitOn "?" rPath of
+              [rUri] -> (rUri, "")
+              [rUri, rParams] -> (rUri, rParams)
+          splitParams :: String -> [(String, Input)]
+          splitParams = map (mkParamTuple . splitOn "=") . filter (/= "") . splitOn "&"
+          mkParamTuple :: [String] -> (String, Input)
+          mkParamTuple [k, v] = (k, mkInputValue v)
+          mkParamTuple [k] = (k, mkInputValue "")
+          mkInputValue str = Input { inputValue = Right (LB.fromStrict $ U.fromString str)
+                                   , inputFilename = Nothing
+                                   , inputContentType = ContentType {ctType = "text", ctSubtype = "plain", ctParameters = []}
+                                   }
 
 withLang :: LanguagePreference -> Request -> Request
 withLang lang req = req { rqHeaders = newHeaders }

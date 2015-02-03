@@ -22,3 +22,9 @@ test_home_lang = do
     home <- testRequest req
     resp <- responseContent home
     assertContains "Главная" resp
+
+test_explicit_lang = do
+    req <- mkRequest "/?lang=ru"
+    home <- testRequest req
+    resp <- responseContent home
+    assertContains "Главная" resp
