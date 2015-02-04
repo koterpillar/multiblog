@@ -4,6 +4,7 @@ module App where
 import Control.Monad.State
 
 import qualified Data.ByteString.Char8 as B
+import Data.List
 import Data.Maybe
 import qualified Data.Text as T
 import Data.Time
@@ -86,8 +87,9 @@ article date slug = do
 articleList :: (Article -> Bool) -> AppPart Response
 articleList articleFilter = do
     articles <- lift $ getFiltered articleFilter
+    let sorted = sortBy reverseCompare articles
     language <- languageHeaderM
-    articleListDisplay language articles >>= html
+    articleListDisplay language sorted >>= html
 
 meta :: String -> AppPart Response
 meta slug = do

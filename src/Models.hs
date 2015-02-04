@@ -30,6 +30,9 @@ data Article = Article { arSlug     :: String
                        }
     deriving (Eq, Show)
 
+instance Ord Article where
+    a `compare` b = (arAuthored a, arSlug a) `compare` (arAuthored b, arSlug b)
+
 data Meta = Meta { mtSlug    :: String
                  , mtContent :: LanguageContent
                  }

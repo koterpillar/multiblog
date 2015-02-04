@@ -16,6 +16,7 @@ test_home = do
     home <- testRequest req
     resp <- responseContent home
     assertContains "Test site" resp
+    assertContainsBefore "Another article" "First test article" resp
 
 test_home_lang = do
     req <- liftM (withLang1 RU) (mkRequest "/")

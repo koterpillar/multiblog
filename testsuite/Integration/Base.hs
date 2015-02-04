@@ -40,6 +40,12 @@ assertContains needle haystack =
         (show needle ++ " not found in:\n" ++ show haystack)
         (needle `isInfixOf` haystack)
 
+assertContainsBefore :: (Eq a, Show a) => [a] -> [a] -> [a] -> Assertion
+assertContainsBefore first second haystack =
+    subAssert $ assertBoolVerbose
+        (show first ++ " does not precede " ++ show second ++ " in:\n" ++ show haystack)
+        (second `isInfixOf` (head $ dropWhile (first `isInfixOf`) $ tails haystack))
+
 -- Create a request with a specified URL
 -- Happstack doesn't make it easy
 mkRequest :: String -> IO Request
