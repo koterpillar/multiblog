@@ -96,3 +96,6 @@ responseContent f@(SendFile _ _ _ _ _ _ _) = do
     let offset = fromIntegral $ sfOffset f
     let count = fromIntegral $ sfCount f
     return $ drop offset $ take count contents
+
+testResponse :: Request -> IO String
+testResponse = testRequest >=> responseContent
