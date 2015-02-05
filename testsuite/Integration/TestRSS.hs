@@ -14,8 +14,9 @@ import Integration.Base
 
 
 test_home = do
-    req <- mkRequest "/en/feed"
+    req <- mkRequest "/feed/en"
     rss <- testResponse req
+    print rss
     let Just xml = parseXMLDoc rss
     let Just feed = elementFeed xml
     assertEqual "Test site" $ txtToString $ feedTitle feed

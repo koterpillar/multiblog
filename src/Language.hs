@@ -50,6 +50,9 @@ parseLanguage [c1, c2] = case fromChars c1 c2 of
                              Nothing -> mzero
 parseLanguage _ = mzero
 
+showLanguage :: Language -> String
+showLanguage = (\(a, b) -> a:b:[]) . toChars
+
 -- TODO: Parsec or library
 languageHeader :: Maybe String -> LanguagePreference
 languageHeader Nothing = LanguagePreference $ M.singleton defaultLanguage 1
@@ -62,6 +65,5 @@ languageHeader (Just str) = LanguagePreference $ M.fromList $ mapMaybe parsePref
 
 instance Show LanguagePreference where
     show = intercalate "," . map (uncurry showPref) . M.toList . unLanguagePreference
-        where showPref lang 1 = languageStr lang
-              showPref lang qvalue = languageStr lang ++ ";q=" ++ show qvalue
-              languageStr = (\(a, b) -> a:b:[]) . toChars
+        where showPref lang 1 = showLanguage lang
+              showPref lang qvalue = showLanguage lang ++ ";q=" ++ show qvalue

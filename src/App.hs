@@ -21,6 +21,7 @@ import Models
 import Routes
 import Utils
 import Views
+import Views.Feed
 
 -- TODO: This should be a ReaderT
 type App = StateT AppState IO
@@ -52,6 +53,7 @@ handler route = case route of
     Daily d -> dailyIndex d
     ArticleView d s -> article d s
     MetaView s -> meta s
+    Feed lang -> feedIndex lang
 
 index :: AppPart Response
 index = articleList $ const True
@@ -96,3 +98,9 @@ meta slug = do
     language <- languageHeaderM
     m <- getMeta slug
     metaDisplay language m >>= html
+
+feedIndex :: Language -> AppPart Response
+feedIndex language = do
+    articles <- lift $ getFiltered (const True)
+    let sorted = sortBy reverseCompare articles
+    feedDisplay language sorted >>= html

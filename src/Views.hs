@@ -54,13 +54,21 @@ render html = do
     route <- liftM convRender askRouteFn
     return $ html route
 
+getLangStringFn :: MonadState AppState m => LanguagePreference -> m (String -> String)
+getLangStringFn lang = do
+    strings <- gets appStrings
+    let fn str = fromMaybe str $ M.lookup str strings >>= matchLanguage lang
+    return fn
+
+getLangString :: MonadState AppState m => LanguagePreference -> String -> m String
+getLangString lang str = getLangStringFn lang >>= (\fn -> return $ fn str)
+
 template :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
     LanguagePreference -> PageContent (URL m) -> m Markup
 template lang page = do
     -- TODO: need to be able to get any meta inside
     about <- getMeta "about"
-    strings <- gets appStrings
-    let langString str = fromMaybe str $ M.lookup str strings >>= matchLanguage lang
+    langString <- getLangStringFn lang
     render $(hamletFile "templates/base.hamlet")
 
 articleListDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
