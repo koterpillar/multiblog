@@ -57,11 +57,11 @@ runSite :: IO ()
 runSite = do
     address <- siteAddress
     -- TODO: directory name as parameter?
-    app <- loadApp "content" siteAddress
+    app <- loadApp "content" address
     lport <- listenPort
     let conf = nullConf { port = lport }
     -- Manually bind the socket to close it on exception
     bracket
         (bindPort conf)
         close
-        (\sock -> simpleHTTPWithSocket' (runApp app) sock conf $ site address)
+        (\sock -> simpleHTTPWithSocket' (runApp app) sock conf site)
