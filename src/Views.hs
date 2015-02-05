@@ -100,14 +100,21 @@ inlineToStr inline = writePlain def $ Pandoc undefined [Plain inline]
 langContent :: HasContent a => LanguagePreference -> a -> Pandoc
 langContent lang = fromJust . matchLanguage lang . getContent
 
+-- Generate a link to some content
+linkTo :: (Linkable a, MonadRoute m, URL m ~ Sitemap)
+       => a
+       -> m String
+linkTo a = do
+    routeFn <- askRouteFn
+    return $ T.unpack $ routeFn (link a) []
+
 -- Modify the content to have a link to itself and have no anchors
 linkedContent :: (HasContent a, Linkable a, MonadRoute m, URL m ~ Sitemap)
               => LanguagePreference
               -> a
               -> m Pandoc
 linkedContent lang a = do
-    routeFn <- askRouteFn
-    let target = T.unpack $ routeFn (link a) []
+    target <- linkTo a
     return $ linkedHeader target $ langContent lang a
 
 -- Modify the first header to be a link to a given place

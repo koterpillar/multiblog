@@ -17,6 +17,7 @@ Executable multiblog
 
   Build-depends:
     blaze-html >= 0.7,
+    blaze-markup >= 0.6,
     boomerang >= 1.4,
     bytestring >= 0.10,
     containers >= 0.5,
