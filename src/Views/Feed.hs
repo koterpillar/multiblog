@@ -5,7 +5,9 @@ module Views.Feed where
 
 import Control.Monad.State
 
-import Text.Atom.Feed (Feed, TextContent (..), nullFeed)
+import Data.Time
+
+import Text.Atom.Feed (TextContent (..), nullFeed)
 import Text.Atom.Feed.Export (xmlFeed)
 import Text.XML.Light.Output (showTopElement)
 
@@ -16,16 +18,12 @@ import Models
 import Routes
 import Views
 
-makeFeed :: MonadState AppState m => Language -> m Feed
-makeFeed lang = do
-    siteName <- getLangString (singleLanguage lang) "siteName"
-    siteId <- gets appAddress
-    -- TODO where to get lastUpdated?
-    let lastUpdatedStr = "2015-01-01"
-    return $ nullFeed siteId (TextString siteName) lastUpdatedStr
-
 feedDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
     Language -> [Article] -> m String
-feedDisplay lang _ = do
-    feed <- makeFeed lang
+feedDisplay lang articles = do
+    siteName <- getLangString (singleLanguage lang) "siteName"
+    siteId <- gets appAddress
+    let lastUpdated = arAuthored $ head articles
+    let lastUpdatedStr = showGregorian (utctDay lastUpdated) ++ "T00:00:00Z"
+    let feed = nullFeed siteId (TextString siteName) lastUpdatedStr
     return $ showTopElement $ xmlFeed feed

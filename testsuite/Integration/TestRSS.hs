@@ -21,3 +21,4 @@ test_home = do
     let Just feed = elementFeed xml
     assertEqual "Test site" $ txtToString $ feedTitle feed
     assertEqual testAddress $ feedId feed
+    assertEqual "2015-02-01T00:00:00Z" $ feedUpdated feed
