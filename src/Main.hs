@@ -55,9 +55,9 @@ listenPort = liftM (read . fromMaybe "8000") (lookupEnv "LISTEN_PORT")
 -- Run the actual site
 runSite :: IO ()
 runSite = do
-    -- TODO: parametrise?
-    app <- loadApp "content"
     address <- siteAddress
+    -- TODO: directory name as parameter?
+    app <- loadApp "content" siteAddress
     lport <- listenPort
     let conf = nullConf { port = lport }
     -- Manually bind the socket to close it on exception

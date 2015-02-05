@@ -19,9 +19,10 @@ import Views
 makeFeed :: MonadState AppState m => Language -> m Feed
 makeFeed lang = do
     siteName <- getLangString (singleLanguage lang) "siteName"
+    siteId <- gets appAddress
     -- TODO where to get lastUpdated?
     let lastUpdatedStr = "2015-01-01"
-    return $ nullFeed "feed_id" (TextString siteName) lastUpdatedStr
+    return $ nullFeed siteId (TextString siteName) lastUpdatedStr
 
 feedDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
     Language -> [Article] -> m String

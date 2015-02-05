@@ -53,6 +53,7 @@ instance HasSlug Meta where
     getSlug = mtSlug
 
 data AppState = AppState { appDirectory :: String
+                         , appAddress   :: String
                          , appArticles  :: [Article]
                          , appMeta      :: [Meta]
                          , appStrings   :: M.Map String (LanguageMap String)

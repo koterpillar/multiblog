@@ -20,3 +20,4 @@ test_home = do
     let Just xml = parseXMLDoc rss
     let Just feed = elementFeed xml
     assertEqual "Test site" $ txtToString $ feedTitle feed
+    assertEqual testAddress $ feedId feed

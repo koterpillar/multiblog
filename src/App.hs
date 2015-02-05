@@ -28,18 +28,21 @@ type App = StateT AppState IO
 
 type AppPart a = RouteT Sitemap (ServerPartT App) a
 
-loadApp :: String -> IO AppState
-loadApp dataDirectory = do
+loadApp :: String -- directory to load from
+        -> String -- site address
+        -> IO AppState
+loadApp dataDirectory siteAddress = do
     app <- loadFromDirectory dataDirectory
     case app of
         Left err -> error err
-        Right appState -> return appState
+        Right appState -> return appState { appAddress = siteAddress }
 
 runApp :: AppState -> App a -> IO a
 runApp app a = evalStateT a app
 
-site :: String -> ServerPartT App Response
-site address = do
+site :: ServerPartT App Response
+site = do
+    address <- lift $ gets appAddress
     appDir <- lift $ gets appDirectory
     let routedSite = boomerangSiteRouteT handler sitemap
     let staticSite = serveDirectory DisableBrowsing [] $ appDir ++ "/static"
