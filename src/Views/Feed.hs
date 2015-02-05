@@ -7,15 +7,8 @@ import Control.Monad.State
 
 import Data.Time
 
-import Text.Atom.Feed ( Date
-                      , Feed (..)
-                      , Entry (..)
-                      , EntryContent (..)
-                      , TextContent (..)
-                      , nullEntry
-                      , nullFeed
-                      , nullLink
-                      )
+import Text.Atom.Feed (Date, Entry (..), EntryContent (..), Feed (..),
+                       TextContent (..), nullEntry, nullFeed, nullLink)
 import Text.Atom.Feed.Export (xmlFeed)
 
 import Text.Blaze.Renderer.String (renderMarkup)
@@ -38,11 +31,11 @@ atomDate = (++ "T00:00:00Z") . showGregorian . utctDay
 articleEntry :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m) => Language -> Article -> m Entry
 articleEntry lang article = do
     let lpref = singleLanguage lang
-    link <- linkTo article
-    let entry = nullEntry link (TextString $ langTitle lpref article) (atomDate $ arAuthored article)
+    articleLink <- linkTo article
+    let entry = nullEntry articleLink (TextString $ langTitle lpref article) (atomDate $ arAuthored article)
     let content = renderMarkup $ writeHtml def $ langContent lpref article
     return entry { entryContent = Just $ HTMLContent content
-                 , entryLinks = [nullLink link]
+                 , entryLinks = [nullLink articleLink]
                  }
 
 feedDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
