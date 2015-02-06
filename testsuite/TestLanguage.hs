@@ -55,3 +55,7 @@ prop_showLanguageHeader m = languageHeader (Just (show m)) == m
 
 prop_mapKeysM :: [(String, String)] -> Bool
 prop_mapKeysM l = mapKeysM Just m == Just m where m = M.fromList l
+
+prop_bestLanguage lp = M.null m || (all (<= bestValue) (M.elems m))
+    where Just bestValue = M.lookup (bestLanguage lp) m
+          m = unLanguagePreference lp

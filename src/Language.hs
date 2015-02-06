@@ -5,6 +5,7 @@ module Language where
 import Control.Applicative
 import Control.Monad
 
+import Data.Function
 import Data.LanguageCodes
 import Data.List
 import Data.List.Split
@@ -32,6 +33,9 @@ defaultLanguage = EN
 
 singleLanguage :: Language -> LanguagePreference
 singleLanguage lang = LanguagePreference $ M.singleton lang 1
+
+bestLanguage :: LanguagePreference -> Language
+bestLanguage = fst . head . sortBy (reverseCompare `on` snd) . M.toList . unLanguagePreference
 
 rankLanguage :: Language -> LanguagePreference -> Float
 rankLanguage lang = fromMaybe 0 . M.lookup lang . unLanguagePreference

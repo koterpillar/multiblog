@@ -37,4 +37,4 @@ isSpecial ".." = True
 isSpecial _ = False
 
 reverseCompare :: Ord a => a -> a -> Ordering
-reverseCompare a b = compare b a
+reverseCompare = flip compare
