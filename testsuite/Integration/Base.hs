@@ -24,15 +24,14 @@ import Import
 import Language
 
 
--- Site handler with a test address
-testHandler :: ServerPartT App Response
-testHandler = site "http://test"
+testAddress :: String
+testAddress = "http://test"
 
 -- Make a request to the application
 testRequest :: Request -> IO Response
 testRequest req = do
-    app <- loadApp "testsuite/Integration/content"
-    runApp app $ simpleHTTP'' testHandler req
+    app <- loadApp "testsuite/Integration/content" testAddress
+    runApp app $ simpleHTTP'' site req
 
 assertContains :: (Eq a, Show a) => [a] -> [a] -> Assertion
 assertContains needle haystack =
@@ -96,3 +95,6 @@ responseContent f@(SendFile _ _ _ _ _ _ _) = do
     let offset = fromIntegral $ sfOffset f
     let count = fromIntegral $ sfCount f
     return $ drop offset $ take count contents
+
+testResponse :: Request -> IO String
+testResponse = testRequest >=> responseContent

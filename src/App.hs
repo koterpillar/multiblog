@@ -21,24 +21,28 @@ import Models
 import Routes
 import Utils
 import Views
+import Views.Feed
 
 -- TODO: This should be a ReaderT
 type App = StateT AppState IO
 
 type AppPart a = RouteT Sitemap (ServerPartT App) a
 
-loadApp :: String -> IO AppState
-loadApp dataDirectory = do
+loadApp :: String -- directory to load from
+        -> String -- site address
+        -> IO AppState
+loadApp dataDirectory siteAddress = do
     app <- loadFromDirectory dataDirectory
     case app of
         Left err -> error err
-        Right appState -> return appState
+        Right appState -> return appState { appAddress = siteAddress }
 
 runApp :: AppState -> App a -> IO a
 runApp app a = evalStateT a app
 
-site :: String -> ServerPartT App Response
-site address = do
+site :: ServerPartT App Response
+site = do
+    address <- lift $ gets appAddress
     appDir <- lift $ gets appDirectory
     let routedSite = boomerangSiteRouteT handler sitemap
     let staticSite = serveDirectory DisableBrowsing [] $ appDir ++ "/static"
@@ -52,6 +56,7 @@ handler route = case route of
     Daily d -> dailyIndex d
     ArticleView d s -> article d s
     MetaView s -> meta s
+    Feed lang -> feedIndex lang
 
 index :: AppPart Response
 index = articleList $ const True
@@ -96,3 +101,9 @@ meta slug = do
     language <- languageHeaderM
     m <- getMeta slug
     metaDisplay language m >>= html
+
+feedIndex :: Language -> AppPart Response
+feedIndex language = do
+    articles <- lift $ getFiltered (const True)
+    let sorted = sortBy reverseCompare articles
+    feedDisplay language sorted >>= html

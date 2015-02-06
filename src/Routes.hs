@@ -1,5 +1,6 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeOperators   #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE TypeOperators     #-}
 module Routes where
 
 import Prelude hiding ((.))
@@ -14,12 +15,15 @@ import Text.Boomerang.TH (makeBoomerangs)
 
 import Web.Routes.Boomerang
 
+import Language
+
 data Sitemap = Index
            | Yearly Integer
            | Monthly Integer Int
            | Daily Day
            | ArticleView Day String
            | MetaView String
+           | Feed Language
            deriving (Eq, Show)
 
 makeBoomerangs ''Sitemap
@@ -28,6 +32,12 @@ rDay :: Boomerang TextsError [T.Text] r (Day :- r)
 rDay = xpure mkDay parseDay . (integer </> int </> int)
     where mkDay (y :- m :- d :- x) = fromGregorian y m d :- x
           parseDay (day :- x) = let (y, m, d) = toGregorian day in Just $ y :- m :- d :- x
+
+-- TODO: This will error on strings which are not language codes
+rLanguage :: Boomerang TextsError [T.Text] r (Language :- r)
+rLanguage = xpure mkLang parseLang . anyString
+    where mkLang (str :- x) = let Just lang = parseLanguage str in lang :- x
+          parseLang (lang :- x) = Just $ showLanguage lang :- x
 
 rString :: Boomerang e tok i (T.Text :- o) -> Boomerang e tok i (String :- o)
 rString = xmaph T.unpack (Just . T.pack)
@@ -43,4 +53,5 @@ sitemap = mconcat
     , rDaily . rDay
     , rArticleView . rDay </> anyString
     , rMetaView . anyString
+    , rFeed . "feed" </> rLanguage
     ]
