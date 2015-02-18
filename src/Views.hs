@@ -8,6 +8,7 @@ import qualified Control.Arrow as A
 import Control.Monad
 import Control.Monad.State
 
+import Data.LanguageCodes
 import qualified Data.Map as M
 import Data.Maybe
 import Data.Monoid
@@ -68,6 +69,8 @@ template :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) 
 template lang page = do
     -- TODO: need to be able to get any meta inside
     about <- getMeta "about"
+    -- TODO: Hamlet can't iterate over sets, can it?
+    allLangs <- gets allLanguages
     langString <- getLangStringFn lang
     render $(hamletFile "templates/base.hamlet")
 
