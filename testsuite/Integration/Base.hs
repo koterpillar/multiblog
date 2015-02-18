@@ -24,21 +24,26 @@ import Import
 import Language
 
 
--- Site handler with a test address
-testHandler :: ServerPartT App Response
-testHandler = site "http://test"
+testAddress :: String
+testAddress = "http://test"
 
 -- Make a request to the application
 testRequest :: Request -> IO Response
 testRequest req = do
-    app <- loadApp "testsuite/Integration/content"
-    runApp app $ simpleHTTP'' testHandler req
+    app <- loadApp "testsuite/Integration/content" testAddress
+    runApp app $ simpleHTTP'' site req
 
 assertContains :: (Eq a, Show a) => [a] -> [a] -> Assertion
 assertContains needle haystack =
     subAssert $ assertBoolVerbose
         (show needle ++ " not found in:\n" ++ show haystack)
         (needle `isInfixOf` haystack)
+
+assertContainsBefore :: (Eq a, Show a) => [a] -> [a] -> [a] -> Assertion
+assertContainsBefore first second haystack =
+    subAssert $ assertBoolVerbose
+        (show first ++ " does not precede " ++ show second ++ " in:\n" ++ show haystack)
+        (second `isInfixOf` (head $ dropWhile (first `isInfixOf`) $ tails haystack))
 
 -- Create a request with a specified URL
 -- Happstack doesn't make it easy
@@ -86,7 +91,7 @@ withLang1 lang = withLang $ singleLanguage lang
 -- Add a language cookie to a response
 withLangCookie :: Language -> Request -> Request
 withLangCookie lang req = req { rqCookies = rqCookies req ++ [("lang", langCookie)] }
-    where langCookie = mkCookie "lang" $ languageStr lang
+    where langCookie = mkCookie "lang" $ showLanguage lang
 
 -- Extract contents from a response
 responseContent :: Response -> IO String
@@ -96,3 +101,6 @@ responseContent f@(SendFile _ _ _ _ _ _ _) = do
     let offset = fromIntegral $ sfOffset f
     let count = fromIntegral $ sfCount f
     return $ drop offset $ take count contents
+
+testResponse :: Request -> IO String
+testResponse = testRequest >=> responseContent

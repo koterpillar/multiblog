@@ -13,24 +13,21 @@ import Integration.Base
 
 test_home = do
     req <- mkRequest "/"
-    home <- testRequest req
-    resp <- responseContent home
-    assertContains "Test site" resp
+    home <- testResponse req
+    assertContains "Test site" home
+    assertContainsBefore "Another article" "First test article" home
 
 test_home_lang = do
     req <- liftM (withLang1 RU) (mkRequest "/")
-    home <- testRequest req
-    resp <- responseContent home
-    assertContains "Главная" resp
+    home <- testResponse req
+    assertContains "Главная" home
 
 test_explicit_lang = do
     req <- mkRequest "/?lang=ru"
-    home <- testRequest req
-    resp <- responseContent home
-    assertContains "Главная" resp
+    home <- testResponse req
+    assertContains "Главная" home
 
 test_cookie_lang = do
     req <- liftM (withLangCookie ZH) (mkRequest "/")
-    home <- testRequest req
-    resp <- responseContent home
-    assertContains "首页" resp
+    home <- testResponse req
+    assertContains "首页" home
