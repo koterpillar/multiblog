@@ -3,8 +3,6 @@
 
 module TestLanguage where
 
-import Prelude hiding (LT)
-
 import Control.Applicative
 
 import Data.DeriveTH
@@ -15,10 +13,11 @@ import Language
 
 import Test.Framework
 
+import Arbitrary
+
 
 mkPreference :: [(Language, Float)] -> LanguagePreference
 mkPreference = LanguagePreference . M.fromList
-
 
 test_matchLanguageFunc = do
     let values = M.fromList [ (EN, "English")
@@ -45,8 +44,6 @@ test_languageHeader = do
     assertEqual
         (languageHeader $ Just "ru,zh;q=0.8,en;q=0.6")
         (mkPreference [(RU, 1), (ZH, 0.8), (EN, 0.6)])
-
-derive makeArbitrary ''ISO639_1
 
 instance Arbitrary LanguagePreference where
     arbitrary = mkPreference <$> arbitrary
