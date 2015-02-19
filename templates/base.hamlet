@@ -24,9 +24,10 @@ $doctype 5
               <span .caret>
             <ul .dropdown-menu role="menu" aria-labelledby="chooseLangButton">
               $forall lang <- allLangs
-                <a href="#" .switch-language data-lang="#{showLanguage lang}">
-                  <span .flag.#{iso3166 lang}>
-                  #{language lang}
+                <li>
+                  <a href="#" .switch-language data-lang="#{showLanguage lang}">
+                    <span .flag.#{iso3166 lang}>
+                    #{language lang}
       <div .row>
         <div .col-md-8 .col-md-push-4>
           ^{pcContent page}
