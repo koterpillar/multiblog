@@ -18,11 +18,15 @@ $doctype 5
         <div .col-md-10>
           <h1>#{langString "siteName"}
         <div .col-md-2>
-          <ul .f16>
-            $forall lang <- allLangs
-              <li .switch-language data-lang="#{showLanguage lang}">
-                <span .flag.#{iso3166 lang}>
-                #{language lang}
+          <div .dropdown .f16>
+            <button #chooseLangButton type=button data-toggle=dropdown title=#{langString "choose-language"} aria-haspopup="true" aria-expanded="false">
+              <span .flag.#{iso3166 $ bestLanguage lang} title=#{language $ bestLanguage lang}>
+              <span .caret>
+            <ul .dropdown-menu role="menu" aria-labelledby="chooseLangButton">
+              $forall lang <- allLangs
+                <a href="#" .switch-language data-lang="#{showLanguage lang}">
+                  <span .flag.#{iso3166 lang}>
+                  #{language lang}
       <div .row>
         <div .col-md-8 .col-md-push-4>
           ^{pcContent page}
