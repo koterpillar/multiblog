@@ -24,6 +24,7 @@ data Sitemap = Index
            | ArticleView Day String
            | MetaView String
            | Feed Language
+           | SiteScript
            deriving (Eq, Show)
 
 makeBoomerangs ''Sitemap
@@ -51,7 +52,8 @@ sitemap = mconcat
     , rYearly . integer
     , rMonthly . integer </> int
     , rDaily . rDay
+    , rFeed . "feed" </> rLanguage
+    , rSiteScript . "site.js"
     , rArticleView . rDay </> anyString
     , rMetaView . anyString
-    , rFeed . "feed" </> rLanguage
     ]

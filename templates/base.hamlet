@@ -1,5 +1,5 @@
 $doctype 5
-<html>
+<html lang="#{showLanguage $ bestLanguage lang}">
   <head>
     <meta charset="utf-8">
     <title>
@@ -20,7 +20,7 @@ $doctype 5
         <div .col-md-2>
           <ul .f16>
             $forall lang <- allLangs
-              <li>
+              <li .switch-language data-lang="#{showLanguage lang}">
                 <span .flag.#{iso3166 lang}>
                 #{language lang}
       <div .row>
@@ -39,3 +39,4 @@ $doctype 5
               <a href="https://github.com/koterpillar">GitHub
     <script src="https://code.jquery.com/jquery-2.1.3.min.js">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js">
+    <script src=@{SiteScript}>

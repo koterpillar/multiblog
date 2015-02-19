@@ -13,10 +13,12 @@ import qualified Data.Map as M
 import Data.Maybe
 import Data.Monoid
 import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
 import Data.Time
 
 import Text.Blaze.Html (Markup)
 import Text.Hamlet
+import Text.Julius
 import Text.Pandoc hiding (Meta)
 import Text.Pandoc.Walk
 
@@ -134,3 +136,8 @@ linkedHeader target doc = evalState (walkM linkHeader doc) True
               -- remove anchors
               return $ Header n ("",[],[]) text'
           linkHeader x = return x
+
+renderSiteScript :: MonadRoute m => m TL.Text
+renderSiteScript = do
+    route <- liftM convRender askRouteFn
+    return $ renderJavascriptUrl route $(juliusFile "templates/site.julius")

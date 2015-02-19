@@ -58,6 +58,7 @@ handler route = case route of
     ArticleView d s -> article d s
     MetaView s -> meta s
     Feed lang -> feedIndex lang
+    SiteScript -> siteScript
 
 index :: AppPart Response
 index = articleList $ const True
@@ -109,3 +110,6 @@ feedIndex language = do
     articles <- lift $ getFiltered (const True)
     let sorted = sortBy reverseCompare articles
     feedDisplay language sorted >>= html
+
+siteScript :: AppPart Response
+siteScript = renderSiteScript >>= html
