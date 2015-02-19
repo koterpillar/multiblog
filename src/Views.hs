@@ -8,14 +8,17 @@ import qualified Control.Arrow as A
 import Control.Monad
 import Control.Monad.State
 
+import Data.LanguageCodes
 import qualified Data.Map as M
 import Data.Maybe
 import Data.Monoid
 import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
 import Data.Time
 
 import Text.Blaze.Html (Markup)
 import Text.Hamlet
+import Text.Julius
 import Text.Pandoc hiding (Meta)
 import Text.Pandoc.Walk
 
@@ -68,6 +71,8 @@ template :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) 
 template lang page = do
     -- TODO: need to be able to get any meta inside
     about <- getMeta "about"
+    -- TODO: Hamlet can't iterate over sets, can it?
+    allLangs <- gets allLanguages
     langString <- getLangStringFn lang
     render $(hamletFile "templates/base.hamlet")
 
@@ -131,3 +136,8 @@ linkedHeader target doc = evalState (walkM linkHeader doc) True
               -- remove anchors
               return $ Header n ("",[],[]) text'
           linkHeader x = return x
+
+renderSiteScript :: MonadRoute m => m TL.Text
+renderSiteScript = do
+    route <- liftM convRender askRouteFn
+    return $ renderJavascriptUrl route $(juliusFile "templates/site.julius")

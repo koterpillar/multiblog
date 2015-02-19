@@ -59,6 +59,11 @@ parseLanguage _ = mzero
 showLanguage :: Language -> String
 showLanguage = (\(a, b) -> a:b:[]) . toChars
 
+iso3166 :: Language -> String
+iso3166 EN = "gb"
+iso3166 ZH = "cn"
+iso3166 x = showLanguage x
+
 -- TODO: Parsec or library
 languageHeader :: Maybe String -> LanguagePreference
 languageHeader Nothing = LanguagePreference $ M.singleton defaultLanguage 1

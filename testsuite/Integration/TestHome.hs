@@ -26,3 +26,8 @@ test_explicit_lang = do
     req <- mkRequest "/?lang=ru"
     home <- testResponse req
     assertContains "Главная" home
+
+test_cookie_lang = do
+    req <- liftM (withLangCookie ZH) (mkRequest "/")
+    home <- testResponse req
+    assertContains "首页" home

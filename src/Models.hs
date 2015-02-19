@@ -6,6 +6,7 @@ import Control.Monad
 import Control.Monad.State
 
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Data.Time
 
 import Text.Pandoc hiding (Meta, readers)
@@ -95,3 +96,13 @@ getOne articleFilter = onlyOne $ getFiltered articleFilter
 
 getMeta :: (MonadState AppState m, MonadPlus m) => String -> m Meta
 getMeta slug = onlyOne $ gets $ filter (bySlug slug) . appMeta
+
+-- Find all languages used on the site
+allLanguages :: AppState -> S.Set Language
+allLanguages app = S.union articleLangs metaLangs
+    where articleLangs = allContentLangs $ appArticles app
+          metaLangs = allContentLangs $ appMeta app
+          allContentLangs :: HasContent a => [a] -> S.Set Language
+          allContentLangs = S.unions . map contentLangs
+          contentLangs :: HasContent a => a -> S.Set Language
+          contentLangs = S.fromList . M.keys . getContent

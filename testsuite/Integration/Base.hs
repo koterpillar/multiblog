@@ -79,6 +79,7 @@ mkRequest rPath = do
                                    , inputContentType = ContentType {ctType = "text", ctSubtype = "plain", ctParameters = []}
                                    }
 
+-- Add an Accept-Language header to a response
 withLang :: LanguagePreference -> Request -> Request
 withLang lang req = req { rqHeaders = newHeaders }
     where newHeaders = M.insert "accept-language" (HeaderPair "Accept-Language" [U.fromString pref]) (rqHeaders req)
@@ -86,6 +87,11 @@ withLang lang req = req { rqHeaders = newHeaders }
 
 withLang1 :: Language -> Request -> Request
 withLang1 lang = withLang $ singleLanguage lang
+
+-- Add a language cookie to a response
+withLangCookie :: Language -> Request -> Request
+withLangCookie lang req = req { rqCookies = rqCookies req ++ [("lang", langCookie)] }
+    where langCookie = mkCookie "lang" $ showLanguage lang
 
 -- Extract contents from a response
 responseContent :: Response -> IO String
