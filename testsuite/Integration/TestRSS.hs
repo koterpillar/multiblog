@@ -27,7 +27,8 @@ test_home = do
     -- Check feed contents
     let Just feed = elementFeed xml
     assertEqual "Test site" $ txtToString $ feedTitle feed
-    assertEqual testAddress $ feedId feed
+    -- TODO: Web.Routes generate a link without the trailing slash
+    assertEqual (testAddress ++ "/") $ feedId feed
     assertEqual "2015-02-01T00:00:00Z" $ feedUpdated feed
     assertEqual [ "Another article"
                 , "First test article"

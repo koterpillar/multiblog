@@ -54,7 +54,9 @@ feedDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus 
     Language -> [Article] -> m Response
 feedDisplay lang articles = do
     siteName <- getLangString (singleLanguage lang) "siteName"
-    siteId <- gets appAddress
+    home <- linkTo Index
+    -- TODO: Web.Routes generate a link without the trailing slash
+    let siteId = home ++ "/"
     let lastUpdated = arAuthored $ head articles
     let blankFeed = nullFeed siteId (TextString siteName) (atomDate lastUpdated)
     entries <- mapM (articleEntry lang) articles
