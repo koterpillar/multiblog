@@ -62,7 +62,8 @@ feedDisplay lang articles = do
     let lastUpdated = arAuthored $ head articles
     let blankFeed = nullFeed home (TextString siteName) (atomDate lastUpdated)
     entries <- mapM (articleEntry lang) articles
-    let selfLink = (nullLink home) { linkRel = Just $ Left "self" }
+    selfAddress <- linkTo $ Routes.Feed lang
+    let selfLink = (nullLink selfAddress) { linkRel = Just $ Left "self" }
     let feed = blankFeed { feedEntries = entries
                          , feedLinks = [selfLink] }
     return $ toResponse $ AtomFeed $ xmlFeed feed
