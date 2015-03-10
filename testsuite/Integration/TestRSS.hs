@@ -30,7 +30,11 @@ test_home = do
     -- TODO: Web.Routes generate a link without the trailing slash
     assertEqual (testAddress ++ "/") $ feedId feed
     assertEqual "2015-02-01T00:00:00Z" $ feedUpdated feed
+    let entries = feedEntries feed
     assertEqual [ "Another article"
                 , "First test article"
                 ]
-        $ map (txtToString . entryTitle) $ feedEntries feed
+        $ map (txtToString . entryTitle) entries
+    let entry1 = head entries
+    assertEqual ["Author Name"]
+        $ map personName $ entryAuthors entry1

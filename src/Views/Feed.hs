@@ -13,7 +13,8 @@ import Data.Time
 import Happstack.Server
 
 import Text.Atom.Feed (Date, Entry (..), EntryContent (..), Feed (..),
-                       TextContent (..), nullEntry, nullFeed, nullLink)
+                       Person (..), TextContent (..), nullEntry, nullFeed,
+                       nullLink, nullPerson)
 import Text.Atom.Feed.Export (xmlFeed)
 
 import Text.Blaze.Renderer.String (renderMarkup)
@@ -44,10 +45,12 @@ articleEntry :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m) => Langua
 articleEntry lang article = do
     let lpref = singleLanguage lang
     articleLink <- linkTo article
+    authorName <- getLangString lpref "authorName"
     let entry = nullEntry articleLink (TextString $ langTitle lpref article) (atomDate $ arAuthored article)
     let content = renderMarkup $ writeHtml def $ langContent lpref article
     return entry { entryContent = Just $ HTMLContent content
                  , entryLinks = [nullLink articleLink]
+                 , entryAuthors = [nullPerson { personName = authorName }]
                  }
 
 feedDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
