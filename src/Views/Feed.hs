@@ -13,8 +13,8 @@ import Data.Time
 import Happstack.Server
 
 import Text.Atom.Feed (Date, Entry (..), EntryContent (..), Feed (..),
-                       Person (..), TextContent (..), nullEntry, nullFeed,
-                       nullLink, nullPerson)
+                       Link (..), Person (..), TextContent (..), nullEntry,
+                       nullFeed, nullLink, nullPerson)
 import Text.Atom.Feed.Export (xmlFeed)
 
 import Text.Blaze.Renderer.String (renderMarkup)
@@ -57,11 +57,12 @@ feedDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus 
     Language -> [Article] -> m Response
 feedDisplay lang articles = do
     siteName <- getLangString (singleLanguage lang) "siteName"
-    home <- linkTo Index
     -- TODO: Web.Routes generate a link without the trailing slash
-    let siteId = home ++ "/"
+    home <- liftM (++ "/") $ linkTo Index
     let lastUpdated = arAuthored $ head articles
-    let blankFeed = nullFeed siteId (TextString siteName) (atomDate lastUpdated)
+    let blankFeed = nullFeed home (TextString siteName) (atomDate lastUpdated)
     entries <- mapM (articleEntry lang) articles
-    let feed = blankFeed { feedEntries = entries }
+    let selfLink = (nullLink home) { linkRel = Just $ Left "self" }
+    let feed = blankFeed { feedEntries = entries
+                         , feedLinks = [selfLink] }
     return $ toResponse $ AtomFeed $ xmlFeed feed
