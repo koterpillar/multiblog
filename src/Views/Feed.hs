@@ -1,11 +1,16 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeFamilies          #-}
 module Views.Feed where
 
 import Control.Monad.State
 
+import qualified Data.ByteString.Lazy as LB
+import qualified Data.ByteString.UTF8 as U
 import Data.Time
+
+import Happstack.Server
 
 import Text.Atom.Feed (Date, Entry (..), EntryContent (..), Feed (..),
                        TextContent (..), nullEntry, nullFeed, nullLink)
@@ -15,6 +20,7 @@ import Text.Blaze.Renderer.String (renderMarkup)
 
 import Text.Pandoc (def, writeHtml)
 
+import Text.XML.Light (Element)
 import Text.XML.Light.Output (showTopElement)
 
 import Web.Routes
@@ -23,6 +29,12 @@ import Language
 import Models
 import Routes
 import Views
+
+data AtomFeed = AtomFeed { unAtomFeed :: Element }
+
+instance ToMessage AtomFeed where
+    toContentType _ = "application/atom+xml"
+    toMessage = LB.fromStrict . U.fromString . showTopElement . unAtomFeed
 
 -- TODO: show time properly when it's parsed
 atomDate :: UTCTime -> Date
@@ -39,7 +51,7 @@ articleEntry lang article = do
                  }
 
 feedDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
-    Language -> [Article] -> m String
+    Language -> [Article] -> m Response
 feedDisplay lang articles = do
     siteName <- getLangString (singleLanguage lang) "siteName"
     siteId <- gets appAddress
@@ -47,4 +59,4 @@ feedDisplay lang articles = do
     let blankFeed = nullFeed siteId (TextString siteName) (atomDate lastUpdated)
     entries <- mapM (articleEntry lang) articles
     let feed = blankFeed { feedEntries = entries }
-    return $ showTopElement $ xmlFeed feed
+    return $ toResponse $ AtomFeed $ xmlFeed feed
