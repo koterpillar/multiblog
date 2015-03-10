@@ -1,20 +1,27 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeFamilies          #-}
 module Views.Feed where
 
 import Control.Monad.State
 
+import qualified Data.ByteString.Lazy as LB
+import qualified Data.ByteString.UTF8 as U
 import Data.Time
 
+import Happstack.Server
+
 import Text.Atom.Feed (Date, Entry (..), EntryContent (..), Feed (..),
-                       TextContent (..), nullEntry, nullFeed, nullLink)
+                       Link (..), Person (..), TextContent (..), nullEntry,
+                       nullFeed, nullLink, nullPerson)
 import Text.Atom.Feed.Export (xmlFeed)
 
 import Text.Blaze.Renderer.String (renderMarkup)
 
 import Text.Pandoc (def, writeHtml)
 
+import Text.XML.Light (Element)
 import Text.XML.Light.Output (showTopElement)
 
 import Web.Routes
@@ -24,6 +31,12 @@ import Models
 import Routes
 import Views
 
+data AtomFeed = AtomFeed { unAtomFeed :: Element }
+
+instance ToMessage AtomFeed where
+    toContentType _ = "application/atom+xml"
+    toMessage = LB.fromStrict . U.fromString . showTopElement . unAtomFeed
+
 -- TODO: show time properly when it's parsed
 atomDate :: UTCTime -> Date
 atomDate = (++ "T00:00:00Z") . showGregorian . utctDay
@@ -32,19 +45,24 @@ articleEntry :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m) => Langua
 articleEntry lang article = do
     let lpref = singleLanguage lang
     articleLink <- linkTo article
+    authorName <- getLangString lpref "authorName"
     let entry = nullEntry articleLink (TextString $ langTitle lpref article) (atomDate $ arAuthored article)
     let content = renderMarkup $ writeHtml def $ langContent lpref article
     return entry { entryContent = Just $ HTMLContent content
                  , entryLinks = [nullLink articleLink]
+                 , entryAuthors = [nullPerson { personName = authorName }]
                  }
 
 feedDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
-    Language -> [Article] -> m String
+    Language -> [Article] -> m Response
 feedDisplay lang articles = do
     siteName <- getLangString (singleLanguage lang) "siteName"
-    siteId <- gets appAddress
+    -- TODO: Web.Routes generate a link without the trailing slash
+    home <- liftM (++ "/") $ linkTo Index
     let lastUpdated = arAuthored $ head articles
-    let blankFeed = nullFeed siteId (TextString siteName) (atomDate lastUpdated)
+    let blankFeed = nullFeed home (TextString siteName) (atomDate lastUpdated)
     entries <- mapM (articleEntry lang) articles
-    let feed = blankFeed { feedEntries = entries }
-    return $ showTopElement $ xmlFeed feed
+    let selfLink = (nullLink home) { linkRel = Just $ Left "self" }
+    let feed = blankFeed { feedEntries = entries
+                         , feedLinks = [selfLink] }
+    return $ toResponse $ AtomFeed $ xmlFeed feed

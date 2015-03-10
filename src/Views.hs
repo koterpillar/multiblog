@@ -35,6 +35,9 @@ data PageContent a = PageContent { pcTitle   :: Maybe String
 class Linkable a where
     link :: a -> Sitemap
 
+instance Linkable Sitemap where
+    link = id
+
 instance Linkable Article where
     link a = ArticleView (utctDay $ arAuthored a) (arSlug a)
 
