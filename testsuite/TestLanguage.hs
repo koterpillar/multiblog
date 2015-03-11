@@ -45,6 +45,23 @@ test_languageHeader = do
         (languageHeader $ Just "ru,zh;q=0.8,en;q=0.6")
         (mkPreference [(RU, 1), (ZH, 0.8), (EN, 0.6)])
 
+test_parseLanguage = do
+    assertEqual
+        (Just EN)
+        (parseLanguage "en")
+    assertEqual
+        (Just IT)
+        (parseLanguage "it")
+    assertEqual
+        Nothing
+        (parseLanguage "zz")
+    assertEqual
+        (Just EN)
+        (parseLanguage "en-AU")
+    assertEqual
+        (Just ZH)
+        (parseLanguage "zh-Hans")
+
 instance Arbitrary LanguagePreference where
     arbitrary = mkPreference <$> arbitrary
 

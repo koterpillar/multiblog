@@ -54,6 +54,7 @@ parseLanguage :: MonadPlus m => String -> m Language
 parseLanguage [c1, c2] = case fromChars c1 c2 of
                              Just lang -> return lang
                              Nothing -> mzero
+parseLanguage (c1:c2:'-':_) = parseLanguage [c1, c2]
 parseLanguage _ = mzero
 
 showLanguage :: Language -> String
