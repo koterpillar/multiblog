@@ -62,6 +62,9 @@ test_parseLanguage = do
         (Just ZH)
         (parseLanguage "zh-Hans")
 
+-- Test the function is total
+prop_bestLanguageExists s = x == x where x = bestLanguage $ languageHeader s
+
 instance Arbitrary LanguagePreference where
     arbitrary = mkPreference <$> arbitrary
 

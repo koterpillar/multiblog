@@ -37,7 +37,12 @@ singleLanguage :: Language -> LanguagePreference
 singleLanguage lang = LanguagePreference $ M.singleton lang 1
 
 bestLanguage :: LanguagePreference -> Language
-bestLanguage = fst . head . sortBy (reverseCompare `on` snd) . M.toList . unLanguagePreference
+bestLanguage = fromMaybe defaultLanguage
+             . listToMaybe
+             . fmap fst
+             . sortBy (reverseCompare `on` snd)
+             . M.toList
+             . unLanguagePreference
 
 rankLanguage :: Language -> LanguagePreference -> Float
 rankLanguage lang = fromMaybe 0 . M.lookup lang . unLanguagePreference
