@@ -58,6 +58,9 @@ test_parseLanguage = do
     assertEqual
         (Just EN)
         (parseLanguage "en-AU")
+    assertEqual
+        (Just ZH)
+        (parseLanguage "zh-Hans")
 
 instance Arbitrary LanguagePreference where
     arbitrary = mkPreference <$> arbitrary
