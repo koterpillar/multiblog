@@ -48,16 +48,39 @@ nullState = AppState "" "" [] [] (M.empty)
 testSource :: FilePath -> [(String, String)] -> String -> ContentSource
 testSource path meta content = ContentSource path $ readMarkdown def $ markdown meta content
 
+addArticle :: Article -> AppState -> AppState
+addArticle article app = app { appArticles = article:appArticles app }
+
+withArticle :: AppState -> Article -> AppState
+withArticle = flip addArticle
+
+addMeta :: Meta -> AppState -> AppState
+addMeta meta app = app { appMeta = meta:appMeta app }
+
+withMeta :: AppState -> Meta -> AppState
+withMeta = flip addMeta
+
 test_loadMeta = do
     let sources = [ testSource "meta/about.md" [slug "about", langEn] "This is meta"
                   ]
     assertEqual
-        (Right $ nullState { appMeta = [ Meta { mtSlug = "about"
-                                              , mtContent = M.fromList [ (EN, readMarkdown def "This is meta")
-                                                                       ]
-                                              }
-                                       ]
-                           })
+        (Right $ nullState `withMeta` Meta { mtSlug = "about"
+                                           , mtContent = M.fromList [ (EN, readMarkdown def "This is meta")
+                                                                    ]
+                                           }
+        )
+        (liftM (modifyAppState textOnlyContent) $ fromSources sources)
+
+test_loadArticle = do
+    let sources = [ testSource "2015-03-01/world-order-en.md" [] "Should be parsed automatically"
+                  ]
+    assertEqual
+        (Right $ nullState `withArticle` Article { arSlug = "world-order"
+                                                 , arAuthored = mkDate 2015 03 01
+                                                 , arContent = M.fromList [ (EN, readMarkdown def "Should be parsed automatically")
+                                                                          ]
+                                                 }
+        )
         (liftM (modifyAppState textOnlyContent) $ fromSources sources)
 
 jstring :: String -> Value
