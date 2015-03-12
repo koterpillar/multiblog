@@ -53,8 +53,8 @@ test_loadMeta = do
                   ]
     assertEqual
         (Right $ nullState { appMeta = [ Meta { mtSlug = "about"
-                                       , mtContent = M.fromList [ (EN, readMarkdown def "This is meta")
-                                                                ]
+                                              , mtContent = M.fromList [ (EN, readMarkdown def "This is meta")
+                                                                       ]
                                               }
                                        ]
                            })
@@ -83,13 +83,13 @@ test_groupSources = do
     let snsd1en = testSource "2011-02-03/snsd.md" [slug "snsd", langEn] "Korean group"
     let snsd1ru = testSource "2011-02-03/snsd-ru.md" [slug "snsd", langRu] "Корейская группа"
     let snsd1zh = testSource "2011-02-03/snsd-zh.md" [slug "snsd", langZh] "韩国音乐组合"
-    let snsd2 = testSource "2012-02-03/snsd.md" [slug "snsd", langEn] "Became popular"
+    let snsd2en = testSource "2012-02-03/snsd.md" [slug "snsd", langEn] "Became popular"
     let aboutEn = testSource "meta/about.md" [slug "about", langEn] "Testing myself"
     let aboutRu = testSource "meta/about-ru.md" [slug "about", langRu] "Самопроверка"
-    let sources = [snsd1en, snsd1ru, snsd1zh, snsd2, aboutEn, aboutRu]
+    let sources = [snsd1en, snsd1ru, snsd1zh, snsd2en, aboutEn, aboutRu]
     assertEqual
         (sort2 [ [snsd1en, snsd1ru, snsd1zh]
-               , [snsd2]
+               , [snsd2en]
                , [aboutEn, aboutRu]
                ])
         (sort2 $ M.elems $ groupSources sources)
