@@ -1,14 +1,13 @@
+{-# LANGUAGE FlexibleContexts #-}
 -- Import the application data (articles and meta) from a set of files.
 module Import where
 
-import Control.Applicative
+import Control.Arrow (second)
 import Control.Monad
+import Control.Monad.State
 import Control.Monad.Writer
 
 import qualified Data.ByteString.UTF8 as U
-import Data.Either
-import Data.List
-import Data.List.Split
 import qualified Data.Map as M
 import Data.Maybe
 import Data.Time
@@ -24,73 +23,116 @@ import Models
 import Utils
 
 
+-- Each file gets imported into a ContentSource
 data ContentSource = ContentSource { csPath    :: FilePath
                                    , csContent :: Pandoc
                                    }
     deriving (Eq, Ord, Show)
 
--- Parse a date from string
-readDate :: String -> Maybe UTCTime
-readDate = liftM atMidnight . readM
+-- Each language group of ContentSources becomes either Article or Meta
+-- later
+data Content = Content { coSlug    :: String
+                       , coDate    :: Maybe UTCTime
+                       , coContent :: LanguageContent
+                       }
+    deriving (Eq, Ord, Show)
 
--- Extract a date and a slug from a filename
-filenameData :: FilePath -> Maybe (UTCTime, String)
-filenameData fn = case splitOn "-" fn of
-    [ys, ms, ds, slug] -> do
-        date <- readDate $ intercalate "-" [ys, ms, ds]
-        return (date, slug)
-    _ -> fail "No parse"
+parseContent :: Content -> Either Article Meta
+parseContent c = case coDate c of
+    Just dt -> Left $ Article (coSlug c) (coContent c) dt
+    Nothing -> Right $ Meta (coSlug c) (coContent c)
 
--- Split file path into chunks which data can be extracted from
--- For example, "some/directory/file.md" will be split into
--- ["some", "directory", "file"]
-chunks :: FilePath -> [String]
-chunks = reverse . dropFirstExtension . reverse . splitDirectories
+addContent :: [Content] -> State AppState ()
+addContent = mapM_ $ \c -> modify $ \st -> case parseContent c of
+    -- TODO: this greatly benefits from Lenses on AppState
+    Left a  -> st { appArticles = appArticles st ++ [a] }
+    Right m -> st { appMeta = appMeta st ++ [m] }
+
+-- A meta value extracted from a content source. Some (e.g. from the
+-- Pandoc meta) will have a name associated, some will not.
+data MetaInfo = Named { miName :: String, miValue :: String }
+              | Unnamed { miValue :: String }
+    deriving (Eq, Show)
+
+metaValues :: ContentSource -> [MetaInfo]
+metaValues cs = filenameInfo (csPath cs) ++ pandocInfo (csContent cs)
+
+-- Split file path into MetaInfos
+-- For example, "some/directory/file.md" will be split into unnamed strings:
+-- "some", "directory", "file"
+filenameInfo :: FilePath -> [MetaInfo]
+filenameInfo = map Unnamed . reverse . dropFirstExtension . reverse . splitDirectories
     where dropFirstExtension [] = []
           dropFirstExtension (x:xs) = dropExtension x:xs
 
--- Extract a text value from Pandoc Meta
-metaText :: MetaValue -> Maybe String
-metaText (MetaInlines [Str text]) = Just text
-metaText (MetaString text) = Just text
-metaText _ = Nothing
+-- Read MetaInfos from Pandoc
+pandocInfo :: Pandoc -> [MetaInfo]
+pandocInfo (Pandoc meta _) = catMaybes $ map mkInfo $ M.toList $ unMeta meta
+    where mkInfo (name, value) = do
+              text <- metaText value
+              return $ Named name text
+          metaText (MetaInlines [Str text]) = Just text
+          metaText (MetaString text) = Just text
+          metaText _ = Nothing
 
--- Extract all meta values of a specific name from a content source
-metaValues :: String -- The meta attribute name to extract
-           -> Bool -- Whether to also extract from the file path
-           -> ContentSource -- Content source
-           -> [String] -- Extracted list of values
-metaValues name matchPath source = maybeToList (lookupMeta name m >>= metaText) ++ fpChunks
-    where (Pandoc m _) = csContent source
-          fpChunks = if matchPath then chunks $ csPath source else []
+extractContent :: ContentSource -> Either String Content
+extractContent cs = flip evalStateT (metaValues cs) ecst
+    where ecst :: StateT [MetaInfo] (Either String) Content
+          ecst = do
+                lang' <- liftM (require "Language is required") $ extractLanguage
+                lang <- lift lang'
+                date <- extractDate
+                slug' <- liftM (require "Slug is required") $ extractSlug
+                slug <- lift slug'
+                return $ Content slug date $ M.singleton lang $ csContent cs
 
--- Extract a value of a specific type from a content source
-metaValue :: String -- The meta attribute name to extract
-          -> Bool -- Whether to also extract from the file path
-          -> (String -> Maybe a) -- A function to parse a value
-          -> ContentSource -- Content source
-          -> Maybe a -- Extracted value
-metaValue name matchPath readFunc source =
-    msum $ readFunc <$> metaValues name matchPath source
+fromSources :: [ContentSource] -> Either String ([Article], [Meta])
+fromSources = undefined
 
--- Extract a string attribute from a content source
-stringMeta :: String -- Attribute name
-           -> ContentSource -- Content source
-           -> Maybe String -- Attribute value
-stringMeta name = listToMaybe . metaValues name False
+-- MetaInfo sets can be used to extract typed information
+-- Extracting something changes the set
 
--- Extract a language from a content source
-langMeta :: ContentSource -> Maybe Language
-langMeta = metaValue "lang" False parseLanguage
+-- Try to read the language off the end of a string
+extractLanguage :: MonadState [MetaInfo] s => s (Maybe Language)
+extractLanguage = extractFromMeta "language" parseLang
+    where split3 :: String -> (String, String)
+          split3 (x:y:z:t:u) = ((x:hd), tl) where (hd, tl) = split3 (y:z:t:u)
+          split3 tl = ("", tl)
+          parseLang :: String -> Maybe (Language, String)
+          parseLang str = let (hd, tl) = split3 str in case tl of
+              '-':langStr -> case parseLanguage langStr of
+                                 Just lang -> Just (lang, hd)
+                                 _ -> Nothing
+              _ -> Nothing
 
--- Extract a date attribute from a content source
--- The file path chunks will be considered as well
-dateMeta :: ContentSource -> Maybe UTCTime
-dateMeta = metaValue "date" True readDate
+-- Try to read the date off the start
+extractDate :: MonadState [MetaInfo] s => s (Maybe UTCTime)
+extractDate = extractFromMeta "date" $ \str -> case reads str of
+    [(dt, rest)] -> Just (atMidnight dt, rest)
+    _ -> Nothing
 
--- A map of supported file formats and corresponding Pandoc readers
-readers :: M.Map String (String -> Pandoc)
-readers = M.fromList [("md", readMarkdown def)]
+-- Extract the slug, this can be any string
+extractSlug :: MonadState [MetaInfo] s => s (Maybe String)
+extractSlug = extractFromMeta "slug" $ \str -> Just (str, "")
+
+-- Extract either unnamed or named meta, applying a parser afterwards
+extractFromMeta :: MonadState [MetaInfo] s => String -> (String -> Maybe (a, String)) -> s (Maybe a)
+extractFromMeta name parser = extractIf test
+    where test (Named name' value) | name == name' = liftM (second (Named name)) $ parser value
+                                   | otherwise = Nothing
+          test (Unnamed value) = liftM (second Unnamed) $ parser value
+
+-- Extract a meta matching a function
+extractIf :: MonadState [c] s => (c -> Maybe (a, c)) -> s (Maybe a)
+extractIf test = do
+        st <- get
+        let (result, st') = tryExtract st
+        put st'
+        return result
+    where tryExtract [] = (Nothing, [])
+          tryExtract (m:ms) = case test m of
+              Just (result, m') -> (Just result, m':ms)
+              Nothing -> (result, m:ms') where (result, ms') = tryExtract ms
 
 -- Load the application state from a directory
 loadFromDirectory :: FilePath -> IO (Either String AppState)
@@ -98,9 +140,14 @@ loadFromDirectory path = do
     sources <- sourcesFromDirectory path
     stringsFile <- readFile $ path </> "strings.yaml"
     return $ do
-        state <- fromSources sources
+        (articles, metas) <- fromSources sources
         strings <- loadStrings stringsFile
-        return $ state { appDirectory = path, appStrings = strings, appAddress = "" }
+        return $ emptyState { appDirectory = path
+                            , appAddress = ""
+                            , appArticles = articles
+                            , appMeta = metas
+                            , appStrings = strings
+                            }
 
 -- All content sources from a directory
 sourcesFromDirectory :: FilePath -> IO [ContentSource]
@@ -128,61 +175,9 @@ sourceFromFile fp = case takeExtension fp of
             tell [ContentSource fp content]
     ext -> fail $ "Invalid extension " ++ ext
 
-fromSources :: [ContentSource] -> Either String AppState
-fromSources sources = do
-    let grouped = M.elems $ groupSources sources
-    extracted <- mapM makeArticle grouped
-    let (articles, meta) = partitionEithers extracted
-    return AppState { appDirectory = ""
-                    , appAddress = ""
-                    , appArticles = articles
-                    , appMeta = meta
-                    , appStrings = M.empty
-                    }
-
--- Convert Maybe to Either, appending a content source's file name
--- to an error message
--- TODO: better name
-mfes :: ContentSource -> String -> Maybe a -> Either String a
-mfes as err = mfe (err ++ " in " ++ csPath as)
-
--- Merge content sources into an article
-makeArticle :: [ContentSource] -> Either String (Either Article Meta)
-makeArticle [] = fail "at least one source is required"
-makeArticle ss@(s1:_) = do
-    content <- mergeLanguageContent ss
-    slug <- mfes s1 "Slug is required" $ stringMeta "slug" s1
-    return $ case dateMeta s1 of
-        Just dt -> Left Article { arSlug = slug
-                                , arContent = content
-                                , arAuthored = dt
-                                }
-        Nothing -> Right Meta { mtSlug = slug
-                              , mtContent = content
-                              }
-
--- Merge language content from a group of sources
-mergeLanguageContent :: [ContentSource] -> Either String LanguageContent
-mergeLanguageContent ss = liftM M.fromList $ forM ss $ \s -> do
-    lang <- mfes s "Language is required" $ langMeta s
-    let pandoc = csContent s
-    return (lang, pandoc)
-
--- Group items from content sources
-groupSources :: [ContentSource] -> M.Map ContentSourceIndex [ContentSource]
-groupSources = M.fromListWith (++) . map sourceKeyVal
-    where sourceKeyVal s = (sourceKey s, [s])
-
-data ContentSourceIndex = ArticleContentSource String UTCTime
-                        | MetaContentSource String
-    deriving (Eq, Ord)
-
--- Whether two content sources belong to the same item (article/meta)
-sourceKey :: ContentSource -> ContentSourceIndex
-sourceKey s = case dateMeta s of
-                  Just dt -> ArticleContentSource slug dt
-                  Nothing -> MetaContentSource slug
-    where slug = fromJust $ stringMeta "slug" s
+-- A map of supported file formats and corresponding Pandoc readers
+readers :: M.Map String (String -> Pandoc)
+readers = M.fromList [("md", readMarkdown def)]
 
 -- Load translations from a YAML file
 loadStrings :: String -> Either String (M.Map String (LanguageMap String))
