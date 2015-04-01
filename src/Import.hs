@@ -76,15 +76,13 @@ pandocInfo (Pandoc meta _) = catMaybes $ map mkInfo $ M.toList $ unMeta meta
           metaText _ = Nothing
 
 extractContent :: ContentSource -> Either String Content
-extractContent cs = flip evalStateT (metaValues cs) ecst
-    where ecst :: StateT [MetaInfo] (Either String) Content
-          ecst = do
-                lang' <- liftM (require "Language is required") $ extractLanguage
-                lang <- lift lang'
-                date <- extractDate
-                slug' <- liftM (require "Slug is required") $ extractSlug
-                slug <- lift slug'
-                return $ Content slug date $ M.singleton lang $ csContent cs
+extractContent cs = flip evalStateT (metaValues cs) $ do
+    lang' <- liftM (require "Language is required") $ extractLanguage
+    lang <- lift lang'
+    date <- extractDate
+    slug' <- liftM (require "Slug is required") $ extractSlug
+    slug <- lift slug'
+    return $ Content slug date $ M.singleton lang $ csContent cs
 
 fromSources :: [ContentSource] -> Either String ([Article], [Meta])
 fromSources = undefined
