@@ -8,6 +8,7 @@ import Control.Monad.State
 import Control.Monad.Writer
 
 import qualified Data.ByteString.UTF8 as U
+import Data.Either
 import qualified Data.Map as M
 import Data.Maybe
 import Data.Time
@@ -37,16 +38,17 @@ data Content = Content { coSlug    :: String
                        }
     deriving (Eq, Ord, Show)
 
+-- Merge content with same date/slug
+mergeContent :: Content -> Content -> Content
+mergeContent c1 c2 = Content { coSlug = coSlug c1
+                             , coDate = coDate c1
+                             , coContent = M.union (coContent c1) (coContent c2)
+                             }
+
 parseContent :: Content -> Either Article Meta
 parseContent c = case coDate c of
     Just dt -> Left $ Article (coSlug c) (coContent c) dt
     Nothing -> Right $ Meta (coSlug c) (coContent c)
-
-addContent :: [Content] -> State AppState ()
-addContent = mapM_ $ \c -> modify $ \st -> case parseContent c of
-    -- TODO: this greatly benefits from Lenses on AppState
-    Left a  -> st { appArticles = appArticles st ++ [a] }
-    Right m -> st { appMeta = appMeta st ++ [m] }
 
 -- A meta value extracted from a content source. Some (e.g. from the
 -- Pandoc meta) will have a name associated, some will not.
@@ -83,9 +85,6 @@ extractContent cs = flip evalStateT (metaValues cs) $ do
     slug' <- liftM (require "Slug is required") $ extractSlug
     slug <- lift slug'
     return $ Content slug date $ M.singleton lang $ csContent cs
-
-fromSources :: [ContentSource] -> Either String ([Article], [Meta])
-fromSources = undefined
 
 -- MetaInfo sets can be used to extract typed information
 -- Extracting something changes the set
@@ -146,6 +145,15 @@ loadFromDirectory path = do
                             , appMeta = metas
                             , appStrings = strings
                             }
+
+-- Group sources by slug/date and make Articles or Metas out of them
+fromSources :: [ContentSource] -> Either String ([Article], [Meta])
+fromSources css = do
+        cs <- mapM extractContent css
+        let grouped = map (foldr1 mergeContent) $ groupBy coKey cs
+        let parsed = map parseContent grouped
+        return (lefts parsed, rights parsed)
+    where coKey c = (coSlug c, coDate c)
 
 -- All content sources from a directory
 sourcesFromDirectory :: FilePath -> IO [ContentSource]
