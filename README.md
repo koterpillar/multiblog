@@ -30,8 +30,13 @@ Each file must have the following attributes:
 Attributes can be specified by either:
 
 * Including an attribute pair in the [YAML metadata block][yaml-metadata].
-* Only for dates: including in the file or directory name, for example,
+* For languages: ending a file or a directory name in `-la`, for example, `-en`
+  for English.
+* For dates: including in the file or directory name, for example,
   `content/2015-01-03-myarticle.md`.
+* For slugs: if not explicitly specified in YAML metadata, the file name (or a
+  directory name, starting from the most specific) is taken to be a slug, after
+  taking out the parts of it parsed as a date or language.
 
 Some elements of the blog other than content itself must also be translated.
 The translations use the file `content/strings.yaml` which must contain hashes
