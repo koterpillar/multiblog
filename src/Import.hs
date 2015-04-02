@@ -57,7 +57,7 @@ data MetaInfo = Named { miName :: String, miValue :: String }
     deriving (Eq, Show)
 
 metaValues :: ContentSource -> [MetaInfo]
-metaValues cs = filenameInfo (csPath cs) ++ pandocInfo (csContent cs)
+metaValues cs = pandocInfo (csContent cs) ++ filenameInfo (csPath cs)
 
 -- Split file path into MetaInfos
 -- For example, "some/directory/file.md" will be split into unnamed strings:
