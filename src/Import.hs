@@ -97,10 +97,10 @@ liftExtracted = liftM . second . liftM
 
 -- Try to read the language off the end of a string
 extractLanguage :: MonadState [MetaInfo] s => s (Maybe Language)
-extractLanguage = extractFromMeta "language" parseLang
-    where split3 :: String -> (String, String)
-          split3 (x:y:z:t:u) = ((x:hd), tl) where (hd, tl) = split3 (y:z:t:u)
-          split3 tl = ("", tl)
+extractLanguage = extractFromMeta "lang" parseLang
+    where split3 :: [a] -> ([a], [a])
+          split3 (x:xs@(_:_:_:_)) = ((x:hd), tl) where (hd, tl) = split3 xs
+          split3 xs = ([], xs)
           parseLang :: Extractor String Language
           parseLang str = let (hd, tl) = split3 str in case tl of
               '-':langStr -> case parseLanguage langStr of
