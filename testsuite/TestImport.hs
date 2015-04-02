@@ -19,7 +19,6 @@ import Import
 import Models
 
 import Test.Framework
-import Test.HUnit
 
 
 markdown :: [(String, String)] -> String -> String
@@ -54,23 +53,38 @@ test_loadMeta = do
     let sources = [ testSource "meta/about.md" [slug "about", langEn] "This is meta"
                   ]
     let Right (articles, meta) = fromSources sources
-    articles @?= []
-    map textOnlyContent meta @?= [Meta { mtSlug = "about"
-                                       , mtContent = M.fromList [ (EN, readMarkdown def "This is meta")
-                                                                ]
-                                       }]
+    assertEqual [] articles
+    assertEqual
+        [Meta { mtSlug = "about"
+              , mtContent = M.fromList [ (EN, readMarkdown def "This is meta")
+                                       ]
+              }]
+        (map textOnlyContent meta)
 
 test_loadArticle = do
     let sources = [ testSource "2015-03-01/world-order-en.md" [] "Should be parsed automatically"
                   ]
     let Right (articles, meta) = fromSources sources
-    articles @?= [Article { arSlug = "world-order"
-                          , arAuthored = mkDate 2015 03 01
-                          , arContent = M.fromList [ (EN, readMarkdown def "Should be parsed automatically")
-                                                   ]
-                          }]
-    meta @?= []
+    assertEqual [] meta
+    assertEqual
+        [Article { arSlug = "world-order"
+                 , arAuthored = mkDate 2015 03 01
+                 , arContent = M.fromList [ (EN, readMarkdown def "Should be parsed automatically")
+                                          ]
+                 }]
+        (map textOnlyContent articles)
 
+test_extractLanguage = do
+    let runExtract = runState extractLanguage
+    assertEqual (Just CS, []) $ runExtract [Unnamed "cs"]
+    assertEqual (Nothing, [Unnamed "zzz"]) $ runExtract [Unnamed "zzz"]
+    assertEqual (Just CS, []) $ runExtract [Named "lang" "cs"]
+    assertEqual (Nothing, [Named "lang" "ttt"]) $ runExtract [Named "lang" "ttt"]
+    assertEqual (Just CS, [Unnamed "something"]) $ runExtract [Unnamed "something-cs"]
+
+-- This test contains non-ASCII characters. Due to a bug in HTF
+-- (https://github.com/skogsbaer/HTF/issues/47),
+-- no tests are parsed beyond this one, so it must be last.
 test_loadStrings = do
     let strings = unlines [ "title:"
                           , "  en: Title"
@@ -79,15 +93,7 @@ test_loadStrings = do
                           , "  zh: 关于"
                           ]
     assertEqual
-        (loadStrings strings)
         (Right $ M.fromList [ ("title", M.fromList [(EN, "Title"), (RU, "Заголовок")])
                             , ("about", M.fromList [(ZH, "关于")])
                             ])
-
-test_extractLanguage = do
-    let runExtract = runState extractLanguage
-    runExtract [Unnamed "cs"] @?= (Just CS, [])
-    runExtract [Unnamed "zzz"] @?= (Nothing, [Unnamed "zzz"])
-    runExtract [Named "lang" "cs"] @?= (Just CS, [])
-    runExtract [Named "lang" "ttt"] @?= (Nothing, [Named "lang" "ttt"])
-    runExtract [Unnamed "something-cs"] @?= (Just CS, [Unnamed "something"])
+        (loadStrings strings)
