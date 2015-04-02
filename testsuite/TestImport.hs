@@ -61,6 +61,18 @@ test_loadMeta = do
               }]
         (map textOnlyContent meta)
 
+test_loadMeta_implied = do
+    let sources = [ testSource "meta/about-en.md" [] "This is meta"
+                  ]
+    let Right (articles, meta) = fromSources sources
+    assertEqual [] articles
+    assertEqual
+        [Meta { mtSlug = "about"
+              , mtContent = M.fromList [ (EN, readMarkdown def "This is meta")
+                                       ]
+              }]
+        (map textOnlyContent meta)
+
 test_loadArticle = do
     let sources = [ testSource "2015-03-01/world-order-en.md" [] "Should be parsed automatically"
                   ]

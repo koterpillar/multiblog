@@ -61,9 +61,10 @@ metaValues cs = pandocInfo (csContent cs) ++ filenameInfo (csPath cs)
 
 -- Split file path into MetaInfos
 -- For example, "some/directory/file.md" will be split into unnamed strings:
--- "some", "directory", "file"
+-- "file", "directory", "some"
+-- Strings are in reverse order because the file name is the most specific
 filenameInfo :: FilePath -> [MetaInfo]
-filenameInfo = map Unnamed . reverse . dropFirstExtension . reverse . splitDirectories
+filenameInfo = map Unnamed . dropFirstExtension . reverse . splitDirectories
     where dropFirstExtension [] = []
           dropFirstExtension (x:xs) = dropExtension x:xs
 
