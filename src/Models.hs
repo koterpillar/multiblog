@@ -61,6 +61,14 @@ data AppState = AppState { appDirectory :: String
                          }
     deriving (Eq, Show)
 
+emptyState :: AppState
+emptyState = AppState { appDirectory = ""
+                      , appAddress = ""
+                      , appArticles = []
+                      , appMeta = []
+                      , appStrings = M.empty
+                      }
+
 mkDate :: Integer -> Int -> Int -> UTCTime
 mkDate y m d = atMidnight $ fromGregorian y m d
 

@@ -12,9 +12,9 @@ readM s = case reads s of
     _ -> fail "No parse"
 
 -- Convert Maybe to Either, with a supplied error message
-mfe :: String -> Maybe a -> Either String a
-mfe _ (Just v) = Right v
-mfe err Nothing = Left err
+require :: String -> Maybe a -> Either String a
+require _ (Just v) = Right v
+require err Nothing = Left err
 
 -- Are all Eithers in the Map Right?
 mapAllRight :: M.Map k (Either e v) -> Either e (M.Map k v)
@@ -38,3 +38,8 @@ isSpecial _ = False
 
 reverseCompare :: Ord a => a -> a -> Ordering
 reverseCompare = flip compare
+
+-- Group items by a function
+groupBy :: (Eq k, Ord k) => (a -> k) -> [a] -> [[a]]
+groupBy key = M.elems . foldr (uncurry $ M.insertWith (++)) M.empty . map addKey
+    where addKey v = (key v, [v])

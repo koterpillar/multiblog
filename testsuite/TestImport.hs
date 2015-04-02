@@ -4,6 +4,7 @@
 module TestImport where
 
 import Control.Monad
+import Control.Monad.State
 
 import qualified Data.ByteString.Char8 as C8
 import Data.LanguageCodes
@@ -51,18 +52,51 @@ testSource path meta content = ContentSource path $ readMarkdown def $ markdown 
 test_loadMeta = do
     let sources = [ testSource "meta/about.md" [slug "about", langEn] "This is meta"
                   ]
+    let Right (articles, meta) = fromSources sources
+    assertEqual [] articles
     assertEqual
-        (Right $ nullState { appMeta = [ Meta { mtSlug = "about"
-                                       , mtContent = M.fromList [ (EN, readMarkdown def "This is meta")
-                                                                ]
-                                              }
+        [Meta { mtSlug = "about"
+              , mtContent = M.fromList [ (EN, readMarkdown def "This is meta")
                                        ]
-                           })
-        (liftM (modifyAppState textOnlyContent) $ fromSources sources)
+              }]
+        (map textOnlyContent meta)
 
-jstring :: String -> Value
-jstring = String . pack
+test_loadMeta_implied = do
+    let sources = [ testSource "meta/about-en.md" [] "This is meta"
+                  ]
+    let Right (articles, meta) = fromSources sources
+    assertEqual [] articles
+    assertEqual
+        [Meta { mtSlug = "about"
+              , mtContent = M.fromList [ (EN, readMarkdown def "This is meta")
+                                       ]
+              }]
+        (map textOnlyContent meta)
 
+test_loadArticle = do
+    let sources = [ testSource "2015-03-01/world-order-en.md" [] "Should be parsed automatically"
+                  ]
+    let Right (articles, meta) = fromSources sources
+    assertEqual [] meta
+    assertEqual
+        [Article { arSlug = "world-order"
+                 , arAuthored = mkDate 2015 03 01
+                 , arContent = M.fromList [ (EN, readMarkdown def "Should be parsed automatically")
+                                          ]
+                 }]
+        (map textOnlyContent articles)
+
+test_extractLanguage = do
+    let runExtract = runState extractLanguage
+    assertEqual (Just CS, []) $ runExtract [Unnamed "cs"]
+    assertEqual (Nothing, [Unnamed "zzz"]) $ runExtract [Unnamed "zzz"]
+    assertEqual (Just CS, []) $ runExtract [Named "lang" "cs"]
+    assertEqual (Nothing, [Named "lang" "ttt"]) $ runExtract [Named "lang" "ttt"]
+    assertEqual (Just CS, [Unnamed "something"]) $ runExtract [Unnamed "something-cs"]
+
+-- This test contains non-ASCII characters. Due to a bug in HTF
+-- (https://github.com/skogsbaer/HTF/issues/47),
+-- no tests are parsed beyond this one, so it must be last.
 test_loadStrings = do
     let strings = unlines [ "title:"
                           , "  en: Title"
@@ -71,25 +105,7 @@ test_loadStrings = do
                           , "  zh: 关于"
                           ]
     assertEqual
-        (loadStrings strings)
         (Right $ M.fromList [ ("title", M.fromList [(EN, "Title"), (RU, "Заголовок")])
                             , ("about", M.fromList [(ZH, "关于")])
                             ])
-
-sort2 :: Ord a => [[a]] -> [[a]]
-sort2 = sort . map sort
-
-test_groupSources = do
-    let snsd1en = testSource "2011-02-03/snsd.md" [slug "snsd", langEn] "Korean group"
-    let snsd1ru = testSource "2011-02-03/snsd-ru.md" [slug "snsd", langRu] "Корейская группа"
-    let snsd1zh = testSource "2011-02-03/snsd-zh.md" [slug "snsd", langZh] "韩国音乐组合"
-    let snsd2 = testSource "2012-02-03/snsd.md" [slug "snsd", langEn] "Became popular"
-    let aboutEn = testSource "meta/about.md" [slug "about", langEn] "Testing myself"
-    let aboutRu = testSource "meta/about-ru.md" [slug "about", langRu] "Самопроверка"
-    let sources = [snsd1en, snsd1ru, snsd1zh, snsd2, aboutEn, aboutRu]
-    assertEqual
-        (sort2 [ [snsd1en, snsd1ru, snsd1zh]
-               , [snsd2]
-               , [aboutEn, aboutRu]
-               ])
-        (sort2 $ M.elems $ groupSources sources)
+        (loadStrings strings)
