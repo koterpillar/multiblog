@@ -15,6 +15,7 @@ import Data.Time
 import qualified Data.Yaml as Y
 
 import Text.Pandoc hiding (Meta, readers)
+import Text.Pandoc.Error
 
 import System.Directory
 import System.FilePath.Posix
@@ -193,11 +194,13 @@ sourceFromFile fp = case takeExtension fp of
         Nothing -> return ()
         Just reader -> do
             content <- liftM reader $ liftIO $ readFile fp
-            tell [ContentSource fp content]
+            case content of
+                Left err -> fail $ "Error reading " ++ fp ++ ": " ++ show err
+                Right pandoc -> tell [ContentSource fp pandoc]
     ext -> fail $ "Invalid extension " ++ ext
 
 -- A map of supported file formats and corresponding Pandoc readers
-readers :: M.Map String (String -> Pandoc)
+readers :: M.Map String (String -> Either PandocError Pandoc)
 readers = M.fromList [("md", readMarkdown def)]
 
 -- Load translations from a YAML file

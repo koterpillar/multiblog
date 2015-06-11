@@ -14,6 +14,7 @@ import Data.Text (pack)
 import Data.Yaml
 
 import Text.Pandoc hiding (Meta)
+import Text.Pandoc.Error
 
 import Import
 import Models
@@ -27,6 +28,9 @@ markdown meta content = unlines $
     [k ++ ": " ++ v | (k, v) <- meta] ++
     ["---", content]
 
+unsafeReadMarkdown :: String -> Pandoc
+unsafeReadMarkdown = handleError . readMarkdown def
+
 slug s = ("slug", s)
 langEn = ("lang", "en")
 langRu = ("lang", "ru")
@@ -36,7 +40,7 @@ modifyAllContent :: HasContent a => (Pandoc -> Pandoc) -> a -> a
 modifyAllContent f = modifyContent (M.map f)
 
 textOnlyContent :: HasContent a => a -> a
-textOnlyContent = modifyAllContent $ readMarkdown def . writePlain def
+textOnlyContent = modifyAllContent $ unsafeReadMarkdown . writePlain def
 
 modifyAppState :: (forall a. HasContent a => a -> a) -> AppState -> AppState
 modifyAppState f st = st { appArticles = map f $ appArticles st
@@ -47,7 +51,7 @@ nullState :: AppState
 nullState = AppState "" "" [] [] (M.empty)
 
 testSource :: FilePath -> [(String, String)] -> String -> ContentSource
-testSource path meta content = ContentSource path $ readMarkdown def $ markdown meta content
+testSource path meta content = ContentSource path $ unsafeReadMarkdown $ markdown meta content
 
 test_loadMeta = do
     let sources = [ testSource "meta/about.md" [slug "about", langEn] "This is meta"
@@ -56,7 +60,7 @@ test_loadMeta = do
     assertEqual [] articles
     assertEqual
         [Meta { mtSlug = "about"
-              , mtContent = M.fromList [ (EN, readMarkdown def "This is meta")
+              , mtContent = M.fromList [ (EN, unsafeReadMarkdown "This is meta")
                                        ]
               }]
         (map textOnlyContent meta)
@@ -68,7 +72,7 @@ test_loadMeta_implied = do
     assertEqual [] articles
     assertEqual
         [Meta { mtSlug = "about"
-              , mtContent = M.fromList [ (EN, readMarkdown def "This is meta")
+              , mtContent = M.fromList [ (EN, unsafeReadMarkdown "This is meta")
                                        ]
               }]
         (map textOnlyContent meta)
@@ -81,7 +85,7 @@ test_loadArticle = do
     assertEqual
         [Article { arSlug = "world-order"
                  , arAuthored = mkDate 2015 03 01
-                 , arContent = M.fromList [ (EN, readMarkdown def "Should be parsed automatically")
+                 , arContent = M.fromList [ (EN, unsafeReadMarkdown "Should be parsed automatically")
                                           ]
                  }]
         (map textOnlyContent articles)

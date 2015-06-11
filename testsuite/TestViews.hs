@@ -27,9 +27,10 @@ test_linkedHeader = do
                          , "Other header"
                          , "------------"
                          ]
+    let (Right pandoc) = readMarkdown def source
     assertEqual
         (intercalate "\n" [ "<h2><a href=\"http://test\">Header</a></h2>"
                           , "<p>Text content</p>"
                           , "<h2>Other header</h2>"
                           ])
-        $ renderHtml $ writeHtml def $ linkedHeader "http://test" $ readMarkdown def source
+        $ renderHtml $ writeHtml def $ linkedHeader "http://test" pandoc
