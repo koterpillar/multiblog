@@ -1,25 +1,27 @@
 language: haskell
 
 ghc:
-  - 7.8
+  - 7.8  # Only used for Cabal
 
 before_install:
-  - cabal install happy
-  - cabal install hlint
+  - wget https://www.stackage.org/stack/linux-x86_64 -O stack.tar.gz
+  - tar xf stack.tar.gz
+  - mkdir -p $HOME/.local/bin
+  - cp stack-*-linux-x86_64/stack $HOME/.local/bin/stack
+  - stack setup
+  - stack install hlint
 
 install:
-  - cabal install --enable-tests --only-dependencies
-  - cabal configure --enable-tests
-  - cabal build
+  - stack build
 
 script:
   - hlint src testsuite
-  - cabal test
+  - stack test
 
 cache:
   directories:
-    - $HOME/.cabal
-    - $HOME/.ghc
+    - $HOME/.stack
+    - .stack-work
 
 deploy:
   provider: releases
