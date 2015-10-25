@@ -7,7 +7,6 @@ import Prelude hiding ((.))
 
 import Control.Category (Category ((.)))
 
-import Data.Monoid
 import qualified Data.Text as T
 import Data.Time
 
