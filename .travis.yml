@@ -23,11 +23,14 @@ cache:
     - $HOME/.stack
     - .stack-work
 
+before_deploy:
+  - cp $(stack path --local-install-root)/bin/multiblog .
+
 deploy:
   provider: releases
   api-key:
     secure: "JkeIs3oHq3H3JraOPcuSPfYz0UmwW9PVF43DVnrvWVnT1bIql83YkyEnn8Ac93ybdsewQMUhkEDOBASRcyUI2IAv0/jcf3mmdGkU4lPtz4DlCrygv6e4jkHFaAcSH6T4Kjj+bykWiDTOgUVQu9N67HXAm9M3ll5f+wPerHgSZGw="
-  file: dist/build/multiblog/multiblog
+  file: multiblog
   skip_cleanup: true
   on:
     tags: true
