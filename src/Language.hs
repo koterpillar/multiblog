@@ -2,7 +2,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Language where
 
-import Control.Applicative
 import Control.Monad
 
 import Data.Function

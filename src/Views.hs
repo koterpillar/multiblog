@@ -11,7 +11,6 @@ import Control.Monad.State
 import Data.LanguageCodes
 import qualified Data.Map as M
 import Data.Maybe
-import Data.Monoid
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Data.Time

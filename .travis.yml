@@ -1,31 +1,36 @@
 language: haskell
 
 ghc:
-  - 7.8
+  - 7.8  # Only used for Cabal
 
 before_install:
-  - cabal install happy
-  - cabal install hlint
+  - wget https://www.stackage.org/stack/linux-x86_64 -O stack.tar.gz
+  - tar xf stack.tar.gz
+  - mkdir -p $HOME/.local/bin
+  - cp stack-*-linux-x86_64/stack $HOME/.local/bin/stack
+  - stack setup
+  - stack install hlint
 
 install:
-  - cabal install --enable-tests --only-dependencies
-  - cabal configure --enable-tests
-  - cabal build
+  - stack build
 
 script:
   - hlint src testsuite
-  - cabal test
+  - stack test
 
 cache:
   directories:
-    - $HOME/.cabal
-    - $HOME/.ghc
+    - $HOME/.stack
+    - .stack-work
+
+before_deploy:
+  - cp $(stack path --local-install-root)/bin/multiblog .
 
 deploy:
   provider: releases
   api-key:
     secure: "JkeIs3oHq3H3JraOPcuSPfYz0UmwW9PVF43DVnrvWVnT1bIql83YkyEnn8Ac93ybdsewQMUhkEDOBASRcyUI2IAv0/jcf3mmdGkU4lPtz4DlCrygv6e4jkHFaAcSH6T4Kjj+bykWiDTOgUVQu9N67HXAm9M3ll5f+wPerHgSZGw="
-  file: dist/build/multiblog/multiblog
+  file: multiblog
   skip_cleanup: true
   on:
     tags: true
