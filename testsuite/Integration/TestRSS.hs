@@ -38,3 +38,6 @@ test_home = do
     let entry1 = head entries
     assertEqual ["Author Name"]
         $ map personName $ entryAuthors entry1
+    let Just (HTMLContent content) = entryContent entry1
+    assertEqual "<p>This article should appear above the first one</p>"
+        $ content
