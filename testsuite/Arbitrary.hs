@@ -4,16 +4,12 @@ module Arbitrary where
 
 import Prelude hiding (LT)
 
-import Control.Applicative
-
 import Data.DeriveTH
 import Data.LanguageCodes
 import qualified Data.Map as M
 import Data.Time
 
 import Text.Pandoc
-
-import Language
 
 import Test.Framework
 

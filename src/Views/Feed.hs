@@ -47,7 +47,7 @@ articleEntry lang article = do
     articleLink <- linkTo article
     authorName <- getLangString lpref "authorName"
     let entry = nullEntry articleLink (TextString $ langTitle lpref article) (atomDate $ arAuthored article)
-    let content = renderMarkup $ writeHtml def $ langContent lpref article
+    let content = renderMarkup $ writeHtml def $ stripTitle $ langContent lpref article
     return entry { entryContent = Just $ HTMLContent content
                  , entryLinks = [nullLink articleLink]
                  , entryAuthors = [nullPerson { personName = authorName }]
