@@ -6,10 +6,12 @@ import Control.Monad
 import Control.Monad.State
 
 import qualified Data.Map as M
+import Data.Maybe
 import qualified Data.Set as S
 import Data.Time
 
 import Text.Pandoc hiding (Meta, readers)
+import Text.Pandoc.Walk
 
 import Language
 import Utils
@@ -114,3 +116,29 @@ allLanguages app = S.union articleLangs metaLangs
           allContentLangs = S.unions . map contentLangs
           contentLangs :: HasContent a => a -> S.Set Language
           contentLangs = S.fromList . M.keys . getContent
+
+langTitle :: HasContent a => LanguagePreference -> a -> String
+langTitle lang = fromMaybe "untitled" . listToMaybe . query extractTitle . langContent lang
+    where extractTitle (Header _ _ title) = [inlineToStr title]
+          extractTitle _ = []
+
+-- TODO: Might be a better way to do this in Pandoc
+inlineToStr :: [Inline] -> String
+inlineToStr inline = writePlain def $ Pandoc undefined [Plain inline]
+
+stripTitle :: Pandoc -> Pandoc
+stripTitle (Pandoc meta blocks) = Pandoc meta blocks'
+    where blocks' = catMaybes $ evalState (mapM stripFirst blocks) True
+          stripFirst :: Block -> State Bool (Maybe Block)
+          stripFirst block = do
+              isFirst <- get
+              if isFirst
+                  then case block of
+                      Header _ _ _ -> do
+                          put False
+                          return Nothing
+                      _ -> return $ Just block
+                  else return $ Just block
+
+langContent :: HasContent a => LanguagePreference -> a -> Pandoc
+langContent lang = fromJust . matchLanguage lang . getContent

@@ -95,18 +95,6 @@ metaDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus 
 metaDisplay lang meta = template lang $
     mkPage (Just $ langTitle lang meta) $(hamletFile "templates/meta.hamlet")
 
-langTitle :: HasContent a => LanguagePreference -> a -> String
-langTitle lang = fromMaybe "untitled" . listToMaybe . query extractTitle . langContent lang
-    where extractTitle (Header _ _ title) = [inlineToStr title]
-          extractTitle _ = []
-
--- TODO: Might be a better way to do this in Pandoc
-inlineToStr :: [Inline] -> String
-inlineToStr inline = writePlain def $ Pandoc undefined [Plain inline]
-
-langContent :: HasContent a => LanguagePreference -> a -> Pandoc
-langContent lang = fromJust . matchLanguage lang . getContent
-
 -- Generate a link to some content
 linkTo :: (Linkable a, MonadRoute m, URL m ~ Sitemap)
        => a
