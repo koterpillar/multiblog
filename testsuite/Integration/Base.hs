@@ -1,8 +1,18 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 -- Base functions for integration tests
-module Integration.Base where
+module Integration.Base (
+    makeRequest,
+    simpleRequest,
+    assertContains,
+    assertContainsBefore,
+    testAddress,
+    withLang,
+    withLang1,
+    withLangCookie,
+) where
 
 import Control.Concurrent.MVar
 import Control.Monad
@@ -10,6 +20,7 @@ import Control.Monad.State
 
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.UTF8 as U
+import Data.Char
 import Data.List
 import Data.List.Split
 import qualified Data.Map as M
@@ -24,14 +35,25 @@ import Import
 import Language
 
 
+data TestRequest = TestRequest { trUri     :: String
+                               , trHeaders :: M.Map String String
+                               , trCookies :: M.Map String String
+                               }
+
+simpleRequest :: String -> TestRequest
+simpleRequest uri = TestRequest uri M.empty M.empty
+
 testAddress :: String
 testAddress = "http://test"
 
 -- Make a request to the application
-testRequest :: Request -> IO Response
-testRequest req = do
+makeRequest :: TestRequest -> IO String
+makeRequest req = do
+    happstackReq <- mkRequest req
     app <- loadApp "testsuite/Integration/content" testAddress
-    runApp app $ simpleHTTP'' site req
+    resp <- runApp app $ simpleHTTP'' site happstackReq
+    content <- responseContent resp
+    return content
 
 assertContains :: (Eq a, Show a) => [a] -> [a] -> Assertion
 assertContains needle haystack =
@@ -47,21 +69,21 @@ assertContainsBefore first second haystack =
 
 -- Create a request with a specified URL
 -- Happstack doesn't make it easy
-mkRequest :: String -> IO Request
-mkRequest rPath = do
-    let (rUri, rParams) = splitUriParam rPath
+mkRequest :: TestRequest -> IO Request
+mkRequest tr@TestRequest{..} = do
+    let (rUri, rParams) = splitUriParam $ trUri
     inputsBody <- newEmptyMVar
     rBody <- newMVar (Body LB.empty)
     return Request { rqSecure = False
                    , rqMethod = GET
                    , rqPaths = filter (/= "") $ splitOn "/" rUri
-                   , rqUri = rPath
+                   , rqUri = trUri
                    , rqQuery = "?" ++ rParams
                    , rqInputsQuery = splitParams rParams
                    , rqInputsBody = inputsBody
-                   , rqCookies = []
+                   , rqCookies = cookies
                    , rqVersion = HttpVersion 1 1
-                   , rqHeaders = M.empty
+                   , rqHeaders = headers
                    , rqBody = rBody
                    , rqPeer = ("", 0)
                    }
@@ -78,20 +100,24 @@ mkRequest rPath = do
                                    , inputFilename = Nothing
                                    , inputContentType = ContentType {ctType = "text", ctSubtype = "plain", ctParameters = []}
                                    }
+          cookies = M.toList $ M.mapWithKey mkCookie trCookies
+          headers = M.fromList $ map makeHeader $ M.toList $ trHeaders
+          makeHeader (name, value) = (name', HeaderPair name' [value'])
+              where name' = U.fromString $ map toLower name
+                    value' = U.fromString value
 
--- Add an Accept-Language header to a response
-withLang :: LanguagePreference -> Request -> Request
-withLang lang req = req { rqHeaders = newHeaders }
-    where newHeaders = M.insert "accept-language" (HeaderPair "Accept-Language" [U.fromString pref]) (rqHeaders req)
+-- Add an Accept-Language header to a request
+withLang :: LanguagePreference -> TestRequest -> TestRequest
+withLang lang req = req { trHeaders = newHeaders }
+    where newHeaders = M.insert "Accept-Language" pref (trHeaders req)
           pref = show lang
 
-withLang1 :: Language -> Request -> Request
-withLang1 lang = withLang $ singleLanguage lang
+withLang1 :: Language -> TestRequest -> TestRequest
+withLang1 = withLang . singleLanguage
 
--- Add a language cookie to a response
-withLangCookie :: Language -> Request -> Request
-withLangCookie lang req = req { rqCookies = rqCookies req ++ [("lang", langCookie)] }
-    where langCookie = mkCookie "lang" $ showLanguage lang
+-- Add a language cookie to a request
+withLangCookie :: Language -> TestRequest -> TestRequest
+withLangCookie lang req = req { trCookies = M.insert "lang" (showLanguage lang) (trCookies req) }
 
 -- Extract contents from a response
 responseContent :: Response -> IO String
@@ -101,6 +127,3 @@ responseContent f@(SendFile _ _ _ _ _ _ _) = do
     let offset = fromIntegral $ sfOffset f
     let count = fromIntegral $ sfCount f
     return $ drop offset $ take count contents
-
-testResponse :: Request -> IO String
-testResponse = testRequest >=> responseContent

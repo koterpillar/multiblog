@@ -12,9 +12,7 @@ import Test.Framework
 
 
 test_static = do
-    req <- mkRequest "/some-verification-file.html"
-    static <- testRequest req
-    resp <- responseContent static
+    resp <- makeRequest $ simpleRequest "/some-verification-file.html"
     assertEqual
         "This is the exact content of the verification file.\n"
         resp

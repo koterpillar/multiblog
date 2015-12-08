@@ -19,8 +19,7 @@ atomEntry :: QName
 atomEntry = QName "entry" Nothing Nothing
 
 test_home = do
-    req <- mkRequest "/feed/en"
-    rss <- testResponse req
+    rss <- makeRequest $ simpleRequest "/feed/en"
     let Just xml = parseXMLDoc rss
     -- Make sure every entry validates
     assertEqual [] $ flattenT $ mkTree [] $ map validateEntry $ findChildren atomEntry xml

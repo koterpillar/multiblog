@@ -14,8 +14,7 @@ import Test.Framework
 
 
 test_article = do
-    req <- mkRequest "/2015/01/01/first-test"
-    article <- testResponse req
+    article <- makeRequest $ simpleRequest "/2015/01/01/first-test"
     assertContains
         "<h2 id=\"first-test-article\">First test article</h2>"
         article
