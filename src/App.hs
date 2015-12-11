@@ -56,7 +56,7 @@ handler route = case route of
     Monthly y m -> monthlyIndex y m
     Daily d -> dailyIndex d
     ArticleView d s -> article d s
-    MetaView s -> meta s
+    MetaView s f -> meta s f
     Feed lang -> feedIndex lang
     SiteScript -> siteScript
 
@@ -99,11 +99,14 @@ articleList articleFilter = do
     language <- languageHeaderM
     articleListDisplay language sorted >>= html
 
-meta :: String -> AppPart Response
-meta slug = do
+meta :: String -> Maybe PageFormat -> AppPart Response
+meta slug format' = do
+    let format = fromMaybe Html format'
     language <- languageHeaderM
     m <- getMeta slug
-    metaDisplay language m >>= html
+    case format of
+      Html -> metaDisplay language m >>= html
+      _ -> metaExport format language m >>= html
 
 feedIndex :: Language -> AppPart Response
 feedIndex language = do

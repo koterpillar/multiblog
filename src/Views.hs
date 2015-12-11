@@ -5,9 +5,11 @@
 module Views where
 
 import qualified Control.Arrow as A
+import Control.Exception (throwIO)
 import Control.Monad
 import Control.Monad.State
 
+import qualified Data.ByteString.Lazy as LBS
 import Data.LanguageCodes
 import qualified Data.Map as M
 import Data.Maybe
@@ -19,6 +21,7 @@ import Text.Blaze.Html (Markup)
 import Text.Hamlet
 import Text.Julius
 import Text.Pandoc hiding (Meta)
+import Text.Pandoc.PDF
 import Text.Pandoc.Walk
 
 import Web.Routes
@@ -41,7 +44,7 @@ instance Linkable Article where
     link a = ArticleView (utctDay $ arAuthored a) (arSlug a)
 
 instance Linkable Meta where
-    link = MetaView . mtSlug
+    link m = MetaView (mtSlug m) Nothing
 
 defaultPage :: PageContent a
 defaultPage = PageContent { pcTitle = Nothing, pcContent = mempty }
@@ -94,6 +97,30 @@ metaDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus 
     LanguagePreference -> Meta -> m Markup
 metaDisplay lang meta = template lang $
     mkPage (Just $ langTitle lang meta) $(hamletFile "templates/meta.hamlet")
+
+writePdf :: WriterOptions -> Pandoc -> IO LBS.ByteString
+writePdf options doc = do
+    wTemplate' <- getDefaultTemplate Nothing "latex"
+    wTemplate <- either throwIO return wTemplate'
+    let options' = options { writerTemplate = wTemplate
+                           , writerSourceURL = Just "http://blah"
+                           , writerBeamer = False
+                           }
+    result <- makePDF "pdflatex" writeLaTeX options' doc
+    case result of
+      Right output -> return output
+      Left err -> error $ show err
+
+metaExport :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m, MonadIO m) =>
+    PageFormat -> LanguagePreference -> Meta -> m LBS.ByteString
+metaExport format lang meta = do
+    let content = langContent lang meta
+    let writer = case format of
+                    Pdf -> writePdf
+                    Docx -> writeDocx
+                    _ -> error "invalid export format"
+    res <- liftIO $ writer def content
+    return res
 
 -- Generate a link to some content
 linkTo :: (Linkable a, MonadRoute m, URL m ~ Sitemap)
