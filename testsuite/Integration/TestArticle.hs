@@ -16,5 +16,5 @@ import Test.Framework
 test_article = do
     article <- makeRequest $ simpleRequest "/2015/01/01/first-test"
     assertContains
-        "<h2 id=\"first-test-article\">First test article</h2>"
+        "<h1 id=\"first-test-article\">First test article</h1>"
         article
