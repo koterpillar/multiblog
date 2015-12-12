@@ -103,8 +103,7 @@ writePdf options doc = do
     wTemplate' <- getDefaultTemplate Nothing "latex"
     wTemplate <- either throwIO return wTemplate'
     let options' = options { writerTemplate = wTemplate
-                           , writerSourceURL = Just "http://blah"
-                           , writerBeamer = False
+                           , writerStandalone = True
                            }
     result <- makePDF "pdflatex" writeLaTeX options' doc
     case result of
