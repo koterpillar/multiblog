@@ -3,6 +3,13 @@ language: haskell
 ghc:
   - 7.8  # Only used for Cabal
 
+addons:
+  apt:
+    packages:
+      - lmodern
+      - texlive-fonts-recommended
+      - texlive-latex-extra
+
 before_install:
   - wget https://www.stackage.org/stack/linux-x86_64 -O stack.tar.gz
   - tar xf stack.tar.gz
