@@ -22,6 +22,18 @@ import Language
 data PageFormat = Html | Pdf | Docx
     deriving (Eq, Show)
 
+-- TODO: use Boomerang for these
+formatToStr :: PageFormat -> String
+formatToStr Html = "pdf"
+formatToStr Pdf = "pdf"
+formatToStr Docx = "docx"
+
+strToFormat :: String -> Maybe PageFormat
+strToFormat "html" = Just Html
+strToFormat "pdf" = Just Pdf
+strToFormat "docx" = Just Docx
+strToFormat _ = Nothing
+
 type MaybeFormat = Maybe PageFormat
 
 data Sitemap = Index
@@ -60,33 +72,30 @@ rExtension = xmap splitExt' (Just . joinExt')
           joinExt' :: String :- Maybe String :- o -> String :- o
           joinExt' (seg :- ext :- o) = joinExt seg ext :- o
 
+-- Swap the top 2 components in a Boomerang
 xflip :: Boomerang e tok i (a :- b :- o) -> Boomerang e tok i (b :- a :- o)
 xflip = xmap pflip (Just . pflip)
     where pflip (a :- b :- o) = b :- a :- o
 
+-- Apply a transformation to the second topmost component of a Boomerang
 xmaph2 :: (b -> c) -> (c -> Maybe b) -> Boomerang e tok i (a :- b :- o) -> Boomerang e tok i (a :- c :- o)
 xmaph2 f g = xflip . xmaph f g . xflip
 
+-- Split a path component into basename and extension
 splitExt :: String -> (String, Maybe String)
 splitExt segment = case splitOn "." segment of
                      [] -> ("", Nothing)
                      [s] -> (s, Nothing)
                      ss -> (intercalate "." $ init ss, Just $ last ss)
 
+-- Join a basename and extension together
 joinExt :: String -> Maybe String -> String
 joinExt segment Nothing = segment
 joinExt segment (Just ext) = segment ++ "." ++ ext
 
-formatToStr :: PageFormat -> String
-formatToStr Html = "pdf"
-formatToStr Pdf = "pdf"
-formatToStr Docx = "docx"
-
-strToFormat :: String -> Maybe PageFormat
-strToFormat "html" = Just Html
-strToFormat "pdf" = Just Pdf
-strToFormat "docx" = Just Docx
-strToFormat _ = Nothing
+-- Convert the second topmost component into a MaybeFormat
+xFormat :: Boomerang e tok i (String :- Maybe String :- o) -> Boomerang e tok i (String :- MaybeFormat :- o)
+xFormat = xmaph2 ((=<<) strToFormat) (Just . fmap formatToStr)
 
 sitemap :: Boomerang TextsError [Text] r (Sitemap :- r)
 sitemap = mconcat
@@ -97,5 +106,5 @@ sitemap = mconcat
     , rFeed . "feed" </> rLanguage
     , rSiteScript . "site.js"
     , rArticleView . rDay </> anyString
-    , rMetaView . xmaph2 ((=<<) strToFormat) (Just . fmap formatToStr) (rExtension anyString)
+    , rMetaView . xFormat (rExtension anyString)
     ]
