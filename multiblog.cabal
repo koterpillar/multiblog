@@ -30,6 +30,8 @@ Executable multiblog
                , network
                , pandoc
                , pandoc-types
+               , process
+               , process-extras
                , shakespeare
                , split
                , system-argv0

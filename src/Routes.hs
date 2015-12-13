@@ -9,8 +9,8 @@ import Control.Category (Category ((.)))
 
 import Data.List
 import Data.List.Split
-import qualified Data.Text as T
 import Data.Text (Text)
+import qualified Data.Text as T
 import Data.Time
 
 import Text.Boomerang.TH (makeBoomerangs)

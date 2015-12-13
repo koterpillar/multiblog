@@ -31,6 +31,12 @@ test_meta_pdf = do
         "%PDF"
         (take 4 meta_pdf)
 
+test_meta_pdf_ru = do
+    meta_pdf <- makeRequest $ withLang1 RU $ simpleRequest "/meta.pdf"
+    assertEqual
+        "%PDF"
+        (take 4 meta_pdf)
+
 test_meta_docx = do
     meta_docx <- makeRequest $ simpleRequest "/meta.docx"
     assertEqual
