@@ -11,6 +11,7 @@ import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.UTF8 as U
 
 import System.Exit
+import System.Process (proc)
 import System.Process.ByteString.Lazy
 
 import Text.Blaze.Renderer.Utf8 as Utf8Renderer
@@ -49,7 +50,8 @@ pdfExport lang meta = do
 
 wkhtmltopdf :: MonadIO m => LB.ByteString -> m LB.ByteString
 wkhtmltopdf html = liftIO $ do
-    (exitCode, pdf, err) <- readProcessWithExitCode "wkhtmltopdf" ["-q", "-", "-"] html
+    (exitCode, pdf, err) <- readCreateProcessWithExitCode wkProc html
     case exitCode of
       ExitSuccess -> return pdf
       ExitFailure _ -> error $ U.toString $ LB.toStrict err
+  where wkProc = proc "xvfb-run" ["-a", "wkhtmltopdf", "-q", "-", "-"]
