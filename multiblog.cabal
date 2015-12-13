@@ -38,6 +38,7 @@ Executable multiblog
                , system-filepath
                , text
                , time
+               , transformers
                , xml
                , web-routes
                , web-routes-boomerang
