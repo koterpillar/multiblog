@@ -4,5 +4,10 @@ $doctype 5
     <meta charset="utf-8">
     <title>
       #{title}
+    <link rel="stylesheet" href="https://raw.githubusercontent.com/waiting-for-dev/gutenweb/master/dist/gutenweb.css">
+    <style>
+      ul {
+        page-break-inside: avoid;
+      }
   <body>
     #{content}

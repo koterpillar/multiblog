@@ -62,4 +62,10 @@ wkhtmltopdf html = liftIO $ do
       ExitSuccess -> return pdf
       ExitFailure _ -> error $ U.toString $ LB.toStrict err
   -- wkhtmltopdf requires an X display
-  where wkProc = proc "xvfb-run" ["-a", "wkhtmltopdf", "-q", "-", "-"]
+  where wkProc = proc "xvfb-run" $ ["-a"] ++ wkArgs
+        wkArgs = [ "wkhtmltopdf"
+                 , "--margin-top", "15mm"
+                 , "--margin-bottom", "15mm"
+                 , "-q"
+                 , "-", "-"
+                 ]
