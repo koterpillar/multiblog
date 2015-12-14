@@ -40,10 +40,13 @@ loadApp dataDirectory siteAddress = do
         Left err -> error err
         Right appState -> return appState { appAddress = siteAddress }
 
-runApp :: AppData -> App a -> IO a
-runApp app a = do
+initAppCache :: IO AppCache
+initAppCache = do
     pdfCache <- initCache
-    let cache = AppCache pdfCache
+    return $ AppCache pdfCache
+
+runApp :: AppCache -> AppData -> App a -> IO a
+runApp cache app a = do
     runReaderT (evalStateT a cache) app
 
 site :: ServerPartT App Response
