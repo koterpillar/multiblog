@@ -3,6 +3,7 @@ module App where
 
 import Control.Applicative (optional)
 import Control.Monad.Reader
+import Control.Monad.State
 
 import qualified Data.ByteString.Char8 as B
 import Data.List
@@ -16,6 +17,7 @@ import Web.Routes
 import Web.Routes.Boomerang
 import Web.Routes.Happstack
 
+import Cache
 import Import
 import Language
 import Models
@@ -25,7 +27,7 @@ import Views
 import Views.Export
 import Views.Feed
 
-type App = ReaderT AppData IO
+type App = StateT AppCache (ReaderT AppData IO)
 
 type AppPart a = RouteT Sitemap (ServerPartT App) a
 
@@ -39,7 +41,10 @@ loadApp dataDirectory siteAddress = do
         Right appState -> return appState { appAddress = siteAddress }
 
 runApp :: AppData -> App a -> IO a
-runApp app a = runReaderT a app
+runApp app a = do
+    pdfCache <- initCache
+    let cache = AppCache pdfCache
+    runReaderT (evalStateT a cache) app
 
 site :: ServerPartT App Response
 site = do

@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Models where
 
@@ -6,6 +7,7 @@ import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
 
+import qualified Data.ByteString.Lazy as LB
 import qualified Data.Map as M
 import Data.Maybe
 import qualified Data.Set as S
@@ -14,6 +16,7 @@ import Data.Time
 import Text.Pandoc hiding (Meta, readers)
 import Text.Pandoc.Walk
 
+import Cache
 import Language
 import Utils
 
@@ -56,11 +59,11 @@ instance HasSlug Article where
 instance HasSlug Meta where
     getSlug = mtSlug
 
-data AppData = AppData { appDirectory  :: String
-                       , appAddress  :: String
-                       , appArticles :: [Article]
-                       , appMeta     :: [Meta]
-                       , appStrings  :: M.Map String (LanguageMap String)
+data AppData = AppData { appDirectory :: String
+                       , appAddress   :: String
+                       , appArticles  :: [Article]
+                       , appMeta      :: [Meta]
+                       , appStrings   :: M.Map String (LanguageMap String)
                        }
     deriving (Eq, Show)
 
@@ -143,3 +146,9 @@ stripTitle (Pandoc meta blocks) = Pandoc meta blocks'
 
 langContent :: HasContent a => LanguagePreference -> a -> Pandoc
 langContent lang = fromJust . matchLanguage lang . getContent
+
+data AppCache = AppCache { appcachePdf :: Cache (Language, String) LB.ByteString
+                         }
+
+instance HasCache (Language, String) LB.ByteString AppCache where
+    getCache = appcachePdf
