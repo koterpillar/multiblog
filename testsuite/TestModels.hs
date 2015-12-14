@@ -16,7 +16,7 @@ import Arbitrary
 derive makeArbitrary ''Article
 derive makeArbitrary ''Meta
 
-derive makeArbitrary ''AppState
+derive makeArbitrary ''AppData
 
 
 fall = flip all

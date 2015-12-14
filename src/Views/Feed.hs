@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 module Views.Feed where
 
-import Control.Monad.State
+import Control.Monad.Reader
 
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.UTF8 as U
@@ -41,11 +41,11 @@ instance ToMessage AtomFeed where
 atomDate :: UTCTime -> Date
 atomDate = (++ "T00:00:00Z") . showGregorian . utctDay
 
-articleEntry :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m) => Language -> Article -> m Entry
+articleEntry :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m) => Language -> Article -> m Entry
 articleEntry lang article = do
     let lpref = singleLanguage lang
     articleLink <- linkTo article
-    authorName <- getLangString lpref "authorName"
+    authorName <- askLangString lpref "authorName"
     let entry = nullEntry articleLink (TextString $ langTitle lpref article) (atomDate $ arAuthored article)
     let content = renderMarkup $ writeHtml def $ stripTitle $ langContent lpref article
     return entry { entryContent = Just $ HTMLContent content
@@ -53,10 +53,10 @@ articleEntry lang article = do
                  , entryAuthors = [nullPerson { personName = authorName }]
                  }
 
-feedDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
+feedDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) =>
     Language -> [Article] -> m Response
 feedDisplay lang articles = do
-    siteName <- getLangString (singleLanguage lang) "siteName"
+    siteName <- askLangString (singleLanguage lang) "siteName"
     -- TODO: Web.Routes generate a link without the trailing slash
     home <- liftM (++ "/") $ linkTo Index
     let lastUpdated = arAuthored $ head articles

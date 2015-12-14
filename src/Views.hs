@@ -6,6 +6,7 @@ module Views where
 
 import qualified Control.Arrow as A
 import Control.Monad
+import Control.Monad.Reader
 import Control.Monad.State
 
 import Data.LanguageCodes
@@ -59,38 +60,38 @@ render html = do
     route <- liftM convRender askRouteFn
     return $ html route
 
-getLangStringFn :: MonadState AppState m => LanguagePreference -> m (String -> String)
-getLangStringFn lang = do
-    strings <- gets appStrings
+askLangStringFn :: MonadReader AppData m => LanguagePreference -> m (String -> String)
+askLangStringFn lang = do
+    strings <- asks appStrings
     let fn str = fromMaybe str $ M.lookup str strings >>= matchLanguage lang
     return fn
 
-getLangString :: MonadState AppState m => LanguagePreference -> String -> m String
-getLangString lang str = getLangStringFn lang >>= (\fn -> return $ fn str)
+askLangString :: MonadReader AppData m => LanguagePreference -> String -> m String
+askLangString lang str = askLangStringFn lang >>= (\fn -> return $ fn str)
 
-template :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
+template :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) =>
     LanguagePreference -> PageContent -> m Markup
 template lang page = do
     -- TODO: need to be able to get any meta inside
-    about <- getMeta "about"
+    about <- askMeta "about"
     -- TODO: Hamlet can't iterate over sets, can it?
-    allLangs <- gets allLanguages
-    langString <- getLangStringFn lang
+    allLangs <- asks allLanguages
+    langString <- askLangStringFn lang
     render $(hamletFile "templates/base.hamlet")
 
-articleListDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
+articleListDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) =>
     LanguagePreference -> [Article] -> m Markup
 articleListDisplay lang articles = do
     articlesContent <- mapM (linkedContent lang) articles
     template lang $
         mkPage Nothing $(hamletFile "templates/list.hamlet")
 
-articleDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
+articleDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) =>
     LanguagePreference -> Article -> m Markup
 articleDisplay lang article = template lang $
     mkPage (Just $ langTitle lang article) $(hamletFile "templates/article.hamlet")
 
-metaDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m) =>
+metaDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) =>
     LanguagePreference -> Meta -> m Markup
 metaDisplay lang meta = template lang $
     mkPage (Just $ langTitle lang meta) $(hamletFile "templates/meta.hamlet")

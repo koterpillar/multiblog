@@ -2,7 +2,7 @@
 module App where
 
 import Control.Applicative (optional)
-import Control.Monad.State
+import Control.Monad.Reader
 
 import qualified Data.ByteString.Char8 as B
 import Data.List
@@ -25,27 +25,26 @@ import Views
 import Views.Export
 import Views.Feed
 
--- TODO: This should be a ReaderT
-type App = StateT AppState IO
+type App = ReaderT AppData IO
 
 type AppPart a = RouteT Sitemap (ServerPartT App) a
 
 loadApp :: String -- directory to load from
         -> String -- site address
-        -> IO AppState
+        -> IO AppData
 loadApp dataDirectory siteAddress = do
     app <- loadFromDirectory dataDirectory
     case app of
         Left err -> error err
         Right appState -> return appState { appAddress = siteAddress }
 
-runApp :: AppState -> App a -> IO a
-runApp app a = evalStateT a app
+runApp :: AppData -> App a -> IO a
+runApp app a = runReaderT a app
 
 site :: ServerPartT App Response
 site = do
-    address <- lift $ gets appAddress
-    appDir <- lift $ gets appDirectory
+    address <- lift $ asks appAddress
+    appDir <- lift $ asks appDirectory
     let routedSite = boomerangSiteRouteT handler sitemap
     let staticSite = serveDirectory DisableBrowsing [] $ appDir ++ "/static"
     implSite (T.pack address) "" routedSite `mplus` staticSite
@@ -90,12 +89,12 @@ html = ok . toResponse
 article :: Day -> String -> AppPart Response
 article date slug = do
     language <- languageHeaderM
-    a <- onlyOne $ lift $ getFiltered $ byDateSlug date slug
+    a <- onlyOne $ lift $ askFiltered $ byDateSlug date slug
     articleDisplay language a >>= html
 
 articleList :: (Article -> Bool) -> AppPart Response
 articleList articleFilter = do
-    articles <- lift $ getFiltered articleFilter
+    articles <- lift $ askFiltered articleFilter
     let sorted = sortBy reverseCompare articles
     language <- languageHeaderM
     articleListDisplay language sorted >>= html
@@ -104,14 +103,14 @@ meta :: String -> Maybe PageFormat -> AppPart Response
 meta slug format' = do
     let format = fromMaybe Html format'
     language <- languageHeaderM
-    m <- getMeta slug
+    m <- askMeta slug
     case format of
       Html -> metaDisplay language m >>= html
       _ -> metaExport format language m >>= html
 
 feedIndex :: Language -> AppPart Response
 feedIndex language = do
-    articles <- lift $ getFiltered (const True)
+    articles <- lift $ askFiltered (const True)
     let sorted = sortBy reverseCompare articles
     feedDisplay language sorted >>= html
 

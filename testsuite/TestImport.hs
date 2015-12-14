@@ -42,10 +42,10 @@ modifyAllContent f = modifyContent (M.map f)
 textOnlyContent :: HasContent a => a -> a
 textOnlyContent = modifyAllContent $ unsafeReadMarkdown . writePlain def
 
-modifyAppState :: (forall a. HasContent a => a -> a) -> AppState -> AppState
-modifyAppState f st = st { appArticles = map f $ appArticles st
-                         , appMeta = map f $ appMeta st
-                         }
+modifyAppData :: (forall a. HasContent a => a -> a) -> AppData -> AppData
+modifyAppData f st = st { appArticles = map f $ appArticles st
+                        , appMeta = map f $ appMeta st
+                        }
 
 testSource :: FilePath -> [(String, String)] -> String -> ContentSource
 testSource path meta content = ContentSource path $ unsafeReadMarkdown $ markdown meta content

@@ -5,7 +5,7 @@
 module Views.Export where
 
 import Control.Monad
-import Control.Monad.State
+import Control.Monad.Reader
 
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.UTF8 as U
@@ -28,7 +28,7 @@ import Views
 
 
 -- Export a meta into one of the supported formats
-metaExport :: (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m, MonadIO m) =>
+metaExport :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m, MonadIO m) =>
     PageFormat -> LanguagePreference -> Meta -> m LB.ByteString
 -- Pandoc uses TeX to render PDFs, which requires a lot of packages for Unicode
 -- support, etc. Use wkhtmltopdf instead
@@ -43,7 +43,7 @@ metaExport format lang meta = do
     return res
 
 -- Export a PDF using wkhtmltopdf
-pdfExport ::  (MonadRoute m, URL m ~ Sitemap, MonadState AppState m, MonadPlus m, MonadIO m) =>
+pdfExport ::  (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m, MonadIO m) =>
     LanguagePreference -> Meta -> m LB.ByteString
 pdfExport lang meta = do
     let content = writeHtml def $ langContent lang meta
