@@ -14,5 +14,6 @@ import {-@ HTF_TESTS @-} TestModels
 import {-@ HTF_TESTS @-} TestRoutes
 import {-@ HTF_TESTS @-} TestUtils
 import {-@ HTF_TESTS @-} TestViews
+import {-@ HTF_TESTS @-} TestViewsExport
 
 main = htfMain htf_importedTests

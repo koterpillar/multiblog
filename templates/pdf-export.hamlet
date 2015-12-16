@@ -6,7 +6,7 @@ $doctype 5
       #{title}
     <link rel="stylesheet" href="https://raw.githubusercontent.com/waiting-for-dev/gutenweb/master/dist/gutenweb.css">
     <style>
-      ul {
+      .grouped {
         page-break-inside: avoid;
       }
   <body>

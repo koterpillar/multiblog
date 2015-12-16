@@ -36,6 +36,7 @@ Executable multiblog
                , split
                , system-argv0
                , system-filepath
+               , tagsoup
                , text
                , time
                , transformers
