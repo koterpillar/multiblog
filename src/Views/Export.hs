@@ -78,18 +78,18 @@ wkhtmlProc = proc "xvfb-run" $ ["-a"] ++ wkArgs
 
 data FixupState = Start | Joining { fsLevel :: Int } | JoinEnd
 
--- Put each run of paragraph elements into a common <div>, to help with page
--- formatting
+-- wkhtmltopdf doesn't follow page-break-before: avoid. Help it by grouping the
+-- headers together with elements that follow into a div each.
 fixupHtml :: StringLike str => str -> str
 fixupHtml = renderTags . go Start . parseTags where
-  -- Run through the tags and emit joiner_start and joiner_end in the right
-  -- places
+  -- Run through the tags and wrap the headers with the following paragraphs
+  -- in '<div class="grouped">...</div>'
   go :: StringLike str => FixupState -> [Tag str] -> [Tag str]
   -- End of input
   go _ [] = []
-  -- Opening tag, emit joiner_start if it's a paragraph element and start
+  -- Opening tag, emit joiner_start if it's a header element and start
   -- watching for the end of the run
-  go Start (t@(TagOpen tag _):ts) = if joinable tag
+  go Start (t@(TagOpen tag _):ts) = if isHeader tag
                                        then joiner_start:t:go (Joining 0) ts
                                        else t:go Start ts
   -- Closing tag, pass as is
@@ -102,24 +102,23 @@ fixupHtml = renderTags . go Start . parseTags where
   -- Closing a nested tag
   go (Joining lvl) (t@(TagClose _):ts) = t:go (Joining $ lvl - 1) ts
 
-  -- Opening another tag after a closing paragraph tag; it's either another
-  -- paragraph tag or the end of the run
-  go JoinEnd (t@(TagOpen tag _):ts) = if joinable tag
-                                         then t:go (Joining 0) ts
-                                         else joiner_end:t:go Start ts
-  -- Closing another tag after a paragraph tag; this is definitely the end of
-  -- the run
+  -- Opening another tag after a closing tag; maybe it's another header tag and
+  -- thus the end of the run
+  go JoinEnd (t@(TagOpen tag _):ts) = if isHeader tag
+                                         then joiner_end:joiner_start:t:go (Joining 0) ts
+                                         else t:go (Joining 0) ts
+  -- Closing another tag after closing the tag that started the run; this is
+  -- definitely the end of the run
   go JoinEnd (t@(TagClose _):ts) = joiner_end:t:go Start ts
 
   -- Other things are copied as they are
   go st (t:ts) = t:go st ts
 
-  -- Whether the tag is a paragraph element
-  joinable :: StringLike str => str -> Bool
-  joinable = joinable' . toString
-    where joinable' "p" = True
-          joinable' "ul" = True
-          joinable' _ = False
+  -- Whether the tag is a header that needs to group things after it
+  isHeader :: StringLike str => str -> Bool
+  isHeader = isHeader' . toString
+    where isHeader' "h3" = True
+          isHeader' _ = False
 
   -- Tag to output before a paragraph element run
   joiner_start :: StringLike str => Tag str
