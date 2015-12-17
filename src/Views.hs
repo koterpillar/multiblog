@@ -19,6 +19,7 @@ import Data.Time
 import Text.Blaze.Html (Markup)
 import Text.Hamlet
 import Text.Julius
+import Text.Lucius
 import Text.Pandoc hiding (Meta)
 import Text.Pandoc.Walk
 
@@ -132,3 +133,8 @@ renderSiteScript :: MonadRoute m => m TL.Text
 renderSiteScript = do
     route <- liftM convRender askRouteFn
     return $ renderJavascriptUrl route $(juliusFile "templates/site.julius")
+
+renderPrintStylesheet :: MonadRoute m => m TL.Text
+renderPrintStylesheet = do
+    route <- liftM convRender askRouteFn
+    return $ renderCssUrl route $(luciusFile "templates/print.lucius")

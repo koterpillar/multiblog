@@ -44,6 +44,7 @@ data Sitemap = Index
            | MetaView String MaybeFormat
            | Feed Language
            | SiteScript
+           | PrintStylesheet
            deriving (Eq, Show)
 
 makeBoomerangs ''Sitemap
@@ -105,6 +106,7 @@ sitemap = mconcat
     , rDaily . rDay
     , rFeed . "feed" </> rLanguage
     , rSiteScript . "site.js"
+    , rPrintStylesheet . "print.css"
     , rArticleView . rDay </> anyString
     , rMetaView . xFormat (rExtension anyString)
     ]

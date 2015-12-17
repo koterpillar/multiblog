@@ -4,10 +4,6 @@ $doctype 5
     <meta charset="utf-8">
     <title>
       #{title}
-    <link rel="stylesheet" href="https://raw.githubusercontent.com/waiting-for-dev/gutenweb/master/dist/gutenweb.css">
-    <style>
-      .grouped {
-        page-break-inside: avoid;
-      }
+    <link rel="stylesheet" href=@{PrintStylesheet}>
   <body>
     #{content}

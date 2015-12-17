@@ -67,6 +67,7 @@ handler route = case route of
     MetaView s f -> meta s f
     Feed lang -> feedIndex lang
     SiteScript -> siteScript
+    PrintStylesheet -> printStylesheet
 
 index :: AppPart Response
 index = articleList $ const True
@@ -122,5 +123,17 @@ feedIndex language = do
     let sorted = sortBy reverseCompare articles
     feedDisplay language sorted >>= html
 
+-- Override content type on any response
+data WithContentType r = WithContentType String r
+
+instance ToMessage r => ToMessage (WithContentType r) where
+    toResponse (WithContentType ct r) = setHeaderBS (B.pack "Content-Type") (B.pack ct) $ toResponse r
+
+asCss :: ToMessage r => r -> WithContentType r
+asCss = WithContentType "text/css"
+
 siteScript :: AppPart Response
 siteScript = renderSiteScript >>= html
+
+printStylesheet :: AppPart Response
+printStylesheet = renderPrintStylesheet >>= html . asCss
