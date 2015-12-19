@@ -2,6 +2,7 @@
 module App where
 
 import Control.Applicative (optional)
+import Control.Monad.Reader
 import Control.Monad.State
 
 import qualified Data.ByteString.Char8 as B
@@ -16,35 +17,42 @@ import Web.Routes
 import Web.Routes.Boomerang
 import Web.Routes.Happstack
 
+import Cache
 import Import
 import Language
 import Models
 import Routes
 import Utils
 import Views
+import Views.Export
 import Views.Feed
 
--- TODO: This should be a ReaderT
-type App = StateT AppState IO
+type App = StateT AppCache (ReaderT AppData IO)
 
 type AppPart a = RouteT Sitemap (ServerPartT App) a
 
 loadApp :: String -- directory to load from
         -> String -- site address
-        -> IO AppState
+        -> IO AppData
 loadApp dataDirectory siteAddress = do
     app <- loadFromDirectory dataDirectory
     case app of
         Left err -> error err
         Right appState -> return appState { appAddress = siteAddress }
 
-runApp :: AppState -> App a -> IO a
-runApp app a = evalStateT a app
+initAppCache :: IO AppCache
+initAppCache = do
+    pdfCache <- initCache
+    return $ AppCache pdfCache
+
+runApp :: AppCache -> AppData -> App a -> IO a
+runApp cache app a = do
+    runReaderT (evalStateT a cache) app
 
 site :: ServerPartT App Response
 site = do
-    address <- lift $ gets appAddress
-    appDir <- lift $ gets appDirectory
+    address <- lift $ asks appAddress
+    appDir <- lift $ asks appDirectory
     let routedSite = boomerangSiteRouteT handler sitemap
     let staticSite = serveDirectory DisableBrowsing [] $ appDir ++ "/static"
     implSite (T.pack address) "" routedSite `mplus` staticSite
@@ -56,9 +64,10 @@ handler route = case route of
     Monthly y m -> monthlyIndex y m
     Daily d -> dailyIndex d
     ArticleView d s -> article d s
-    MetaView s -> meta s
+    MetaView s f -> meta s f
     Feed lang -> feedIndex lang
     SiteScript -> siteScript
+    PrintStylesheet -> printStylesheet
 
 index :: AppPart Response
 index = articleList $ const True
@@ -89,27 +98,42 @@ html = ok . toResponse
 article :: Day -> String -> AppPart Response
 article date slug = do
     language <- languageHeaderM
-    a <- onlyOne $ lift $ getFiltered $ byDateSlug date slug
+    a <- onlyOne $ lift $ askFiltered $ byDateSlug date slug
     articleDisplay language a >>= html
 
 articleList :: (Article -> Bool) -> AppPart Response
 articleList articleFilter = do
-    articles <- lift $ getFiltered articleFilter
+    articles <- lift $ askFiltered articleFilter
     let sorted = sortBy reverseCompare articles
     language <- languageHeaderM
     articleListDisplay language sorted >>= html
 
-meta :: String -> AppPart Response
-meta slug = do
+meta :: String -> Maybe PageFormat -> AppPart Response
+meta slug format' = do
+    let format = fromMaybe Html format'
     language <- languageHeaderM
-    m <- getMeta slug
-    metaDisplay language m >>= html
+    m <- askMeta slug
+    case format of
+      Html -> metaDisplay language m >>= html
+      _ -> metaExport format language m >>= html
 
 feedIndex :: Language -> AppPart Response
 feedIndex language = do
-    articles <- lift $ getFiltered (const True)
+    articles <- lift $ askFiltered (const True)
     let sorted = sortBy reverseCompare articles
     feedDisplay language sorted >>= html
 
+-- Override content type on any response
+data WithContentType r = WithContentType String r
+
+instance ToMessage r => ToMessage (WithContentType r) where
+    toResponse (WithContentType ct r) = setHeaderBS (B.pack "Content-Type") (B.pack ct) $ toResponse r
+
+asCss :: ToMessage r => r -> WithContentType r
+asCss = WithContentType "text/css"
+
 siteScript :: AppPart Response
 siteScript = renderSiteScript >>= html
+
+printStylesheet :: AppPart Response
+printStylesheet = renderPrintStylesheet >>= html . asCss

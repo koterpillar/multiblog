@@ -1,10 +1,13 @@
 {-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Models where
 
 import Control.Monad
+import Control.Monad.Reader
 import Control.Monad.State
 
+import qualified Data.ByteString.Lazy as LB
 import qualified Data.Map as M
 import Data.Maybe
 import qualified Data.Set as S
@@ -13,6 +16,7 @@ import Data.Time
 import Text.Pandoc hiding (Meta, readers)
 import Text.Pandoc.Walk
 
+import Cache
 import Language
 import Utils
 
@@ -55,21 +59,21 @@ instance HasSlug Article where
 instance HasSlug Meta where
     getSlug = mtSlug
 
-data AppState = AppState { appDirectory :: String
-                         , appAddress   :: String
-                         , appArticles  :: [Article]
-                         , appMeta      :: [Meta]
-                         , appStrings   :: M.Map String (LanguageMap String)
-                         }
+data AppData = AppData { appDirectory :: String
+                       , appAddress   :: String
+                       , appArticles  :: [Article]
+                       , appMeta      :: [Meta]
+                       , appStrings   :: M.Map String (LanguageMap String)
+                       }
     deriving (Eq, Show)
 
-emptyState :: AppState
-emptyState = AppState { appDirectory = ""
-                      , appAddress = ""
-                      , appArticles = []
-                      , appMeta = []
-                      , appStrings = M.empty
-                      }
+emptyState :: AppData
+emptyState = AppData { appDirectory = ""
+                     , appAddress = ""
+                     , appArticles = []
+                     , appMeta = []
+                     , appStrings = M.empty
+                     }
 
 mkDate :: Integer -> Int -> Int -> UTCTime
 mkDate y m d = atMidnight $ fromGregorian y m d
@@ -94,21 +98,21 @@ bySlug slug = (== slug) . getSlug
 byDateSlug :: Day -> String -> Article -> Bool
 byDateSlug d s a = byDate d a && bySlug s a
 
-getApp :: MonadState AppState m => m AppState
-getApp = get
+askApp :: MonadReader AppData m => m AppData
+askApp = ask
 
-getFiltered :: MonadState AppState m => (Article -> Bool) -> m [Article]
-getFiltered articleFilter = gets $ filter articleFilter . appArticles
+askFiltered :: MonadReader AppData m => (Article -> Bool) -> m [Article]
+askFiltered articleFilter = asks $ filter articleFilter . appArticles
 
-getOne :: (MonadState AppState m, MonadPlus m) =>
+askOne :: (MonadReader AppData m, MonadPlus m) =>
     (Article -> Bool) -> m Article
-getOne articleFilter = onlyOne $ getFiltered articleFilter
+askOne articleFilter = onlyOne $ askFiltered articleFilter
 
-getMeta :: (MonadState AppState m, MonadPlus m) => String -> m Meta
-getMeta slug = onlyOne $ gets $ filter (bySlug slug) . appMeta
+askMeta :: (MonadReader AppData m, MonadPlus m) => String -> m Meta
+askMeta slug = onlyOne $ asks $ filter (bySlug slug) . appMeta
 
 -- Find all languages used on the site
-allLanguages :: AppState -> S.Set Language
+allLanguages :: AppData -> S.Set Language
 allLanguages app = S.union articleLangs metaLangs
     where articleLangs = allContentLangs $ appArticles app
           metaLangs = allContentLangs $ appMeta app
@@ -142,3 +146,9 @@ stripTitle (Pandoc meta blocks) = Pandoc meta blocks'
 
 langContent :: HasContent a => LanguagePreference -> a -> Pandoc
 langContent lang = fromJust . matchLanguage lang . getContent
+
+data AppCache = AppCache { appcachePdf :: Cache (Language, String) LB.ByteString
+                         }
+
+instance HasCache (Language, String) LB.ByteString AppCache where
+    getCache = appcachePdf

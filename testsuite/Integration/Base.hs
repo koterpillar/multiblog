@@ -51,7 +51,8 @@ makeRequest :: TestRequest -> IO String
 makeRequest req = do
     happstackReq <- mkRequest req
     app <- loadApp "testsuite/Integration/content" testAddress
-    resp <- runApp app $ simpleHTTP'' site happstackReq
+    cache <- initAppCache
+    resp <- runApp cache app $ simpleHTTP'' site happstackReq
     content <- responseContent resp
     return content
 

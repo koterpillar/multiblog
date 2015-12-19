@@ -16,7 +16,7 @@ import Test.Framework
 data TestLink = TestLink String
 
 instance Linkable TestLink where
-    link (TestLink dest) = MetaView dest
+    link (TestLink dest) = MetaView dest Nothing
 
 test_linkedHeader = do
     let source = unlines [ "Header"

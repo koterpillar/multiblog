@@ -149,7 +149,7 @@ extractIf test = do
               Nothing -> (result, m:ms') where (result, ms') = tryExtract ms
 
 -- Load the application state from a directory
-loadFromDirectory :: FilePath -> IO (Either String AppState)
+loadFromDirectory :: FilePath -> IO (Either String AppData)
 loadFromDirectory path = do
     sources <- sourcesFromDirectory path
     stringsFile <- readFile $ path </> "strings.yaml"

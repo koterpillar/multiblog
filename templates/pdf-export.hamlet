@@ -1,0 +1,9 @@
+$doctype 5
+<html lang="#{showLanguage $ bestLanguage lang}">
+  <head>
+    <meta charset="utf-8">
+    <title>
+      #{title}
+    <link rel="stylesheet" href=@{PrintStylesheet}>
+  <body>
+    #{content}
