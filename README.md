@@ -42,6 +42,10 @@ Some elements of the blog other than content itself must also be translated.
 The translations use the file `content/strings.yaml` which must contain hashes
 of the following structure: string - language - translation.
 
+The sidebar links are specified in `content/links.yaml`. They can point either
+to metas or to any external address.
+
+
 Examples
 ========
 
@@ -103,6 +107,18 @@ This is an example of string translation file, `content/strings.yaml`:
 home:
   en: Home
   zh: 首页
+```
+
+An example of links file, `content/links.yaml`:
+
+```yaml
+- page: about
+- url: https://www.yandex.ru
+  text:
+    en: Yandex
+    ru: Яндекс
+- url: https://www.github.com
+  text: GitHub
 ```
 
 [yaml-metadata]: http://johnmacfarlane.net/pandoc/demo/example9/pandocs-markdown.html#extension-yaml_metadata_block
