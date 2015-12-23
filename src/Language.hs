@@ -24,7 +24,9 @@ mapKeysM kfunc = liftM M.fromList . mapM kvfunc . M.toList
     where kvfunc (k, v) = liftM (\k' -> (k', v)) $ kfunc k
 
 instance (Y.FromJSON v) => Y.FromJSON (M.Map Language v) where
-    parseJSON v = Y.parseJSON v >>= mapKeysM parseLanguage
+    parseJSON v@(Y.Object _) = Y.parseJSON v >>= mapKeysM parseLanguage
+    parseJSON v@(Y.String _) = M.singleton defaultLanguage <$> Y.parseJSON v
+    parseJSON _ = mzero
 
 newtype LanguagePreference = LanguagePreference { unLanguagePreference :: LanguageMap Float }
     deriving (Eq)

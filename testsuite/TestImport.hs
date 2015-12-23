@@ -95,9 +95,6 @@ test_extractLanguage = do
     assertEqual (Nothing, [Named "lang" "ttt"]) $ runExtract [Named "lang" "ttt"]
     assertEqual (Just CS, [Unnamed "something"]) $ runExtract [Unnamed "something-cs"]
 
--- This test contains non-ASCII characters. Due to a bug in HTF
--- (https://github.com/skogsbaer/HTF/issues/47),
--- no tests are parsed beyond this one, so it must be last.
 test_loadStrings = do
     let strings = unlines [ "title:"
                           , "  en: Title"
@@ -110,3 +107,23 @@ test_loadStrings = do
                             , ("about", M.fromList [(ZH, "关于")])
                             ])
         (loadStrings strings)
+
+test_loadLinks = do
+    let links = unlines [ "- page: about"
+                        , "- url: https://1.example.com/"
+                        , "  text: Example 1"
+                        , "- url: https://2.example.com/"
+                        , "  text:"
+                        , "    en: Example 2"
+                        , "    ru: Пример 2"
+                        , "    zh: 列子2"
+                        ]
+    assertEqual
+        (Right $ [ MetaLink "about"
+                 , ExternalLink "https://1.example.com/" (M.fromList [(EN, "Example 1")])
+                 , ExternalLink "https://2.example.com/" (M.fromList [ (EN, "Example 2")
+                                                                     , (RU, "Пример 2")
+                                                                     , (ZH, "列子2")
+                                                                     ])
+                 ])
+        (loadLinks links)
