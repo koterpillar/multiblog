@@ -1,8 +1,10 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
 module Models where
 
+import Control.Applicative
 import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
@@ -12,6 +14,7 @@ import qualified Data.Map as M
 import Data.Maybe
 import qualified Data.Set as S
 import Data.Time
+import Data.Yaml
 
 import Text.Pandoc hiding (Meta, readers)
 import Text.Pandoc.Walk
@@ -21,6 +24,8 @@ import Language
 import Utils
 
 type LanguageContent = LanguageMap Pandoc
+
+type LanguageString = LanguageMap String
 
 class HasSlug a where
     getSlug :: a -> String
@@ -40,30 +45,43 @@ data Article = Article { arSlug     :: String
 instance Ord Article where
     a `compare` b = (arAuthored a, arSlug a) `compare` (arAuthored b, arSlug b)
 
+instance HasContent Article where
+    getContent = arContent
+    modifyContent f a = a { arContent = f $ arContent a }
+
+instance HasSlug Article where
+    getSlug = arSlug
+
 data Meta = Meta { mtSlug    :: String
                  , mtContent :: LanguageContent
                  }
     deriving (Eq, Show)
 
-instance HasContent Article where
-    getContent = arContent
-    modifyContent f a = a { arContent = f $ arContent a }
-
 instance HasContent Meta where
     getContent = mtContent
     modifyContent f m = m { mtContent = f $ mtContent m }
 
-instance HasSlug Article where
-    getSlug = arSlug
-
 instance HasSlug Meta where
     getSlug = mtSlug
+
+data Link = MetaLink { lnName :: String
+                     }
+          | ExternalLink { lnUrl  :: String
+                         , lnText :: LanguageString
+                         }
+    deriving (Eq, Show)
+
+instance FromJSON Link where
+    parseJSON (Object v) = MetaLink <$> v .: "page"
+                         <|> ExternalLink <$> v.: "url" <*> v.: "text"
+    parseJSON _ = mzero
 
 data AppData = AppData { appDirectory :: String
                        , appAddress   :: String
                        , appArticles  :: [Article]
                        , appMeta      :: [Meta]
-                       , appStrings   :: M.Map String (LanguageMap String)
+                       , appStrings   :: M.Map String LanguageString
+                       , appLinks     :: [Link]
                        }
     deriving (Eq, Show)
 
@@ -73,6 +91,7 @@ emptyState = AppData { appDirectory = ""
                      , appArticles = []
                      , appMeta = []
                      , appStrings = M.empty
+                     , appLinks = []
                      }
 
 mkDate :: Integer -> Int -> Int -> UTCTime

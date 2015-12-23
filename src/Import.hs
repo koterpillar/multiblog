@@ -153,14 +153,17 @@ loadFromDirectory :: FilePath -> IO (Either String AppData)
 loadFromDirectory path = do
     sources <- sourcesFromDirectory path
     stringsFile <- readFile $ path </> "strings.yaml"
+    linksFile <- readFile $ path </> "links.yaml"
     return $ do
         (articles, metas) <- fromSources sources
         strings <- loadStrings stringsFile
+        links <- loadLinks linksFile
         return $ emptyState { appDirectory = path
                             , appAddress = ""
                             , appArticles = articles
                             , appMeta = metas
                             , appStrings = strings
+                            , appLinks = links
                             }
 
 -- Group sources by slug/date and make Articles or Metas out of them
@@ -205,5 +208,8 @@ readers :: M.Map String (String -> Either PandocError Pandoc)
 readers = M.fromList [("md", readMarkdown def)]
 
 -- Load translations from a YAML file
-loadStrings :: String -> Either String (M.Map String (LanguageMap String))
+loadStrings :: String -> Either String (M.Map String LanguageString)
 loadStrings = Y.decodeEither . U.fromString
+
+loadLinks :: String -> Either String [Link]
+loadLinks = Y.decodeEither . U.fromString
