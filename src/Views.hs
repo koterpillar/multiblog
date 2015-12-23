@@ -20,7 +20,7 @@ import Text.Blaze.Html (Markup)
 import Text.Hamlet
 import Text.Julius
 import Text.Lucius
-import Text.Pandoc hiding (Meta)
+import Text.Pandoc hiding (Meta, Reader)
 import Text.Pandoc.Walk
 
 import Web.Routes
@@ -70,20 +70,30 @@ askLangStringFn lang = do
 askLangString :: MonadReader AppData m => LanguagePreference -> String -> m String
 askLangString lang str = askLangStringFn lang >>= (\fn -> return $ fn str)
 
+linkTitle :: (MonadReader AppData m, MonadPlus m) => LanguagePreference -> Link -> m String
+linkTitle lang (ExternalLink url titles) = return $ fromMaybe url $ matchLanguage lang titles
+linkTitle lang (MetaLink slug) = do
+    meta <- askMeta slug
+    return $ langTitle lang meta
+
+linkDestination :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) => Link -> m String
+linkDestination (ExternalLink url _) = return url
+linkDestination (MetaLink slug) = do
+    meta <- askMeta slug
+    route <- askRouteFn
+    return $ T.unpack $ route (link meta) []
+
 template :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) =>
     LanguagePreference -> PageContent -> m Markup
 template lang page = do
     links <- asks appLinks
-    -- TODO: Hamlet can't iterate over sets, can it?
+    linkTitleUrls <- forM links $ \l -> do
+        title <- linkTitle lang l
+        destination <- linkDestination l
+        return (title, destination)
+
     allLangs <- asks allLanguages
     langString <- askLangStringFn lang
-    -- TODO: Implement links to metas
-    let linkTitle :: Link -> String
-        linkTitle (ExternalLink url titles) = fromMaybe url $ matchLanguage lang titles
-        linkTitle (MetaLink _) = undefined
-    let linkDest :: Link -> String
-        linkDest (ExternalLink url _) = url
-        linkDest (MetaLink _) = undefined
     render $(hamletFile "templates/base.hamlet")
 
 articleListDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) =>
