@@ -72,6 +72,7 @@ wkhtmlProc = proc "xvfb-run" $ ["-a"] ++ wkArgs
   where wkArgs = [ "wkhtmltopdf"
                  , "--margin-top", "15mm"
                  , "--margin-bottom", "15mm"
+                 , "--zoom", "0.78125"
                  , "-q"
                  , "-", "-"
                  ]
