@@ -140,7 +140,7 @@ linkedHeader target doc = evalState (walkM linkHeader doc) True
               isFirst <- get
               put False
               -- make the first header a link
-              let text' = if isFirst then [Link text (target, "")] else text
+              let text' = if isFirst then [Link nullAttr text (target, "")] else text
               -- remove anchors
               return $ Header n ("",[],[]) text'
           linkHeader x = return x

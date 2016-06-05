@@ -1,10 +1,4 @@
 flags: {}
 packages:
 - '.'
-extra-deps:
-- boomerang-1.4.5
-- web-routes-0.27.9
-- web-routes-boomerang-0.28.4
-- web-routes-happstack-0.23.9
-- web-routes-th-0.22.3
-resolver: lts-3.17
+resolver: lts-6.1
