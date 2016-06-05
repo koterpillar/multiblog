@@ -13,9 +13,6 @@ import Text.Pandoc
 
 import Test.Framework
 
-instance (Ord k, Arbitrary k, Arbitrary v) => Arbitrary (M.Map k v) where
-    arbitrary = M.fromList <$> arbitrary
-
 instance Arbitrary Day where
     arbitrary = fromGregorian <$> arbitrary <*> arbitrary <*> arbitrary
 instance Arbitrary UTCTime where
