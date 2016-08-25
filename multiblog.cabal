@@ -16,6 +16,7 @@ Executable multiblog
   ghc-options: -Wall -Werror
 
   Build-depends: base >= 4.7 && < 5
+               , aeson
                , blaze-html
                , blaze-markup
                , boomerang

@@ -154,16 +154,19 @@ loadFromDirectory path = do
     sources <- sourcesFromDirectory path
     stringsFile <- readFile $ path </> "strings.yaml"
     linksFile <- readFile $ path </> "links.yaml"
+    analyticsFile <- readFile $ path </> "analytics.yaml"
     return $ do
         (articles, metas) <- fromSources sources
         strings <- loadStrings stringsFile
         links <- loadLinks linksFile
+        analytics <- loadAnalytics analyticsFile
         return $ emptyState { appDirectory = path
                             , appAddress = ""
                             , appArticles = articles
                             , appMeta = metas
                             , appStrings = strings
                             , appLinks = links
+                            , appAnalytics = analytics
                             }
 
 -- Group sources by slug/date and make Articles or Metas out of them
@@ -213,3 +216,7 @@ loadStrings = Y.decodeEither . U.fromString
 
 loadLinks :: String -> Either String [Link]
 loadLinks = Y.decodeEither . U.fromString
+
+-- Load analytics keys
+loadAnalytics :: String -> Either String Analytics
+loadAnalytics = Y.decodeEither . U.fromString

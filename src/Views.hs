@@ -94,6 +94,10 @@ template lang page = do
 
     allLangs <- asks allLanguages
     langString <- askLangStringFn lang
+
+    analyticsIDs <- asks appAnalytics
+    let analytics = $(hamletFile "templates/analytics.hamlet")
+
     render $(hamletFile "templates/base.hamlet")
 
 articleListDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) =>
