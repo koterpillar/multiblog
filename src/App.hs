@@ -129,7 +129,7 @@ data WithContentType r = WithContentType String r
 instance ToMessage r => ToMessage (WithContentType r) where
     toResponse (WithContentType ct r) = setHeaderBS (B.pack "Content-Type") (B.pack ct) $ toResponse r
 
-asCss :: ToMessage r => r -> WithContentType r
+asCss :: r -> WithContentType r
 asCss = WithContentType "text/css"
 
 siteScript :: AppPart Response

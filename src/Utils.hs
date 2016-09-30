@@ -40,6 +40,6 @@ reverseCompare :: Ord a => a -> a -> Ordering
 reverseCompare = flip compare
 
 -- Group items by a function
-groupBy :: (Eq k, Ord k) => (a -> k) -> [a] -> [[a]]
+groupBy :: Ord k => (a -> k) -> [a] -> [[a]]
 groupBy key = M.elems . foldr (uncurry $ M.insertWith (++)) M.empty . map addKey
     where addKey v = (key v, [v])

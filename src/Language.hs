@@ -19,7 +19,7 @@ type Language = ISO639_1
 
 type LanguageMap = M.Map Language
 
-mapKeysM :: (Monad m, Ord k1, Ord k2) => (k1 -> m k2) -> M.Map k1 a -> m (M.Map k2 a)
+mapKeysM :: (Monad m, Ord k2) => (k1 -> m k2) -> M.Map k1 a -> m (M.Map k2 a)
 mapKeysM kfunc = liftM M.fromList . mapM kvfunc . M.toList
     where kvfunc (k, v) = liftM (\k' -> (k', v)) $ kfunc k
 
