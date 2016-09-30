@@ -1,7 +1,7 @@
 Name:                multiblog
 Version:             0.1
-Synopsis:            Home page of koterpillar.com
-Description:         Project Description Here
+Synopsis:            Blog engine for koterpillar.com
+Description:         Static blog engine with multilingual support
 License:             MIT
 Author:              Alexey Kotlyarov
 Maintainer:          a@koterpillar.com
