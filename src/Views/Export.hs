@@ -48,7 +48,7 @@ metaExport format lang meta = do
     return res
 
 -- Export a PDF using wkhtmltopdf
-pdfExport ::  (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadState AppCache m, MonadIO m) =>
+pdfExport ::  (MonadRoute m, URL m ~ Sitemap, MonadState AppCache m, MonadIO m) =>
     LanguagePreference -> Meta -> m LB.ByteString
 pdfExport lang meta = withCacheM (bestLanguage lang, mtSlug meta) $ do
     let content = writeHtml def $ langContent lang meta

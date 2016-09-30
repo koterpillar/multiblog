@@ -53,7 +53,7 @@ articleEntry lang article = do
                  , entryAuthors = [nullPerson { personName = authorName }]
                  }
 
-feedDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) =>
+feedDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m) =>
     Language -> [Article] -> m Response
 feedDisplay lang articles = do
     siteName <- askLangString (singleLanguage lang) "siteName"
