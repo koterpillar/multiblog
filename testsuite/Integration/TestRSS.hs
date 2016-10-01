@@ -14,7 +14,6 @@ import Test.Framework
 
 import Integration.Base
 
-
 atomEntry :: QName
 atomEntry = QName "entry" Nothing Nothing
 
@@ -22,7 +21,8 @@ test_home = do
     rss <- makeRequest $ simpleRequest "/feed/en"
     let Just xml = parseXMLDoc rss
     -- Make sure every entry validates
-    assertEqual [] $ flattenT $ mkTree [] $ map validateEntry $ findChildren atomEntry xml
+    assertEqual [] $
+        flattenT $ mkTree [] $ map validateEntry $ findChildren atomEntry xml
     -- Check feed contents
     let Just feed = elementFeed xml
     assertEqual "Test site" $ txtToString $ feedTitle feed
@@ -30,13 +30,9 @@ test_home = do
     assertEqual (testAddress ++ "/") $ feedId feed
     assertEqual "2015-02-01T00:00:00Z" $ feedUpdated feed
     let entries = feedEntries feed
-    assertEqual [ "Another article"
-                , "First test article"
-                ]
-        $ map (txtToString . entryTitle) entries
+    assertEqual ["Another article", "First test article"] $
+        map (txtToString . entryTitle) entries
     let entry1 = head entries
-    assertEqual ["Author Name"]
-        $ map personName $ entryAuthors entry1
+    assertEqual ["Author Name"] $ map personName $ entryAuthors entry1
     let Just (HTMLContent content) = entryContent entry1
-    assertEqual "<p>This article should appear above the first one.</p>"
-        $ content
+    assertEqual "<p>This article should appear above the first one.</p>" $ content

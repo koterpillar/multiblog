@@ -16,18 +16,22 @@ import ReloadHup
 
 -- Run the site, handling SIGHUP
 main :: IO ()
-main = reloadHup $ do
-    address <- siteAddress
-    -- TODO: directory name as parameter?
-    app <- loadApp "content" address
-    cache <- initAppCache
-    lport <- listenPort
-    let conf = nullConf { port = lport }
-    -- Manually bind the socket to close it on exception
-    bracket
-        (bindPort conf)
-        close
-        (\sock -> simpleHTTPWithSocket' (runApp cache app) sock conf site)
+main =
+    reloadHup $
+    do address <- siteAddress
+       -- TODO: directory name as parameter?
+       app <- loadApp "content" address
+       cache <- initAppCache
+       lport <- listenPort
+       let conf =
+               nullConf
+               { port = lport
+               }
+       -- Manually bind the socket to close it on exception
+       bracket
+           (bindPort conf)
+           close
+           (\sock -> simpleHTTPWithSocket' (runApp cache app) sock conf site)
 
 siteAddress :: IO String
 siteAddress = do

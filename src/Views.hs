@@ -1,7 +1,8 @@
-{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell       #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
+
 module Views where
 
 import qualified Control.Arrow as A
@@ -29,11 +30,12 @@ import Language
 import Models
 import Routes
 
-data PageContent = PageContent { pcTitle   :: Maybe String
-                               , pcContent :: HtmlUrl Sitemap
-                               }
+data PageContent = PageContent
+    { pcTitle :: Maybe String
+    , pcContent :: HtmlUrl Sitemap
+    }
 
-class Linkable a where
+class Linkable a  where
     link :: a -> Sitemap
 
 instance Linkable Sitemap where
@@ -46,90 +48,112 @@ instance Linkable Meta where
     link m = MetaView (mtSlug m) Nothing
 
 defaultPage :: PageContent
-defaultPage = PageContent { pcTitle = Nothing, pcContent = mempty }
+defaultPage =
+    PageContent
+    { pcTitle = Nothing
+    , pcContent = mempty
+    }
 
 mkPage :: Maybe String -> HtmlUrl Sitemap -> PageContent
-mkPage title content = defaultPage { pcTitle = title
-                                   , pcContent = content
-                                   }
+mkPage title content =
+    defaultPage
+    { pcTitle = title
+    , pcContent = content
+    }
 
-convRender :: (url -> [(a, Maybe b)] -> c)  -> url -> [(a, b)] -> c
+convRender :: (url -> [(a, Maybe b)] -> c) -> url -> [(a, b)] -> c
 convRender maybeF url params = maybeF url $ map (A.second Just) params
 
-render :: MonadRoute m => HtmlUrl (URL m) -> m Markup
+render
+    :: MonadRoute m
+    => HtmlUrl (URL m) -> m Markup
 render html = do
     route <- liftM convRender askRouteFn
     return $ html route
 
-askLangStringFn :: MonadReader AppData m => LanguagePreference -> m (String -> String)
+askLangStringFn
+    :: MonadReader AppData m
+    => LanguagePreference -> m (String -> String)
 askLangStringFn lang = do
     strings <- asks appStrings
     let fn str = fromMaybe str $ M.lookup str strings >>= matchLanguage lang
     return fn
 
-askLangString :: MonadReader AppData m => LanguagePreference -> String -> m String
+askLangString
+    :: MonadReader AppData m
+    => LanguagePreference -> String -> m String
 askLangString lang str = askLangStringFn lang >>= (\fn -> return $ fn str)
 
-linkTitle :: (MonadReader AppData m, MonadPlus m) => LanguagePreference -> Link -> m String
-linkTitle lang (ExternalLink url titles) = return $ fromMaybe url $ matchLanguage lang titles
+linkTitle
+    :: (MonadReader AppData m, MonadPlus m)
+    => LanguagePreference -> Link -> m String
+linkTitle lang (ExternalLink url titles) =
+    return $ fromMaybe url $ matchLanguage lang titles
 linkTitle lang (MetaLink slug) = do
     meta <- askMeta slug
     return $ langTitle lang meta
 
-linkDestination :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) => Link -> m String
+linkDestination
+    :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m)
+    => Link -> m String
 linkDestination (ExternalLink url _) = return url
 linkDestination (MetaLink slug) = do
     meta <- askMeta slug
     route <- askRouteFn
     return $ T.unpack $ route (link meta) []
 
-template :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) =>
-    LanguagePreference -> PageContent -> m Markup
+template
+    :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m)
+    => LanguagePreference -> PageContent -> m Markup
 template lang page = do
     links <- asks appLinks
-    linkTitleUrls <- forM links $ \l -> do
-        title <- linkTitle lang l
-        destination <- linkDestination l
-        return (title, destination)
-
+    linkTitleUrls <-
+        forM links $
+        \l -> do
+            title <- linkTitle lang l
+            destination <- linkDestination l
+            return (title, destination)
     allLangs <- asks allLanguages
     langString <- askLangStringFn lang
-
     analyticsIDs <- asks appAnalytics
     let analytics = $(hamletFile "templates/analytics.hamlet")
-
     render $(hamletFile "templates/base.hamlet")
 
-articleListDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) =>
-    LanguagePreference -> [Article] -> m Markup
+articleListDisplay
+    :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m)
+    => LanguagePreference -> [Article] -> m Markup
 articleListDisplay lang articles = do
     articlesContent <- mapM (linkedContent lang) articles
+    template lang $ mkPage Nothing $(hamletFile "templates/list.hamlet")
+
+articleDisplay
+    :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m)
+    => LanguagePreference -> Article -> m Markup
+articleDisplay lang article =
     template lang $
-        mkPage Nothing $(hamletFile "templates/list.hamlet")
+    mkPage
+        (Just $ langTitle lang article)
+        $(hamletFile "templates/article.hamlet")
 
-articleDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) =>
-    LanguagePreference -> Article -> m Markup
-articleDisplay lang article = template lang $
-    mkPage (Just $ langTitle lang article) $(hamletFile "templates/article.hamlet")
-
-metaDisplay :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m) =>
-    LanguagePreference -> Meta -> m Markup
-metaDisplay lang meta = template lang $
+metaDisplay
+    :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m)
+    => LanguagePreference -> Meta -> m Markup
+metaDisplay lang meta =
+    template lang $
     mkPage (Just $ langTitle lang meta) $(hamletFile "templates/meta.hamlet")
 
 -- Generate a link to some content
-linkTo :: (Linkable a, MonadRoute m, URL m ~ Sitemap)
-       => a
-       -> m String
+linkTo
+    :: (Linkable a, MonadRoute m, URL m ~ Sitemap)
+    => a -> m String
 linkTo a = do
     routeFn <- askRouteFn
     return $ T.unpack $ routeFn (link a) []
 
 -- Modify the content to have a link to itself and have no anchors
-linkedContent :: (HasContent a, Linkable a, MonadRoute m, URL m ~ Sitemap)
-              => LanguagePreference
-              -> a
-              -> m Pandoc
+linkedContent
+    :: (HasContent a, Linkable a, MonadRoute m, URL m ~ Sitemap)
+    => LanguagePreference -> a -> m Pandoc
 linkedContent lang a = do
     target <- linkTo a
     return $ linkedHeader target $ langContent lang a
@@ -138,23 +162,32 @@ linkedContent lang a = do
 -- and remove all anchors from headers
 linkedHeader :: String -> Pandoc -> Pandoc
 linkedHeader target doc = evalState (walkM linkHeader doc) True
-    where linkHeader :: Block -> State Bool Block
-          linkHeader (Header n _ text) = do
-              -- note if this is the first header
-              isFirst <- get
-              put False
-              -- make the first header a link
-              let text' = if isFirst then [Link nullAttr text (target, "")] else text
-              -- remove anchors
-              return $ Header n ("",[],[]) text'
-          linkHeader x = return x
+  where
+    linkHeader :: Block -> State Bool Block
+    linkHeader (Header n _ text)
+               -- note if this is the first header
+     = do
+        isFirst <- get
+        put False
+        -- make the first header a link
+        let text' =
+                if isFirst
+                    then [Link nullAttr text (target, "")]
+                    else text
+        -- remove anchors
+        return $ Header n ("", [], []) text'
+    linkHeader x = return x
 
-renderSiteScript :: MonadRoute m => m TL.Text
+renderSiteScript
+    :: MonadRoute m
+    => m TL.Text
 renderSiteScript = do
     route <- liftM convRender askRouteFn
     return $ renderJavascriptUrl route $(juliusFile "templates/site.julius")
 
-renderPrintStylesheet :: MonadRoute m => m TL.Text
+renderPrintStylesheet
+    :: MonadRoute m
+    => m TL.Text
 renderPrintStylesheet = do
     route <- liftM convRender askRouteFn
     return $ renderCssUrl route $(luciusFile "templates/print.lucius")
