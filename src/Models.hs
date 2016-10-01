@@ -9,6 +9,7 @@ import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
 
+import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.Map as M
 import Data.Maybe
@@ -76,14 +77,22 @@ instance FromJSON Link where
                          <|> ExternalLink <$> v.: "url" <*> v.: "text"
     parseJSON _ = mzero
 
-data AppData = AppData { appDirectory :: String
-                       , appAddress   :: String
-                       , appArticles  :: [Article]
-                       , appMeta      :: [Meta]
-                       , appStrings   :: M.Map String LanguageString
-                       , appLinks     :: [Link]
-                       }
+data Analytics = Analytics { anaGoogle :: Maybe String }
     deriving (Eq, Show)
+
+instance FromJSON Analytics where
+    parseJSON = A.withObject "Object expected" $ \v ->
+        Analytics <$> v .:? "google"
+
+data AppData = AppData { appDirectory       :: String
+                       , appAddress         :: String
+                       , appArticles        :: [Article]
+                       , appMeta            :: [Meta]
+                       , appStrings         :: M.Map String LanguageString
+                       , appLinks           :: [Link]
+                       , appAnalytics       :: Analytics
+                       }
+                       deriving (Eq, Show)
 
 emptyState :: AppData
 emptyState = AppData { appDirectory = ""
@@ -92,6 +101,7 @@ emptyState = AppData { appDirectory = ""
                      , appMeta = []
                      , appStrings = M.empty
                      , appLinks = []
+                     , appAnalytics = Analytics Nothing
                      }
 
 mkDate :: Integer -> Int -> Int -> UTCTime

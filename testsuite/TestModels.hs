@@ -16,6 +16,7 @@ import Arbitrary
 derive makeArbitrary ''Article
 derive makeArbitrary ''Meta
 derive makeArbitrary ''Link
+derive makeArbitrary ''Analytics
 
 derive makeArbitrary ''AppData
 

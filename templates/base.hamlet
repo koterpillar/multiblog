@@ -12,6 +12,7 @@ $doctype 5
     <link rel="stylesheet" href="https://cloud.github.com/downloads/lafeber/world-flags-sprite/flags16.css">
     <link rel="alternate" type="application/atom+xml" href="@{Feed $ bestLanguage lang}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    ^{analytics}
   <body>
     <div .container>
       <div .row>
