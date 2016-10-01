@@ -10,9 +10,6 @@ import Integration.Base
 
 import Test.Framework
 
-
 test_static = do
     resp <- makeRequest $ simpleRequest "/some-verification-file.html"
-    assertEqual
-        "This is the exact content of the verification file.\n"
-        resp
+    assertEqual "This is the exact content of the verification file.\n" resp

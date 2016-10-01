@@ -1,9 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module ReloadHup (
-    reloadHup,
-    Reload,
-) where
+module ReloadHup
+  ( reloadHup
+  , Reload
+  ) where
 
 import Control.Concurrent
 import Control.Exception
@@ -17,8 +17,8 @@ import System.Argv0
 import System.Posix.Process
 import System.Posix.Signals
 
-
-data Reload = Reload
+data Reload =
+    Reload
     deriving (Show, Typeable)
 
 instance Exception Reload
@@ -26,8 +26,11 @@ instance Exception Reload
 reloadHup :: IO () -> IO ()
 reloadHup main = do
     mainThread <- myThreadId
-    _ <- installHandler lostConnection  -- SIGHUP
-        (CatchOnce $ reloadExecutable mainThread) Nothing
+    _ <-
+        installHandler
+            lostConnection -- SIGHUP
+            (CatchOnce $ reloadExecutable mainThread)
+            Nothing
     main
 
 -- Replace the process with a (possibly updated) executable

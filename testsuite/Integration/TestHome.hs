@@ -10,7 +10,6 @@ import Test.Framework
 
 import Integration.Base
 
-
 homeRequest = simpleRequest "/"
 
 test_home = do

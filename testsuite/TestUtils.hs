@@ -14,8 +14,10 @@ test_mapAllRight = do
         (mapAllRight $ M.fromList [("a", Right 1), ("b", Right 2)])
     assertEqual
         (Left "First error")
-        (mapAllRight $ M.fromList [ ("a", Right 1)
-                                  , ("b", Left "First error")
-                                  , ("c", Right 2)
-                                  , ("d", Left "Second error")
-                                  ])
+        (mapAllRight $
+         M.fromList
+             [ ("a", Right 1)
+             , ("b", Left "First error")
+             , ("c", Right 2)
+             , ("d", Left "Second error")
+             ])

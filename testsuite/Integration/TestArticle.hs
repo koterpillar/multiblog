@@ -12,9 +12,6 @@ import Integration.Base
 
 import Test.Framework
 
-
 test_article = do
     article <- makeRequest $ simpleRequest "/2015/01/01/first-test"
-    assertContains
-        "<h1 id=\"first-test-article\">First test article</h1>"
-        article
+    assertContains "<h1 id=\"first-test-article\">First test article</h1>" article

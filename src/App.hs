@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+
 module App where
 
 import Control.Applicative (optional)
@@ -31,14 +32,19 @@ type App = StateT AppCache (ReaderT AppData IO)
 
 type AppPart a = RouteT Sitemap (ServerPartT App) a
 
-loadApp :: String -- directory to load from
-        -> String -- site address
-        -> IO AppData
+loadApp
+    :: String -- directory to load from
+    -> String -- site address
+    -> IO AppData
 loadApp dataDirectory siteAddress = do
     app <- loadFromDirectory dataDirectory
     case app of
         Left err -> error err
-        Right appState -> return appState { appAddress = siteAddress }
+        Right appState ->
+            return
+                appState
+                { appAddress = siteAddress
+                }
 
 initAppCache :: IO AppCache
 initAppCache = do
@@ -58,16 +64,17 @@ site = do
     implSite (T.pack address) "" routedSite `mplus` staticSite
 
 handler :: Sitemap -> AppPart Response
-handler route = case route of
-    Index -> index
-    Yearly y -> yearlyIndex y
-    Monthly y m -> monthlyIndex y m
-    Daily d -> dailyIndex d
-    ArticleView d s -> article d s
-    MetaView s f -> meta s f
-    Feed lang -> feedIndex lang
-    SiteScript -> siteScript
-    PrintStylesheet -> printStylesheet
+handler route =
+    case route of
+        Index -> index
+        Yearly y -> yearlyIndex y
+        Monthly y m -> monthlyIndex y m
+        Daily d -> dailyIndex d
+        ArticleView d s -> article d s
+        MetaView s f -> meta s f
+        Feed lang -> feedIndex lang
+        SiteScript -> siteScript
+        PrintStylesheet -> printStylesheet
 
 index :: AppPart Response
 index = articleList $ const True
@@ -92,7 +99,9 @@ languageHeaderM = do
     let langValue = listToMaybe $ catMaybes [param, cookie, header]
     return $ languageHeader langValue
 
-html :: ToMessage a => a -> AppPart Response
+html
+    :: ToMessage a
+    => a -> AppPart Response
 html = ok . toResponse
 
 article :: Day -> String -> AppPart Response
@@ -114,8 +123,8 @@ meta slug format' = do
     language <- languageHeaderM
     m <- askMeta slug
     case format of
-      Html -> metaDisplay language m >>= html
-      _ -> metaExport format language m >>= html
+        Html -> metaDisplay language m >>= html
+        _ -> metaExport format language m >>= html
 
 feedIndex :: Language -> AppPart Response
 feedIndex language = do
@@ -124,10 +133,14 @@ feedIndex language = do
     feedDisplay language sorted >>= html
 
 -- Override content type on any response
-data WithContentType r = WithContentType String r
+data WithContentType r =
+    WithContentType String
+                    r
 
-instance ToMessage r => ToMessage (WithContentType r) where
-    toResponse (WithContentType ct r) = setHeaderBS (B.pack "Content-Type") (B.pack ct) $ toResponse r
+instance ToMessage r =>
+         ToMessage (WithContentType r) where
+    toResponse (WithContentType ct r) =
+        setHeaderBS (B.pack "Content-Type") (B.pack ct) $ toResponse r
 
 asCss :: r -> WithContentType r
 asCss = WithContentType "text/css"

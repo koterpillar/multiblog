@@ -12,33 +12,24 @@ import Integration.Base
 
 import Test.Framework
 
-
 test_meta = do
     meta <- makeRequest $ simpleRequest "/meta"
-    assertContains
-        "<h1 id=\"test-meta\">Test Meta</h1>"
-        meta
+    assertContains "<h1 id=\"test-meta\">Test Meta</h1>" meta
 
 test_meta_html = do
     meta <- makeRequest $ simpleRequest "/meta.html"
-    assertContains
-        "<h1 id=\"test-meta\">Test Meta</h1>"
-        meta
+    assertContains "<h1 id=\"test-meta\">Test Meta</h1>" meta
 
 test_meta_pdf = do
     meta_pdf <- makeRequest $ simpleRequest "/meta.pdf"
-    assertEqual
-        "%PDF"
-        (take 4 meta_pdf)
+    assertEqual "%PDF" (take 4 meta_pdf)
 
 test_meta_pdf_ru = do
     meta_pdf <- makeRequest $ withLang1 RU $ simpleRequest "/meta.pdf"
-    assertEqual
-        "%PDF"
-        (take 4 meta_pdf)
+    assertEqual "%PDF" (take 4 meta_pdf)
 
 test_meta_docx = do
     meta_docx <- makeRequest $ simpleRequest "/meta.docx"
     assertEqual
-        "PK"  -- DOCX are ZIP files
+        "PK" -- DOCX are ZIP files
         (take 2 meta_docx)

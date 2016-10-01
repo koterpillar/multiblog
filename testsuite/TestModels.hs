@@ -14,21 +14,25 @@ import Test.Framework
 import Arbitrary
 
 derive makeArbitrary ''Article
+
 derive makeArbitrary ''Meta
+
 derive makeArbitrary ''Link
+
 derive makeArbitrary ''Analytics
 
 derive makeArbitrary ''AppData
 
-
 fall = flip all
 
 prop_allLanguages_hasEveryArticle app =
-    fall (appArticles app) $ \article ->
-        fall (M.keys (arContent article)) $ \lang ->
-            S.member lang $ allLanguages app
+    fall (appArticles app) $
+    \article ->
+         fall (M.keys (arContent article)) $
+         \lang -> S.member lang $ allLanguages app
 
 prop_allLanguages_hasEveryMeta app =
-    fall (appMeta app) $ \meta ->
-        fall (M.keys (mtContent meta)) $ \lang ->
-            S.member lang $ allLanguages app
+    fall (appMeta app) $
+    \meta ->
+         fall (M.keys (mtContent meta)) $
+         \lang -> S.member lang $ allLanguages app

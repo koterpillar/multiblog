@@ -15,29 +15,19 @@ import Test.Framework
 
 import Arbitrary
 
-
 mkPreference :: [(Language, Float)] -> LanguagePreference
 mkPreference = LanguagePreference . M.fromList
 
 test_matchLanguageFunc = do
-    let values = M.fromList [ (EN, "English")
-                            , (RU, "Russian")
-                            , (ZH, "Chinese")
-                            ]
+    let values = M.fromList [(EN, "English"), (RU, "Russian"), (ZH, "Chinese")]
     assertEqual
         (Nothing :: Maybe String)
         (matchLanguage (mkPreference [(RU, 1)]) M.empty)
-    assertEqual
-        (Just "Russian")
-        (matchLanguage (mkPreference [(RU, 1)]) values)
+    assertEqual (Just "Russian") (matchLanguage (mkPreference [(RU, 1)]) values)
 
 test_languageHeader = do
-    assertEqual
-        (languageHeader Nothing)
-        (mkPreference [(EN, 1)])
-    assertEqual
-        (languageHeader $ Just "fr")
-        (mkPreference [(FR, 1)])
+    assertEqual (languageHeader Nothing) (mkPreference [(EN, 1)])
+    assertEqual (languageHeader $ Just "fr") (mkPreference [(FR, 1)])
     assertEqual
         (languageHeader $ Just "de,fr,ko")
         (mkPreference [(DE, 1), (FR, 1), (KO, 1)])
@@ -46,24 +36,16 @@ test_languageHeader = do
         (mkPreference [(RU, 1), (ZH, 0.8), (EN, 0.6)])
 
 test_parseLanguage = do
-    assertEqual
-        (Just EN)
-        (parseLanguage "en")
-    assertEqual
-        (Just IT)
-        (parseLanguage "it")
-    assertEqual
-        Nothing
-        (parseLanguage "zz")
-    assertEqual
-        (Just EN)
-        (parseLanguage "en-AU")
-    assertEqual
-        (Just ZH)
-        (parseLanguage "zh-Hans")
+    assertEqual (Just EN) (parseLanguage "en")
+    assertEqual (Just IT) (parseLanguage "it")
+    assertEqual Nothing (parseLanguage "zz")
+    assertEqual (Just EN) (parseLanguage "en-AU")
+    assertEqual (Just ZH) (parseLanguage "zh-Hans")
 
 -- Test the function is total
-prop_bestLanguageExists s = x == x where x = bestLanguage $ languageHeader s
+prop_bestLanguageExists s = x == x
+  where
+    x = bestLanguage $ languageHeader s
 
 instance Arbitrary LanguagePreference where
     arbitrary = mkPreference <$> arbitrary
@@ -71,8 +53,11 @@ instance Arbitrary LanguagePreference where
 prop_showLanguageHeader m = languageHeader (Just (show m)) == m
 
 prop_mapKeysM :: [(String, String)] -> Bool
-prop_mapKeysM l = mapKeysM Just m == Just m where m = M.fromList l
+prop_mapKeysM l = mapKeysM Just m == Just m
+  where
+    m = M.fromList l
 
 prop_bestLanguage lp = M.null m || (all (<= bestValue) (M.elems m))
-    where Just bestValue = M.lookup (bestLanguage lp) m
-          m = unLanguagePreference lp
+  where
+    Just bestValue = M.lookup (bestLanguage lp) m
+    m = unLanguagePreference lp
