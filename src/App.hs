@@ -99,6 +99,17 @@ languageHeaderM = do
     let langValue = listToMaybe $ catMaybes [param, cookie, header]
     return $ languageHeader langValue
 
+pageNumber :: AppPart Int
+pageNumber = do
+    page <- optional $ look "page"
+    return $ fromMaybe 1 $ page >>= readM
+
+pageSize :: Int
+pageSize = 10
+
+paginate :: Int -> [a] -> [a]
+paginate page = take pageSize . drop ((page - 1) * pageSize)
+
 html
     :: ToMessage a
     => a -> AppPart Response
@@ -114,8 +125,10 @@ articleList :: (Article -> Bool) -> AppPart Response
 articleList articleFilter = do
     articles <- lift $ askFiltered articleFilter
     let sorted = sortBy reverseCompare articles
+    page <- pageNumber
+    let paginated = paginate page sorted
     language <- languageHeaderM
-    articleListDisplay language sorted >>= html
+    articleListDisplay language paginated >>= html
 
 meta :: String -> Maybe PageFormat -> AppPart Response
 meta slug format' = do
