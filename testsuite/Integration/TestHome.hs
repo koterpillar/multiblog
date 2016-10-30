@@ -18,6 +18,8 @@ test_home = do
     -- Articles must be ordered correctly
     assertContainsBefore "Another article" "First test article" home
     -- This article must be on the second page
+    assertContains "Next page" home
+    assertNotContains "Previous page" home
     assertNotContains "Very early article" home
     assertContains "<a href=\"http://test/about\">Test About</a>" home
     assertContains "<a href=\"https://1.example.com/\">Example 1</a>" home
@@ -41,3 +43,5 @@ test_cookie_lang = do
 test_home_next_page = do
     home <- makeRequest $ simpleRequest "/?page=2"
     assertContains "Very early article" home
+    assertContains "Previous page" home
+    assertNotContains "Next page" home
