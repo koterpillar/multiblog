@@ -31,7 +31,7 @@ test_home = do
     assertEqual "2015-02-01T00:00:00Z" $ feedUpdated feed
     let entries = feedEntries feed
     assertEqual ["Another article", "First test article"] $
-        map (txtToString . entryTitle) entries
+        map (txtToString . entryTitle) $ take 2 entries
     let entry1 = head entries
     assertEqual ["Author Name"] $ map personName $ entryAuthors entry1
     let Just (HTMLContent content) = entryContent entry1
