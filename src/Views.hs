@@ -61,6 +61,27 @@ mkPage title content =
     , pcContent = content
     }
 
+type PageNumber = Int
+
+data Paginated a = Paginated { pagePrev :: Maybe PageNumber
+                             , pageItems :: [a]
+                             , pageNext :: Maybe PageNumber
+                             }
+    deriving (Eq, Show)
+
+pageSize :: Int
+pageSize = 10
+
+paginate :: Int -> PageNumber -> [a] -> Paginated a
+paginate size page allItems = Paginated prev items next
+   where
+       prev | page == 1 = Nothing
+            | otherwise = Just (page - 1)
+       offsetItems = drop ((page - 1) * size) allItems
+       (items, rest) = splitAt size offsetItems
+       next | null rest = Nothing
+            | otherwise = Just (page + 1)
+
 convRender :: (url -> [(a, Maybe b)] -> c) -> url -> [(a, b)] -> c
 convRender maybeF url params = maybeF url $ map (A.second Just) params
 
@@ -121,9 +142,10 @@ template lang page = do
 
 articleListDisplay
     :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m)
-    => LanguagePreference -> [Article] -> m Markup
+    => LanguagePreference -> Paginated Article -> m Markup
 articleListDisplay lang articles = do
-    articlesContent <- mapM (linkedContent lang) articles
+    articlesContent <- mapM (linkedContent lang) (pageItems articles)
+    langString <- askLangStringFn lang
     template lang $ mkPage Nothing $(hamletFile "templates/list.hamlet")
 
 articleDisplay

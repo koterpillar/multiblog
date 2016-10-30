@@ -39,3 +39,12 @@ test_linkedHeader = do
              , "<h2>Other header</h2>"
              ]) $
         renderHtml $ writeHtml def $ linkedHeader "http://test" pandoc
+
+test_paginated = do
+    let pages = [1..100] :: [Integer]
+    assertEqual
+      (Paginated Nothing [1, 2, 3] (Just 2))
+      (paginate 3 1 pages)
+    assertEqual
+      (Paginated (Just 1) [4, 5, 6] (Just 3))
+      (paginate 3 2 pages)

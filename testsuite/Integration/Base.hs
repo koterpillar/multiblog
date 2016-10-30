@@ -8,6 +8,7 @@ module Integration.Base
   , simpleRequest
   , assertContains
   , assertContainsBefore
+  , assertNotContains
   , testAddress
   , withLang
   , withLang1
@@ -64,6 +65,15 @@ assertContains needle haystack =
     assertBoolVerbose
         (show needle ++ " not found in:\n" ++ show haystack)
         (needle `isInfixOf` haystack)
+
+assertNotContains
+    :: (Eq a, Show a)
+    => [a] -> [a] -> Assertion
+assertNotContains needle haystack =
+    subAssert $
+    assertBoolVerbose
+        (show needle ++ " found in:\n" ++ show haystack)
+        (not $ needle `isInfixOf` haystack)
 
 assertContainsBefore
     :: (Eq a, Show a)

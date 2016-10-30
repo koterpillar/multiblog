@@ -49,6 +49,17 @@ Executable multiblog
                , utf8-string
                , unix
                , yaml
+  other-modules: App
+               , Cache
+               , Import
+               , Language
+               , Models
+               , ReloadHup
+               , Routes
+               , Utils
+               , Views
+               , Views.Export
+               , Views.Feed
 
 Test-Suite tests
   type: exitcode-stdio-1.0
@@ -74,3 +85,28 @@ Test-Suite tests
                , HTF
                , HUnit
                , base
+  other-modules: App
+               , Arbitrary
+               , Cache
+               , Import
+               , Integration.Base
+               , Integration.TestArticle
+               , Integration.TestHome
+               , Integration.TestMeta
+               , Integration.TestRSS
+               , Integration.TestStatic
+               , Language
+               , Models
+               , Routes
+               , TestCache
+               , TestImport
+               , TestLanguage
+               , TestModels
+               , TestRoutes
+               , TestUtils
+               , TestViews
+               , TestViewsExport
+               , Utils
+               , Views
+               , Views.Export
+               , Views.Feed
