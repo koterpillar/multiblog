@@ -42,6 +42,9 @@ Some elements of the blog other than content itself must also be translated.
 The translations use the file `content/strings.yaml` which must contain hashes
 of the following structure: string - language - translation.
 
+Google Analytics is supported for the site. The ID must be specified in
+`content/analytics.yaml`.
+
 The sidebar links are specified in `content/links.yaml`. They can point either
 to metas or to any external address.
 
@@ -119,6 +122,12 @@ An example of links file, `content/links.yaml`:
     ru: Яндекс
 - url: https://www.github.com
   text: GitHub
+```
+
+An example of the analytics file, `content/analytics.yaml`:
+
+```yaml
+google: UA-12345678-9
 ```
 
 [yaml-metadata]: http://johnmacfarlane.net/pandoc/demo/example9/pandocs-markdown.html#extension-yaml_metadata_block
