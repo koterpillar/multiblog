@@ -1,16 +1,15 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 
 module TestImport where
 
-import Control.Monad
 import Control.Monad.State
 
-import qualified Data.ByteString.Char8 as C8
+import qualified Data.ByteString.UTF8 as U
 import Data.LanguageCodes
-import Data.List
 import qualified Data.Map as M
-import Data.Text (pack)
 import Data.Yaml
 
 import Text.Pandoc hiding (Meta)
@@ -34,6 +33,7 @@ unsafeReadMarkdown = handleError . readMarkdown def
 
 slug s = ("slug", s)
 
+langEn, langRu, langZh :: (String, String)
 langEn = ("lang", "en")
 
 langRu = ("lang", "ru")
@@ -122,6 +122,7 @@ test_extractLanguage = do
 
 test_loadStrings = do
     let strings =
+            U.fromString $
             unlines
                 [ "title:"
                 , "  en: Title"
@@ -135,10 +136,11 @@ test_loadStrings = do
              [ ("title", M.fromList [(EN, "Title"), (RU, "Заголовок")])
              , ("about", M.fromList [(ZH, "关于")])
              ])
-        (loadStrings strings)
+        (decodeEither strings :: Either String (M.Map String LanguageString))
 
 test_loadLinks = do
     let links =
+            U.fromString $
             unlines
                 [ "- page: about"
                 , "- url: https://1.example.com/"
@@ -159,4 +161,4 @@ test_loadLinks = do
                "https://2.example.com/"
                (M.fromList [(EN, "Example 2"), (RU, "Пример 2"), (ZH, "列子2")])
          ])
-        (loadLinks links)
+        (decodeEither links :: Either String [Link])

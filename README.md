@@ -48,6 +48,22 @@ Google Analytics is supported for the site. The ID must be specified in
 The sidebar links are specified in `content/links.yaml`. They can point either
 to metas or to any external address.
 
+The blog supports cross-posting the articles to an external service. In order to
+do that, it needs the credentials of both the service and the user on that
+service. The service credentials are provided in `content/services.yaml` and are
+specific to each service. Currently, the following services are supported:
+
+### Twitter
+
+The application must be registered
+on [Twitter Application Management](https://apps.twitter.com/). The service
+credentials are Consumer Key and Consumer Secret; in `services.yaml`:
+
+```yaml
+twitter:
+  consumer_key: XXXXXXXXXXXXXXXX
+  consumer_secret: XXXXXXXXXXXXXXXX
+```
 
 Examples
 ========

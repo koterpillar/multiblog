@@ -22,6 +22,7 @@ Executable multiblog
                , boomerang
                , bytestring
                , containers
+               , data-default-class
                , directory
                , feed
                , filepath
@@ -41,13 +42,14 @@ Executable multiblog
                , text
                , time
                , transformers
-               , xml
+               , twitter-conduit
+               , unix
+               , utf8-string
                , web-routes
                , web-routes-boomerang
                , web-routes-happstack
                , web-routes-th
-               , utf8-string
-               , unix
+               , xml
                , yaml
   other-modules: App
                , Cache
@@ -67,9 +69,13 @@ Test-Suite tests
   main-is: TestMain.hs
 
   build-depends: base >= 4.7 && <5
+               , HTF
+               , HUnit
                , blaze-html
                , bytestring
                , containers
+               , data-default-class
+               , derive
                , directory
                , filepath
                , happstack-server
@@ -77,14 +83,12 @@ Test-Suite tests
                , mtl
                , pandoc
                , pandoc-types
+               , quickcheck-instances
                , shakespeare
                , split
                , time
+               , twitter-conduit
                , xml
-               , derive
-               , HTF
-               , HUnit
-               , base
   other-modules: App
                , Arbitrary
                , Cache

@@ -1,7 +1,9 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Models where
 
@@ -12,14 +14,20 @@ import Control.Monad.State
 
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as LB
+import qualified Data.ByteString.UTF8 as U
+import Data.Default.Class
 import qualified Data.Map as M
 import Data.Maybe
 import qualified Data.Set as S
 import Data.Time
 import Data.Yaml
 
+import GHC.Generics (Generic)
+
 import Text.Pandoc hiding (Meta, readers)
 import Text.Pandoc.Walk
+
+import qualified Web.Twitter.Conduit as TW
 
 import Cache
 import Language
@@ -85,11 +93,35 @@ instance FromJSON Link where
 
 data Analytics = Analytics
     { anaGoogle :: Maybe String
-    } deriving (Eq, Show)
+    } deriving (Generic, Show)
+
+instance Default Analytics
 
 instance FromJSON Analytics where
     parseJSON =
         A.withObject "Object expected" $ \v -> Analytics <$> v .:? "google"
+
+data AppServices = AppServices
+    { asTwitter :: Maybe TW.OAuth
+    } deriving (Generic, Show)
+
+instance Default AppServices
+
+instance FromJSON TW.OAuth where
+    parseJSON =
+        A.withObject "Object expected" $
+        \v -> do
+            key <- v .: "consumer_key"
+            secret <- v .: "consumer_secret"
+            return $
+                TW.twitterOAuth
+                { TW.oauthConsumerKey = U.fromString key
+                , TW.oauthConsumerSecret = U.fromString secret
+                }
+
+instance FromJSON AppServices where
+    parseJSON =
+        A.withObject "Object expected" $ \v -> AppServices <$> v .:? "twitter"
 
 data AppData = AppData
     { appDirectory :: String
@@ -99,19 +131,10 @@ data AppData = AppData
     , appStrings :: M.Map String LanguageString
     , appLinks :: [Link]
     , appAnalytics :: Analytics
-    } deriving (Eq, Show)
+    , appServices :: AppServices
+    } deriving (Generic, Show)
 
-emptyState :: AppData
-emptyState =
-    AppData
-    { appDirectory = ""
-    , appAddress = ""
-    , appArticles = []
-    , appMeta = []
-    , appStrings = M.empty
-    , appLinks = []
-    , appAnalytics = Analytics Nothing
-    }
+instance Default AppData
 
 mkDate :: Integer -> Int -> Int -> UTCTime
 mkDate y m d = atMidnight $ fromGregorian y m d
