@@ -26,6 +26,10 @@ mapKeysM kfunc = liftM M.fromList . mapM kvfunc . M.toList
   where
     kvfunc (k, v) = liftM (\k' -> (k', v)) $ kfunc k
 
+instance Y.FromJSON ISO639_1 where
+    parseJSON v@(Y.String _) = Y.parseJSON v >>= parseLanguage
+    parseJSON _ = mzero
+
 instance (Y.FromJSON v) =>
          Y.FromJSON (M.Map Language v) where
     parseJSON v@(Y.Object _) = Y.parseJSON v >>= mapKeysM parseLanguage

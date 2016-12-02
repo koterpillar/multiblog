@@ -51,7 +51,19 @@ to metas or to any external address.
 The blog supports cross-posting the articles to an external service. In order to
 do that, it needs the credentials of both the service and the user on that
 service. The service credentials are provided in `content/services.yaml` and are
-specific to each service. Currently, the following services are supported:
+specific to each service.
+
+The content can be posted to multiple accounts across one or more services.
+Cross-posting settings are specified separately in `content/cross-posting.yaml`.
+Each entry has the following format:
+
+```yaml
+- service: xxxxxxxx
+  lang: xx
+  # service-specific information
+```
+
+The following services are supported:
 
 ### Twitter
 
@@ -63,6 +75,16 @@ credentials are Consumer Key and Consumer Secret; in `services.yaml`:
 twitter:
   consumer_key: XXXXXXXXXXXXXXXX
   consumer_secret: XXXXXXXXXXXXXXXX
+```
+
+For cross-posting to a Twitter account, an OAuth access token and secret must be
+obtained and put into `cross-posting.yaml` like this:
+
+```yaml
+- service: twitter
+  lang: en
+  oauth_token: XXXXXXXXXXXXXXXX
+  oauth_token_secret: XXXXXXXXXXXXXXXX
 ```
 
 Examples

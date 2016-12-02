@@ -15,6 +15,8 @@ import Data.Yaml
 import Text.Pandoc hiding (Meta)
 import Text.Pandoc.Error
 
+import qualified Web.Twitter.Conduit as TW
+
 import Import
 import Models
 
@@ -162,3 +164,26 @@ test_loadLinks = do
                (M.fromList [(EN, "Example 2"), (RU, "Пример 2"), (ZH, "列子2")])
          ])
         (decodeEither links :: Either String [Link])
+
+test_loadCrossPost = do
+    let crossPosts =
+            U.fromString $
+            unlines
+                [ "- service: twitter"
+                , "  lang: es"
+                , "  oauth_token: ABCDE"
+                , "  oauth_token_secret: FGHIJ"
+                ]
+    assertEqual
+        (Right $
+         [ CrossPost
+           { cpLanguage = ES
+           , cpServiceDetails =
+               TwitterAuth
+                   (TW.Credential
+                        [ ("oauth_token", "ABCDE")
+                        , ("oauth_token_secret", "FGHIJ")
+                        ])
+           }
+         ])
+        (decodeEither crossPosts :: Either String [CrossPost])

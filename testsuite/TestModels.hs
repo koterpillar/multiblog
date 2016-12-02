@@ -1,4 +1,7 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module TestModels where
@@ -14,7 +17,7 @@ import Models
 import Test.Framework
 import Test.QuickCheck.Instances ()
 
-import Arbitrary
+import Arbitrary ()
 
 derive makeArbitrary ''Article
 
@@ -36,8 +39,21 @@ instance Arbitrary TW.OAuth where
 
 derive makeArbitrary ''AppServices
 
+instance Arbitrary TW.Credential where
+    arbitrary = do
+        token <- arbitrary
+        secret <- arbitrary
+        return $
+            TW.Credential
+                [("oauth_token", token), ("oauth_token_secret", secret)]
+
+derive makeArbitrary ''ServiceAuth
+
+derive makeArbitrary ''CrossPost
+
 derive makeArbitrary ''AppData
 
+fall :: [a] -> (a -> Bool) -> Bool
 fall = flip all
 
 prop_allLanguages_hasEveryArticle app =

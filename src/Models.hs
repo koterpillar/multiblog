@@ -123,6 +123,37 @@ instance FromJSON AppServices where
     parseJSON =
         A.withObject "Object expected" $ \v -> AppServices <$> v .:? "twitter"
 
+data ServiceAuth =
+    TwitterAuth TW.Credential
+    deriving (Eq, Show)
+
+parseServiceAuth :: Object -> Parser ServiceAuth
+parseServiceAuth = parseTwitter
+
+parseTwitter :: Object -> Parser ServiceAuth
+parseTwitter v = do
+    token <- v .: "oauth_token"
+    secret <- v .: "oauth_token_secret"
+    return $
+        TwitterAuth $
+        TW.Credential
+            [ ("oauth_token", U.fromString token)
+            , ("oauth_token_secret", U.fromString secret)
+            ]
+
+data CrossPost = CrossPost
+    { cpLanguage :: Language
+    , cpServiceDetails :: ServiceAuth
+    } deriving (Eq, Show)
+
+instance FromJSON CrossPost where
+    parseJSON =
+        A.withObject "Object expected" $
+        \v -> do
+            lang <- v .: "lang"
+            auth <- parseServiceAuth v
+            return $ CrossPost lang auth
+
 data AppData = AppData
     { appDirectory :: String
     , appAddress :: String
@@ -132,6 +163,7 @@ data AppData = AppData
     , appLinks :: [Link]
     , appAnalytics :: Analytics
     , appServices :: AppServices
+    , appCrossPost :: [CrossPost]
     } deriving (Generic, Show)
 
 instance Default AppData
