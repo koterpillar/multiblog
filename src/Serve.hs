@@ -18,9 +18,7 @@ import ReloadHup
 serve :: IO ()
 serve =
     reloadHup $
-    do address <- siteAddress
-       -- TODO: directory name as parameter?
-       app <- loadApp "content" address
+    do app <- loadAppDefault
        cache <- initAppCache
        lport <- listenPort
        let conf =
@@ -32,11 +30,6 @@ serve =
            (bindPort conf)
            close
            (\sock -> simpleHTTPWithSocket' (runApp cache app) sock conf site)
-
-siteAddress :: IO String
-siteAddress = do
-    addr <- lookupEnv "SITE_URL"
-    return $ fromMaybe "http://localhost:8000" addr
 
 listenPort :: IO Int
 listenPort = liftM (read . fromMaybe "8000") (lookupEnv "LISTEN_PORT")

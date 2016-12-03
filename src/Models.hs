@@ -141,6 +141,14 @@ instance ToJSON ServiceAuth where
     toJSON (TwitterAuth token secret) = object [ "oauth_token" .= U.toString token
                                                , "oauth_token_secret" .= U.toString secret ]
 
+twitterAuth :: TW.Credential -> ServiceAuth
+twitterAuth (TW.Credential cred) =
+    let credMap = M.fromList cred
+    in TwitterAuth
+       { saTwitterToken = fromJust $ M.lookup "oauth_token" credMap
+       , saTwitterSecret = fromJust $ M.lookup "oauth_token_secret" credMap
+       }
+
 data CrossPost = CrossPost
     { cpLanguage :: Language
     , cpServiceDetails :: ServiceAuth

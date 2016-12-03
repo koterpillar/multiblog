@@ -68,8 +68,9 @@ The following services are supported:
 ### Twitter
 
 The application must be registered
-on [Twitter Application Management](https://apps.twitter.com/). The service
-credentials are Consumer Key and Consumer Secret; in `services.yaml`:
+on [Twitter Application Management](https://apps.twitter.com/) and needs to have
+"Read and Write" permissions. The service credentials are Consumer Key and
+Consumer Secret; in `services.yaml`:
 
 ```yaml
 twitter:

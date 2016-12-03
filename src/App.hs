@@ -14,6 +14,8 @@ import Data.Time
 
 import Happstack.Server
 
+import System.Environment
+
 import Web.Routes
 import Web.Routes.Boomerang
 import Web.Routes.Happstack
@@ -36,15 +38,26 @@ loadApp
     :: String -- directory to load from
     -> String -- site address
     -> IO AppData
-loadApp dataDirectory siteAddress = do
+loadApp dataDirectory address = do
     app <- loadFromDirectory dataDirectory
     case app of
         Left err -> error err
         Right appState ->
             return
                 appState
-                { appAddress = siteAddress
+                { appAddress = address
                 }
+
+siteAddress :: IO String
+siteAddress = do
+    addr <- lookupEnv "SITE_URL"
+    return $ fromMaybe "http://localhost:8000" addr
+
+-- TODO: directory name as parameter?
+loadAppDefault :: IO AppData
+loadAppDefault = do
+    address <- siteAddress
+    loadApp "content" address
 
 initAppCache :: IO AppCache
 initAppCache = do
