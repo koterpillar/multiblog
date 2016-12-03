@@ -6,7 +6,7 @@ import Control.Monad
 
 import Data.LanguageCodes
 
-import Language
+import Types.Language
 
 import Integration.Base
 

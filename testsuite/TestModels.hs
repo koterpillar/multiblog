@@ -13,6 +13,8 @@ import qualified Data.Set as S
 import qualified Web.Twitter.Conduit as TW
 
 import Models
+import Types.Content
+import Types.Services
 
 import Test.Framework
 import Test.QuickCheck.Instances ()
@@ -39,7 +41,9 @@ instance Arbitrary TW.OAuth where
 
 derive makeArbitrary ''AppServices
 
-derive makeArbitrary ''ServiceAuth
+derive makeArbitrary ''TwitterAuth
+
+derive makeArbitrary ''AppAuth
 
 derive makeArbitrary ''CrossPost
 

@@ -18,7 +18,7 @@ import Text.Boomerang.TH (makeBoomerangs)
 
 import Web.Routes.Boomerang
 
-import Language
+import Types.Language
 
 data PageFormat
     = Html

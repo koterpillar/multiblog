@@ -27,9 +27,10 @@ import Text.XML.Light.Output (showTopElement)
 
 import Web.Routes
 
-import Language
 import Models
 import Routes
+import Types.Content
+import Types.Language
 import Views
 
 data AtomFeed = AtomFeed

@@ -17,6 +17,8 @@ import Text.Pandoc.Error
 
 import Import
 import Models
+import Types.Content
+import Types.Services
 
 import Test.Framework
 
@@ -176,7 +178,7 @@ test_loadCrossPost = do
         (Right $
          [ CrossPost
            { cpLanguage = ES
-           , cpServiceDetails = TwitterAuth "ABCDE" "FGHIJ"
+           , cpServiceDetails = AppAuthTwitter (TwitterAuth "ABCDE" "FGHIJ")
            }
          ])
-        (decodeEither crossPosts :: Either String [CrossPost])
+        (decodeEither crossPosts :: Either String AppCrossPost)

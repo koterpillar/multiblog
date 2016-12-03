@@ -1,12 +1,7 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module Integration.TestArticle where
-
-import Control.Monad
-
-import Data.LanguageCodes
-
-import Language
 
 import Integration.Base
 

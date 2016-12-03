@@ -22,9 +22,10 @@ import Web.Routes.Happstack
 
 import Cache
 import Import
-import Language
 import Models
 import Routes
+import Types.Content
+import Types.Language
 import Utils
 import Views
 import Views.Export

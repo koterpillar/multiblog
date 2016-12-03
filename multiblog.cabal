@@ -56,11 +56,13 @@ Executable multiblog
                , Authorize
                , Cache
                , Import
-               , Language
                , Models
                , ReloadHup
                , Routes
                , Serve
+               , Types.Content
+               , Types.Language
+               , Types.Services
                , Utils
                , Views
                , Views.Export
@@ -102,7 +104,6 @@ Test-Suite tests
                , Integration.TestMeta
                , Integration.TestRSS
                , Integration.TestStatic
-               , Language
                , Models
                , Routes
                , TestCache
@@ -113,6 +114,9 @@ Test-Suite tests
                , TestUtils
                , TestViews
                , TestViewsExport
+               , Types.Content
+               , Types.Language
+               , Types.Services
                , Utils
                , Views
                , Views.Export

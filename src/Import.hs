@@ -24,8 +24,9 @@ import Text.Pandoc.Error
 import System.Directory
 import System.FilePath.Posix
 
-import Language
 import Models
+import Types.Content
+import Types.Language
 import Utils
 
 -- Each file gets imported into a ContentSource
@@ -193,12 +194,14 @@ loadFromDirectory path = do
     linksFile <- readFileOrEmpty $ path </> "links.yaml"
     analyticsFile <- readFileOrEmpty $ path </> "analytics.yaml"
     servicesFile <- readFileOrEmpty $ path </> "services.yaml"
+    crossPostFile <- readFileOrEmpty $ path </> "cross-posting.yaml"
     return $
         do (articles, metas) <- fromSources sources
            strings <- decodeOrDefault stringsFile
            links <- decodeOrDefault linksFile
            analytics <- decodeOrDefault analyticsFile
            services <- decodeOrDefault servicesFile
+           crossPost <- decodeOrDefault crossPostFile
            return $
                def
                { appDirectory = path
@@ -209,6 +212,7 @@ loadFromDirectory path = do
                , appLinks = links
                , appAnalytics = analytics
                , appServices = services
+               , appCrossPost = crossPost
                }
 
 -- Group sources by slug/date and make Articles or Metas out of them
