@@ -123,23 +123,23 @@ instance FromJSON AppServices where
     parseJSON =
         A.withObject "Object expected" $ \v -> AppServices <$> v .:? "twitter"
 
-data ServiceAuth =
-    TwitterAuth TW.Credential
-    deriving (Eq, Show)
+data ServiceAuth = TwitterAuth
+    { saTwitterToken :: U.ByteString
+    , saTwitterSecret :: U.ByteString
+    } deriving (Eq, Show)
 
 parseServiceAuth :: Object -> Parser ServiceAuth
 parseServiceAuth = parseTwitter
 
 parseTwitter :: Object -> Parser ServiceAuth
-parseTwitter v = do
-    token <- v .: "oauth_token"
-    secret <- v .: "oauth_token_secret"
-    return $
-        TwitterAuth $
-        TW.Credential
-            [ ("oauth_token", U.fromString token)
-            , ("oauth_token_secret", U.fromString secret)
-            ]
+parseTwitter v =
+    let decodeUtf = fmap U.fromString
+    in TwitterAuth <$> decodeUtf (v .: "oauth_token") <*>
+       decodeUtf (v .: "oauth_token_secret")
+
+instance ToJSON ServiceAuth where
+    toJSON (TwitterAuth token secret) = object [ "oauth_token" .= U.toString token
+                                               , "oauth_token_secret" .= U.toString secret ]
 
 data CrossPost = CrossPost
     { cpLanguage :: Language

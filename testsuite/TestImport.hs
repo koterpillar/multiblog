@@ -15,8 +15,6 @@ import Data.Yaml
 import Text.Pandoc hiding (Meta)
 import Text.Pandoc.Error
 
-import qualified Web.Twitter.Conduit as TW
-
 import Import
 import Models
 
@@ -178,12 +176,7 @@ test_loadCrossPost = do
         (Right $
          [ CrossPost
            { cpLanguage = ES
-           , cpServiceDetails =
-               TwitterAuth
-                   (TW.Credential
-                        [ ("oauth_token", "ABCDE")
-                        , ("oauth_token_secret", "FGHIJ")
-                        ])
+           , cpServiceDetails = TwitterAuth "ABCDE" "FGHIJ"
            }
          ])
         (decodeEither crossPosts :: Either String [CrossPost])

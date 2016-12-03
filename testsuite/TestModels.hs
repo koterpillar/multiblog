@@ -39,14 +39,6 @@ instance Arbitrary TW.OAuth where
 
 derive makeArbitrary ''AppServices
 
-instance Arbitrary TW.Credential where
-    arbitrary = do
-        token <- arbitrary
-        secret <- arbitrary
-        return $
-            TW.Credential
-                [("oauth_token", token), ("oauth_token_secret", secret)]
-
 derive makeArbitrary ''ServiceAuth
 
 derive makeArbitrary ''CrossPost
