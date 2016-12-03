@@ -52,12 +52,14 @@ Executable multiblog
                , xml
                , yaml
   other-modules: App
+               , Authorize
                , Cache
                , Import
                , Language
                , Models
                , ReloadHup
                , Routes
+               , Serve
                , Utils
                , Views
                , Views.Export
