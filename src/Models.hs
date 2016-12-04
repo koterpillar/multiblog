@@ -96,3 +96,9 @@ data AppCache = AppCache
 
 instance HasCache (Language, String) LB.ByteString AppCache where
     getCache = appcachePdf
+
+instance HasAppServices AppData where
+    getAppServices = appServices
+
+instance HasCrossPosts AppData where
+    getCrossPosts = appCrossPost

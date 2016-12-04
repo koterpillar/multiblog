@@ -3,6 +3,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Types.Services where
 
+import Control.Monad.Reader
+
 import qualified Data.Aeson as A
 import qualified Data.ByteString.UTF8 as U
 import Data.Default.Class
@@ -19,6 +21,9 @@ import Types.Language
 data AppServices = AppServices
     { asTwitter :: Maybe TW.OAuth
     } deriving (Generic, Show)
+
+class HasAppServices a where
+    getAppServices :: a -> AppServices
 
 instance Default AppServices
 
@@ -94,6 +99,9 @@ data CrossPost = CrossPost
 
 type AppCrossPost = [CrossPost]
 
+class HasCrossPosts a where
+    getCrossPosts :: a -> AppCrossPost
+
 instance FromJSON CrossPost where
     parseJSON =
         A.withObject "Object expected" $
@@ -102,16 +110,19 @@ instance FromJSON CrossPost where
             auth <- parseAppAuth v
             return $ CrossPost lang auth
 
-withTwitter :: AppServices -> (TW.OAuth -> a) -> a
-withTwitter services act =
-    case asTwitter services of
+withTwitter :: (HasAppServices a, MonadReader a m) => (TW.OAuth -> m r) -> m r
+withTwitter act = do
+    twitter <- asks (asTwitter . getAppServices)
+    case twitter of
         Nothing -> error "Twitter credentials not defined"
         Just auth -> act auth
 
 withCreds
-    :: (ServiceAuth a, Applicative m)
-    => AppCrossPost -> (Language -> a -> m b) -> m [b]
-withCreds cps act = traverse (uncurry act) $ mapMaybe filterService cps
+    :: (ServiceAuth sa, HasCrossPosts a, MonadReader a m)
+    => (Language -> sa -> m b) -> m [b]
+withCreds act = do
+    cps <- asks (mapMaybe filterService . getCrossPosts)
+    traverse (uncurry act) cps
   where
     filterService crossPost =
         case fromAppAuth (cpServiceDetails crossPost) of

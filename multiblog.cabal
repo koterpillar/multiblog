@@ -55,6 +55,7 @@ Executable multiblog
   other-modules: App
                , Authorize
                , Cache
+               , CrossPost
                , Import
                , Models
                , ReloadHup
@@ -97,6 +98,7 @@ Test-Suite tests
   other-modules: App
                , Arbitrary
                , Cache
+               , CrossPost
                , Import
                , Integration.Base
                , Integration.TestArticle
