@@ -25,16 +25,10 @@ getAuthorization :: String -> IO AppAuth
 getAuthorization "twitter" = authorizeTwitter
 getAuthorization _ = error "Invalid service name"
 
-withTwitter :: AppData -> (OAuth -> IO a) -> IO a
-withTwitter app act =
-    case asTwitter (appServices app) of
-        Nothing -> error "Twitter credentials not defined"
-        Just auth -> act auth
-
 authorizeTwitter :: IO AppAuth
 authorizeTwitter = do
     app <- loadAppDefault
-    withTwitter app $ \auth -> do
+    withTwitter (appServices app) $ \auth -> do
         mgr <- newManager tlsManagerSettings
         tempCred <- OA.getTemporaryCredential auth mgr
         let url = OA.authorizeUrl auth tempCred

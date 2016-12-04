@@ -102,6 +102,18 @@ instance FromJSON CrossPost where
             auth <- parseAppAuth v
             return $ CrossPost lang auth
 
-withCreds :: ServiceAuth a => AppCrossPost -> (a -> IO b) -> IO [b]
-withCreds cps act =
-    traverse act $ mapMaybe (fromAppAuth . cpServiceDetails) cps
+withTwitter :: AppServices -> (TW.OAuth -> a) -> a
+withTwitter services act =
+    case asTwitter services of
+        Nothing -> error "Twitter credentials not defined"
+        Just auth -> act auth
+
+withCreds
+    :: (ServiceAuth a, Applicative m)
+    => AppCrossPost -> (Language -> a -> m b) -> m [b]
+withCreds cps act = traverse (uncurry act) $ mapMaybe filterService cps
+  where
+    filterService crossPost =
+        case fromAppAuth (cpServiceDetails crossPost) of
+            Nothing -> Nothing
+            Just cred -> Just (cpLanguage crossPost, cred)
