@@ -16,15 +16,12 @@ import Web.Authenticate.OAuth as OA
 import App
 import Types.Services
 
-authorize :: String -> IO ()
+authorize :: String -> App ()
 authorize service = do
-    app <- loadAppDefault
-    cache <- initAppCache
-    runApp cache app $ do
-        auth <- getAuthorization service
-        liftIO $ do
-            putStrLn ""
-            putStr $ U.toString $ Y.encode auth
+    auth <- getAuthorization service
+    liftIO $
+        do putStrLn ""
+           putStr $ U.toString $ Y.encode auth
 
 getAuthorization :: String -> App AppAuth
 getAuthorization "twitter" = authorizeTwitter

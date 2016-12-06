@@ -18,15 +18,13 @@ import Types.Content
 import Types.Language
 import Types.Services
 
-crossPost :: IO ()
+crossPost :: App ()
 crossPost = do
-    app <- loadAppDefault
-    cache <- initAppCache
-    runApp cache app $ runRoute $ do
-        arts <- asks appArticles
-        case arts of
-            [] -> error "No articles to post"
-            _ -> crossPostTwitter (maximum arts)
+    runRoute $
+        do arts <- asks appArticles
+           case arts of
+               [] -> error "No articles to post"
+               _ -> crossPostTwitter (maximum arts)
 
 crossPostTwitter
     :: (MonadRoute m, URL m ~ Sitemap, MonadIO m, MonadReader AppData m)
