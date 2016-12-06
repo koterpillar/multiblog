@@ -47,6 +47,7 @@ Google Analytics is supported for the site. The ID must be specified in
 
 The sidebar links are specified in `content/links.yaml`. They can point either
 to metas or to any external address.
+### Cross-posting
 
 The blog supports cross-posting the articles to an external service. In order to
 do that, it needs the credentials of both the service and the user on that
@@ -63,9 +64,16 @@ Each entry has the following format:
   # service-specific information
 ```
 
+To obtain the authorization for cross-posting to a particular account on a
+service, run `multiblog authorize <service>`.
+
+To post the _latest_ article to every configured service, run `multiblog
+cross-post`. Note that the `SITE_URL` must be set correctly so that the link in
+the cross post is valid.
+
 The following services are supported:
 
-### Twitter
+#### Twitter
 
 The application must be registered
 on [Twitter Application Management](https://apps.twitter.com/) and needs to have
@@ -79,7 +87,8 @@ twitter:
 ```
 
 For cross-posting to a Twitter account, an OAuth access token and secret must be
-obtained and put into `cross-posting.yaml` like this:
+obtained, using `multiblog authorize twitter`, and put into `cross-posting.yaml`
+like this:
 
 ```yaml
 - service: twitter
