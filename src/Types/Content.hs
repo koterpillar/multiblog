@@ -1,3 +1,6 @@
+{-|
+Types for the blog content - articles and metas.
+-}
 {-# LANGUAGE OverloadedStrings #-}
 module Types.Content where
 

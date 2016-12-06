@@ -77,8 +77,11 @@ site = do
     let staticSite = serveDirectory DisableBrowsing [] $ appDir ++ "/static"
     implSite (T.pack address) "" routedSite `mplus` staticSite
 
+-- Run an action in application routing context
 runRoute :: RouteT Sitemap m a -> m a
 runRoute act =
+    -- Supply a known good URL ("" and query parameters []) to run the site,
+    -- producing the result of the given action
     let (Right res) = runSite "" (boomerangSiteRouteT (const act) sitemap) []
     in res
 

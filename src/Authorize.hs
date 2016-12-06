@@ -1,3 +1,6 @@
+{-|
+Subcommand to obtain a user's authorization for a service to cross-post.
+-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Authorize where

@@ -267,6 +267,8 @@ readFileOrEmpty path = do
         then B.readFile path
         else (pure "")
 
+-- Decode YAML, returning a default value on empty content (empty files are not
+-- valid YAML)
 decodeOrDefault :: (Default a, Y.FromJSON a) => B.ByteString -> Either String a
 decodeOrDefault "" = Right def
 decodeOrDefault s = Y.decodeEither s

@@ -1,3 +1,6 @@
+{-|
+Subcommand to cross-post the latest article to all external services.
+-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
 module CrossPost where

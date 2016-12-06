@@ -1,3 +1,6 @@
+{-|
+Command to serve the blog.
+-}
 module Serve where
 
 import Control.Monad.IO.Class

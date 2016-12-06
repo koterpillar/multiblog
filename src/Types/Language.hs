@@ -1,3 +1,6 @@
+{-|
+Language-related types.
+-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
