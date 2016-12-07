@@ -27,9 +27,10 @@ import Text.Pandoc hiding (Meta)
 import Web.Routes
 
 import Cache
-import Language
 import Models
 import Routes
+import Types.Content
+import Types.Language
 import Views
 
 -- Export a meta into one of the supported formats

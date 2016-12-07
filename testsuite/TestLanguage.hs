@@ -9,7 +9,7 @@ import Data.DeriveTH
 import Data.LanguageCodes
 import qualified Data.Map as M
 
-import Language
+import Types.Language
 
 import Test.Framework
 

@@ -14,15 +14,18 @@ import Data.Time
 
 import Happstack.Server
 
+import System.Environment
+
 import Web.Routes
 import Web.Routes.Boomerang
 import Web.Routes.Happstack
 
 import Cache
 import Import
-import Language
 import Models
 import Routes
+import Types.Content
+import Types.Language
 import Utils
 import Views
 import Views.Export
@@ -36,15 +39,26 @@ loadApp
     :: String -- directory to load from
     -> String -- site address
     -> IO AppData
-loadApp dataDirectory siteAddress = do
+loadApp dataDirectory address = do
     app <- loadFromDirectory dataDirectory
     case app of
         Left err -> error err
         Right appState ->
             return
                 appState
-                { appAddress = siteAddress
+                { appAddress = address
                 }
+
+siteAddress :: IO String
+siteAddress = do
+    addr <- lookupEnv "SITE_URL"
+    return $ fromMaybe "http://localhost:8000" addr
+
+-- TODO: directory name as parameter?
+loadAppDefault :: IO AppData
+loadAppDefault = do
+    address <- siteAddress
+    loadApp "content" address
 
 initAppCache :: IO AppCache
 initAppCache = do
@@ -62,6 +76,14 @@ site = do
     let routedSite = boomerangSiteRouteT handler sitemap
     let staticSite = serveDirectory DisableBrowsing [] $ appDir ++ "/static"
     implSite (T.pack address) "" routedSite `mplus` staticSite
+
+-- Run an action in application routing context
+runRoute :: RouteT Sitemap m a -> m a
+runRoute act =
+    -- Supply a known good URL ("" and query parameters []) to run the site,
+    -- producing the result of the given action
+    let (Right res) = runSite "" (boomerangSiteRouteT (const act) sitemap) []
+    in res
 
 handler :: Sitemap -> AppPart Response
 handler route =

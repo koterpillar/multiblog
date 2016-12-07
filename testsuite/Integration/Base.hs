@@ -33,7 +33,7 @@ import Test.HUnit
 
 import App
 import Import
-import Language
+import Types.Language
 
 data TestRequest = TestRequest
     { trUri :: String

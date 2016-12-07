@@ -26,8 +26,9 @@ import Text.Pandoc.Walk
 
 import Web.Routes
 
-import Language
 import Models
+import Types.Content
+import Types.Language
 import Routes
 
 data PageContent = PageContent

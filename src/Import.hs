@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- Import the application data (articles and meta) from a set of files.
 module Import where
@@ -9,7 +10,8 @@ import Control.Monad
 import Control.Monad.State
 import Control.Monad.Writer
 
-import qualified Data.ByteString.UTF8 as U
+import qualified Data.ByteString as B
+import Data.Default.Class
 import Data.Either
 import qualified Data.Map as M
 import Data.Maybe
@@ -22,8 +24,9 @@ import Text.Pandoc.Error
 import System.Directory
 import System.FilePath.Posix
 
-import Language
 import Models
+import Types.Content
+import Types.Language
 import Utils
 
 -- Each file gets imported into a ContentSource
@@ -187,16 +190,20 @@ extractIf test = do
 loadFromDirectory :: FilePath -> IO (Either String AppData)
 loadFromDirectory path = do
     sources <- sourcesFromDirectory path
-    stringsFile <- readFile $ path </> "strings.yaml"
-    linksFile <- readFile $ path </> "links.yaml"
-    analyticsFile <- readFile $ path </> "analytics.yaml"
+    stringsFile <- readFileOrEmpty $ path </> "strings.yaml"
+    linksFile <- readFileOrEmpty $ path </> "links.yaml"
+    analyticsFile <- readFileOrEmpty $ path </> "analytics.yaml"
+    servicesFile <- readFileOrEmpty $ path </> "services.yaml"
+    crossPostFile <- readFileOrEmpty $ path </> "cross-posting.yaml"
     return $
         do (articles, metas) <- fromSources sources
-           strings <- loadStrings stringsFile
-           links <- loadLinks linksFile
-           analytics <- loadAnalytics analyticsFile
+           strings <- decodeOrDefault stringsFile
+           links <- decodeOrDefault linksFile
+           analytics <- decodeOrDefault analyticsFile
+           services <- decodeOrDefault servicesFile
+           crossPost <- decodeOrDefault crossPostFile
            return $
-               emptyState
+               def
                { appDirectory = path
                , appAddress = ""
                , appArticles = articles
@@ -204,6 +211,8 @@ loadFromDirectory path = do
                , appStrings = strings
                , appLinks = links
                , appAnalytics = analytics
+               , appServices = services
+               , appCrossPost = crossPost
                }
 
 -- Group sources by slug/date and make Articles or Metas out of them
@@ -251,13 +260,15 @@ sourceFromFile fp =
 readers :: M.Map String (String -> Either PandocError Pandoc)
 readers = M.fromList [("md", readMarkdown def)]
 
--- Load translations from a YAML file
-loadStrings :: String -> Either String (M.Map String LanguageString)
-loadStrings = Y.decodeEither . U.fromString
+readFileOrEmpty :: String -> IO (B.ByteString)
+readFileOrEmpty path = do
+    exists <- doesFileExist path
+    if exists
+        then B.readFile path
+        else (pure "")
 
-loadLinks :: String -> Either String [Link]
-loadLinks = Y.decodeEither . U.fromString
-
--- Load analytics keys
-loadAnalytics :: String -> Either String Analytics
-loadAnalytics = Y.decodeEither . U.fromString
+-- Decode YAML, returning a default value on empty content (empty files are not
+-- valid YAML)
+decodeOrDefault :: (Default a, Y.FromJSON a) => B.ByteString -> Either String a
+decodeOrDefault "" = Right def
+decodeOrDefault s = Y.decodeEither s

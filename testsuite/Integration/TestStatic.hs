@@ -4,7 +4,7 @@ module Integration.TestStatic where
 
 import Control.Monad
 
-import Language
+import Types.Language
 
 import Integration.Base
 
