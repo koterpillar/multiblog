@@ -24,7 +24,7 @@ data PageFormat
     = Html
     | Pdf
     | Docx
-    deriving (Eq, Show)
+    deriving (Eq, Ord, Show)
 
 -- TODO: use Boomerang for these
 formatToStr :: PageFormat -> String
@@ -53,7 +53,7 @@ data Sitemap
     | Feed Language
     | SiteScript
     | PrintStylesheet
-    deriving (Eq, Show)
+    deriving (Eq, Ord, Show)
 
 makeBoomerangs ''Sitemap
 

@@ -28,7 +28,9 @@ Executable multiblog
                , feed
                , filepath
                , happstack-server
+               , http-conduit
                , iso639
+               , lens
                , mtl
                , network
                , pandoc
@@ -44,6 +46,7 @@ Executable multiblog
                , time
                , transformers
                , twitter-conduit
+               , twitter-types
                , unix
                , utf8-string
                , web-routes
@@ -85,7 +88,9 @@ Test-Suite tests
                , directory
                , filepath
                , happstack-server
+               , http-conduit
                , iso639
+               , lens
                , mtl
                , pandoc
                , pandoc-types
@@ -94,6 +99,7 @@ Test-Suite tests
                , split
                , time
                , twitter-conduit
+               , twitter-types
                , xml
   other-modules: App
                , Arbitrary

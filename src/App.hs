@@ -7,6 +7,8 @@ import Control.Monad.Reader
 import Control.Monad.State
 
 import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.UTF8 as U
+import Data.Functor.Identity
 import Data.List
 import Data.Maybe
 import qualified Data.Text as T
@@ -80,10 +82,14 @@ site = do
 -- Run an action in application routing context
 runRoute :: RouteT Sitemap m a -> m a
 runRoute act =
-    -- Supply a known good URL ("" and query parameters []) to run the site,
+    -- Supply a known good URL (root) to run the site,
     -- producing the result of the given action
     let (Right res) = runSite "" (boomerangSiteRouteT (const act) sitemap) []
     in res
+
+parseRoute :: T.Text -> Either String Sitemap
+parseRoute = fmap runIdentity . runSite "" (boomerangSiteRouteT pure sitemap) . segments
+    where segments = decodePathInfo . U.fromString . T.unpack
 
 handler :: Sitemap -> AppPart Response
 handler route =
