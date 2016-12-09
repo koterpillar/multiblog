@@ -1,9 +1,9 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
+{-# OPTIONS -Wno-missing-signatures #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Integration.TestRSS where
 
-import Control.Monad
 import Data.Monoid
 import qualified Data.Text as T
 
