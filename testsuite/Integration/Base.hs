@@ -25,6 +25,7 @@ import Data.Char
 import Data.List
 import Data.List.Split
 import qualified Data.Map as M
+import qualified Data.Text as T
 
 import Happstack.Server
 
@@ -44,7 +45,7 @@ data TestRequest = TestRequest
 simpleRequest :: String -> TestRequest
 simpleRequest uri = TestRequest uri M.empty M.empty
 
-testAddress :: String
+testAddress :: T.Text
 testAddress = "http://test"
 
 -- Make a request to the application

@@ -14,6 +14,7 @@ import qualified Data.ByteString.Lazy as LB
 import Data.Default.Class
 import qualified Data.Map as M
 import qualified Data.Set as S
+import qualified Data.Text as T
 import Data.Time
 import Data.Yaml
 
@@ -37,7 +38,7 @@ instance FromJSON Analytics where
 
 data AppData = AppData
     { appDirectory :: String
-    , appAddress :: String
+    , appAddress :: T.Text
     , appArticles :: [Article]
     , appMeta :: [Meta]
     , appStrings :: M.Map String LanguageString
@@ -47,7 +48,19 @@ data AppData = AppData
     , appCrossPost :: AppCrossPost
     } deriving (Generic, Show)
 
-instance Default AppData
+instance Default AppData where
+    def =
+        AppData
+        { appDirectory = def
+        , appAddress = T.empty
+        , appArticles = def
+        , appMeta = def
+        , appStrings = def
+        , appLinks = def
+        , appAnalytics = def
+        , appServices = def
+        , appCrossPost = def
+        }
 
 mkDate :: Integer -> Int -> Int -> UTCTime
 mkDate y m d = atMidnight $ fromGregorian y m d

@@ -37,7 +37,7 @@ type AppPart a = RouteT Sitemap (ServerPartT App) a
 
 loadApp
     :: String -- directory to load from
-    -> String -- site address
+    -> T.Text -- site address
     -> IO AppData
 loadApp dataDirectory address = do
     app <- loadFromDirectory dataDirectory
@@ -49,9 +49,9 @@ loadApp dataDirectory address = do
                 { appAddress = address
                 }
 
-siteAddress :: IO String
+siteAddress :: IO T.Text
 siteAddress = do
-    addr <- lookupEnv "SITE_URL"
+    addr <- fmap (fmap T.pack) $ lookupEnv "SITE_URL"
     return $ fromMaybe "http://localhost:8000" addr
 
 -- TODO: directory name as parameter?
@@ -75,7 +75,7 @@ site = do
     appDir <- lift $ asks appDirectory
     let routedSite = boomerangSiteRouteT handler sitemap
     let staticSite = serveDirectory DisableBrowsing [] $ appDir ++ "/static"
-    implSite (T.pack address) "" routedSite `mplus` staticSite
+    implSite address "" routedSite `mplus` staticSite
 
 -- Run an action in application routing context
 runRoute :: RouteT Sitemap m a -> m a
