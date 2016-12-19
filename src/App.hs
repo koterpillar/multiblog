@@ -7,6 +7,8 @@ import Control.Monad.Reader
 import Control.Monad.State
 
 import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.UTF8 as U
+import Data.Functor.Identity
 import Data.List
 import Data.Maybe
 import qualified Data.Text as T
@@ -37,7 +39,7 @@ type AppPart a = RouteT Sitemap (ServerPartT App) a
 
 loadApp
     :: String -- directory to load from
-    -> String -- site address
+    -> T.Text -- site address
     -> IO AppData
 loadApp dataDirectory address = do
     app <- loadFromDirectory dataDirectory
@@ -49,9 +51,9 @@ loadApp dataDirectory address = do
                 { appAddress = address
                 }
 
-siteAddress :: IO String
+siteAddress :: IO T.Text
 siteAddress = do
-    addr <- lookupEnv "SITE_URL"
+    addr <- fmap (fmap T.pack) $ lookupEnv "SITE_URL"
     return $ fromMaybe "http://localhost:8000" addr
 
 -- TODO: directory name as parameter?
@@ -75,15 +77,19 @@ site = do
     appDir <- lift $ asks appDirectory
     let routedSite = boomerangSiteRouteT handler sitemap
     let staticSite = serveDirectory DisableBrowsing [] $ appDir ++ "/static"
-    implSite (T.pack address) "" routedSite `mplus` staticSite
+    implSite address "" routedSite `mplus` staticSite
 
 -- Run an action in application routing context
 runRoute :: RouteT Sitemap m a -> m a
 runRoute act =
-    -- Supply a known good URL ("" and query parameters []) to run the site,
+    -- Supply a known good URL (root) to run the site,
     -- producing the result of the given action
     let (Right res) = runSite "" (boomerangSiteRouteT (const act) sitemap) []
     in res
+
+parseRoute :: T.Text -> Either String Sitemap
+parseRoute = fmap runIdentity . runSite "" (boomerangSiteRouteT pure sitemap) . segments
+    where segments = decodePathInfo . U.fromString . T.unpack
 
 handler :: Sitemap -> AppPart Response
 handler route =

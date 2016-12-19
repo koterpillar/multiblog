@@ -16,8 +16,6 @@ module Integration.Base
   ) where
 
 import Control.Concurrent.MVar
-import Control.Monad
-import Control.Monad.State
 
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString.UTF8 as U
@@ -25,6 +23,7 @@ import Data.Char
 import Data.List
 import Data.List.Split
 import qualified Data.Map as M
+import qualified Data.Text as T
 
 import Happstack.Server
 
@@ -32,7 +31,6 @@ import Test.Framework
 import Test.HUnit
 
 import App
-import Import
 import Types.Language
 
 data TestRequest = TestRequest
@@ -44,7 +42,7 @@ data TestRequest = TestRequest
 simpleRequest :: String -> TestRequest
 simpleRequest uri = TestRequest uri M.empty M.empty
 
-testAddress :: String
+testAddress :: T.Text
 testAddress = "http://test"
 
 -- Make a request to the application
@@ -53,8 +51,8 @@ makeRequest req = do
     happstackReq <- mkRequest req
     app <- loadApp "testsuite/Integration/content" testAddress
     cache <- initAppCache
-    resp <- runApp cache app $ simpleHTTP'' site happstackReq
-    content <- responseContent resp
+    rsp <- runApp cache app $ simpleHTTP'' site happstackReq
+    content <- responseContent rsp
     return content
 
 assertContains
@@ -88,7 +86,7 @@ assertContainsBefore first second haystack =
 -- Create a request with a specified URL
 -- Happstack doesn't make it easy
 mkRequest :: TestRequest -> IO Request
-mkRequest tr@TestRequest {..} = do
+mkRequest TestRequest {..} = do
     let (rUri, rParams) = splitUriParam $ trUri
     inputsBody <- newEmptyMVar
     rBody <- newMVar (Body LB.empty)

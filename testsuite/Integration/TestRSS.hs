@@ -1,8 +1,11 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
+{-# OPTIONS -Wno-missing-signatures #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Integration.TestRSS where
 
-import Control.Monad
+import Data.Monoid
+import qualified Data.Text as T
 
 import Text.Atom.Feed
 import Text.Atom.Feed.Import (elementFeed)
@@ -27,7 +30,7 @@ test_home = do
     let Just feed = elementFeed xml
     assertEqual "Test site" $ txtToString $ feedTitle feed
     -- TODO: Web.Routes generate a link without the trailing slash
-    assertEqual (testAddress ++ "/") $ feedId feed
+    assertEqual (testAddress <> "/") $ T.pack $ feedId feed
     assertEqual "2015-02-01T00:00:00Z" $ feedUpdated feed
     let entries = feedEntries feed
     assertEqual ["Another article", "First test article"] $

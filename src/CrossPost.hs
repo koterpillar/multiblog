@@ -3,15 +3,30 @@ Subcommand to cross-post the latest article to all external services.
 -}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 module CrossPost where
 
+import Control.Lens
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 
+import qualified Data.Aeson as A
+import Data.Default.Class
+import Data.List
+import Data.Maybe
+import Data.Monoid ((<>))
 import qualified Data.Text as T
+
+import Network.HTTP.Conduit (newManager, tlsManagerSettings)
 
 import Web.Routes
 import Web.Twitter.Conduit
+       (call, OAuth, twCredential, twOAuth, TWInfo(..))
+import Web.Twitter.Conduit.Request (APIRequest)
+import Web.Twitter.Conduit.Api
+import Web.Twitter.Conduit.Status
+import Web.Twitter.Conduit.Parameters hiding (map)
+import Web.Twitter.Types
 
 import App
 import Models
@@ -23,30 +38,65 @@ import Types.Services
 
 crossPost :: App ()
 crossPost = do
-    runRoute $
-        do arts <- asks appArticles
-           case arts of
-               [] -> error "No articles to post"
-               _ -> crossPostTwitter (maximum arts)
+    runRoute $ crossPostTwitter
 
 crossPostTwitter
     :: (MonadRoute m, URL m ~ Sitemap, MonadIO m, MonadReader AppData m)
-    => Article -> m ()
-crossPostTwitter art = do
+    => m ()
+crossPostTwitter = do
     mgr <- liftIO $ newManager tlsManagerSettings
+    address <- asks appAddress
     _ <-
-        withCreds $
-        \credLang cred -> do
-            withTwitter $
-                \auth -> do
-                    let twInfo = mkTwitterAuth auth cred
-                    let lpref = singleLanguage credLang
+        withTwitterAuth $
+        \credLang twInfo -> do
+            let doCall
+                    :: (A.FromJSON b, MonadIO m1)
+                    => APIRequest a b -> m1 b
+                doCall = liftIO . call twInfo mgr
+            -- Get account ID
+            accountId <-
+                fmap userId $
+                doCall $
+                accountVerifyCredentials & (includeEntities ?~ False) &
+                (skipStatus ?~ False)
+            -- Get existing posts and collect all articles already linked
+            existingPosts <- doCall $ userTimeline (UserIdParam accountId)
+            existingArticles <- twitterArticleLinks existingPosts
+            -- Filter only articles newer than anything posted
+            let lastExistingArticle = maximum existingArticles
+            unposted <- fmap sort $ askFiltered (lastExistingArticle <)
+            -- Post the remaining articles
+            let lpref = singleLanguage credLang
+            forM unposted $
+                \art -> do
                     let title = langTitle lpref art
                     articleLink <- linkTo art
-                    address <- asks appAddress
-                    let content = title ++ " " ++ address ++ articleLink
-                    liftIO $ call twInfo mgr $ update (T.pack content)
+                    let content = T.pack title <> " " <> address <> T.pack articleLink
+                    doCall $ update content
     return ()
+
+twitterArticleLinks
+    :: (MonadReader AppData m)
+    => [Status] -> m [Article]
+twitterArticleLinks statuses = do
+    addr <- asks appAddress
+    let relativeUrl aurl
+            | T.isPrefixOf addr aurl = Just $ T.drop (T.length addr) aurl
+            | otherwise = Nothing
+    -- Extract all the links pointing to our site
+    let urls = mapMaybe relativeUrl $ concatMap statusLinks statuses
+    -- Filter out the ones for the article route
+    let articleLinks = [(date, slug) | Right (ArticleView date slug) <- map parseRoute urls]
+    -- Get the matched articles
+    let articleFilter art = any (\(d, s) -> byDateSlug d s art) articleLinks
+    askFiltered articleFilter
+
+statusLinks :: Status -> [T.Text]
+statusLinks status = do
+    entity <- maybeToList $ statusEntities status
+    eurl <- enURLs entity
+    let urlEntity = ueExpanded $ entityBody eurl
+    return urlEntity
 
 mkTwitterAuth :: OAuth -> TwitterAuth -> TWInfo
 mkTwitterAuth auth cred =
@@ -57,3 +107,12 @@ mkTwitterAuth auth cred =
         , twCredential = taCredential cred
         }
     }
+
+withTwitterAuth :: MonadReader AppData m => (Language -> TWInfo -> m b) -> m [b]
+withTwitterAuth act =
+    withCreds $
+    \credLang cred -> do
+        withTwitter $
+            \auth -> do
+                let twInfo = mkTwitterAuth auth cred
+                act credLang twInfo
