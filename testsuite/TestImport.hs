@@ -5,7 +5,7 @@
 
 module TestImport where
 
-import Control.Monad.State
+import Control.Arrow
 
 import qualified Data.ByteString.UTF8 as U
 import Data.LanguageCodes
@@ -22,25 +22,8 @@ import Types.Services
 
 import Test.Framework
 
-markdown :: [(String, String)] -> String -> String
-markdown meta content =
-    unlines $
-    ["---"] ++
-    [ k ++ ": " ++ v
-    | (k, v) <- meta ] ++
-    ["---", content]
-
 unsafeReadMarkdown :: String -> Pandoc
 unsafeReadMarkdown = handleError . readMarkdown def
-
-slug s = ("slug", s)
-
-langEn, langRu, langZh :: (String, String)
-langEn = ("lang", "en")
-
-langRu = ("lang", "ru")
-
-langZh = ("lang", "zh")
 
 modifyAllContent
     :: HasContent a
@@ -63,64 +46,41 @@ modifyAppData f st =
     , appMeta = map f $ appMeta st
     }
 
-testSource :: FilePath -> [(String, String)] -> String -> ContentSource
-testSource path meta content =
-    ContentSource path $ unsafeReadMarkdown $ markdown meta content
+testSource :: FilePath -> String -> ContentSource
+testSource path content = ContentSource path $ unsafeReadMarkdown content
 
-test_loadMeta = do
+test_loadContent = do
     let sources =
-            [testSource "meta/about.md" [slug "about", langEn] "This is meta"]
-    let Right (articles, meta) = fromSources sources
-    assertEqual [] articles
-    assertEqual
-        [ Meta
-          { mtSlug = "about"
-          , mtContent = M.fromList [(EN, unsafeReadMarkdown "This is meta")]
-          }
-        ]
-        (map textOnlyContent meta)
-
-test_loadMeta_implied = do
-    let sources = [testSource "meta/about-en.md" [] "This is meta"]
-    let Right (articles, meta) = fromSources sources
-    assertEqual [] articles
-    assertEqual
-        [ Meta
-          { mtSlug = "about"
-          , mtContent = M.fromList [(EN, unsafeReadMarkdown "This is meta")]
-          }
-        ]
-        (map textOnlyContent meta)
-
-test_loadArticle = do
-    let sources =
-            [ testSource
-                  "2015-03-01/world-order-en.md"
-                  []
-                  "Should be parsed automatically"
+            [ testSource "meta/about/en.md" "This is meta"
+            , testSource "meta/about/ru.md" "Это мета"
+            , testSource "2015-03-01-article-one/en.md" "Article One"
+            , testSource "2015-03-01-article-one/ru.md" "Статья Один"
             ]
-    let Right (articles, meta) = fromSources sources
-    assertEqual [] meta
+    let imported =
+            fmap (first (map textOnlyContent) . second (map textOnlyContent)) $
+            fromSources sources
     assertEqual
-        [ Article
-          { arSlug = "world-order"
-          , arAuthored = mkDate 2015 03 01
-          , arContent =
-              M.fromList
-                  [(EN, unsafeReadMarkdown "Should be parsed automatically")]
-          }
-        ]
-        (map textOnlyContent articles)
-
-test_extractLanguage = do
-    let runExtract = runState extractLanguage
-    assertEqual (Just CS, []) $ runExtract [Unnamed "cs"]
-    assertEqual (Nothing, [Unnamed "zzz"]) $ runExtract [Unnamed "zzz"]
-    assertEqual (Just CS, []) $ runExtract [Named "lang" "cs"]
-    assertEqual (Nothing, [Named "lang" "ttt"]) $
-        runExtract [Named "lang" "ttt"]
-    assertEqual (Just CS, [Unnamed "something"]) $
-        runExtract [Unnamed "something-cs"]
+        (Right
+             ( [ Article
+                 { arSlug = "article-one"
+                 , arAuthored = mkDate 2015 03 01
+                 , arContent =
+                       M.fromList
+                           [ (EN, unsafeReadMarkdown "Article One")
+                           , (RU, unsafeReadMarkdown "Статья Один")
+                           ]
+                 }
+               ]
+             , [ Meta
+                 { mtSlug = "about"
+                 , mtContent =
+                       M.fromList
+                           [ (EN, unsafeReadMarkdown "This is meta")
+                           , (RU, unsafeReadMarkdown "Это мета")
+                           ]
+                 }
+               ]))
+        imported
 
 test_loadStrings = do
     let strings =
