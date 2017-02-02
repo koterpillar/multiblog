@@ -11,11 +11,8 @@ the engine.
 Usage
 -----
 
-The compiled program expects to find all the content under `content/`
-directory.
-
-Running `multiblog` will start an HTTP server for the content. The following
-environment variables can be given:
+Running `multiblog` will start an HTTP server for the content found under the
+current directory. The following environment variables can be given:
 
 - `LISTEN_PORT` - the port to listen on, default 8000.
 - `SITE_URL` - the site URL used for the links, default `http://localhost:8000`.
@@ -27,24 +24,18 @@ publication date, and form the main stream of the blog. Metas are pages which
 don't have a date, and are typically acessible from the header/footer menu.
 
 All content is written in Markdown and is converted into HTML when rendering.
-Each file must have the following attributes:
+Both articles and metas have multiple language versions in separate Markdown
+files in the same directory.
 
-* Slug, a string to use in the URL.
-* Language, for distinguishing between the translated versions of the same
-  content.
-* Date - required for articles only; the absense of a date makes the content
-  into a meta.
+Articles directories are named `yyyy-mm-dd-slug`, where `yyyy-mm-dd` is the
+publication date of the article and `slug` is unique, within a day, article
+identifier that will be used in the URL.
 
-Attributes can be specified by either:
+Metas are stored in `meta` directory, and their directory names are taken
+directly to be their slugs.
 
-* Including an attribute pair in the [YAML metadata block][yaml-metadata].
-* For languages: ending a file or a directory name in `-la`, for example, `-en`
-  for English.
-* For dates: including in the file or directory name, for example,
-  `content/2015-01-03-myarticle.md`.
-* For slugs: if not explicitly specified in YAML metadata, the file name (or a
-  directory name, starting from the most specific) is taken to be a slug, after
-  taking out the parts of it parsed as a date or language.
+Individual Markdown files inside the directories are named after their content
+language code, for example, `en.md`.
 
 Some elements of the blog other than content itself must also be translated.
 The translations use the file `content/strings.yaml` which must contain hashes
@@ -120,7 +111,7 @@ the blog.
 This article spread across two files for two languages will be displayed under
 the URL `https://blog.example.com/2015/01/03/myarticle`:
 
-`content/2015-01-03/myarticle-en.md`:
+`2015-01-03-myarticle/en.md`:
 
 ```markdown
 # My article
@@ -128,7 +119,7 @@ the URL `https://blog.example.com/2015/01/03/myarticle`:
 This is the article content in English.
 ```
 
-`content/2015-01-03/myarticle-zh.md`:
+`2015-01-03-myarticle/zh.md`:
 
 ```markdown
 # 我的文章
@@ -136,30 +127,12 @@ This is the article content in English.
 这是该文章的中文内容。
 ```
 
-Note that the slug, date and language extracted from the directory and the file
-names are used to match the different translations of the article. Each of those
-can be specified in YAML metadata instead:
+### Metas
 
-`content/another-translation.md`:
+This is an example of a meta that will be displayed under
+`https://blog.example.com/about`:
 
-```markdown
----
-date: 2015-01-03
-slug: myarticle
-lang: ru
----
-
-# Моя статья
-
-Это содержимое статьи на русском.
-```
-
-### Meta
-
-This file does not have a date (either in the name or in the metadata), so it
-will be displayed under `https://blog.example.com/about`:
-
-`content/about-en.md`
+`meta/about/en.md`
 
 ```markdown
 # About the blog
@@ -167,17 +140,9 @@ will be displayed under `https://blog.example.com/about`:
 This is the site introduction in English.
 ```
 
-Slug and language can be specified in YAML metadata, thus this will be a
-different language version of the above meta:
-
-`content/meta-page-2.md`
+`meta/about/zh.md`
 
 ```markdown
----
-slug: about
-lang: zh
----
-
 # 关于博客
 
 这是该网站的中文介绍。
