@@ -1,8 +1,3 @@
----
-slug: about
-lang: en
----
-
 Test About
 ----------
 
