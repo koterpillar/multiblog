@@ -70,7 +70,7 @@ rLanguage :: Boomerang TextsError [Text] r (Language :- r)
 rLanguage = xpure mkLang parseLang . anyString
   where
     mkLang (str :- x) =
-        let Just lang = parseLanguage str
+        let Just lang = parseLanguageM str
         in lang :- x
     parseLang (lang :- x) = Just $ showLanguage lang :- x
 

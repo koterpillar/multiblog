@@ -36,11 +36,11 @@ test_languageHeader = do
         (mkPreference [(RU, 1), (ZH, 0.8), (EN, 0.6)])
 
 test_parseLanguage = do
-    assertEqual (Just EN) (parseLanguage "en")
-    assertEqual (Just IT) (parseLanguage "it")
-    assertEqual Nothing (parseLanguage "zz")
-    assertEqual (Just EN) (parseLanguage "en-AU")
-    assertEqual (Just ZH) (parseLanguage "zh-Hans")
+    assertEqual (Right EN) (parseLanguage "en")
+    assertEqual (Right IT) (parseLanguage "it")
+    assertEqual (Left "zz is not a valid language code.") (parseLanguage "zz")
+    assertEqual (Right EN) (parseLanguage "en-AU")
+    assertEqual (Right ZH) (parseLanguage "zh-Hans")
 
 -- Test the function is total
 prop_bestLanguageExists s = x == x
