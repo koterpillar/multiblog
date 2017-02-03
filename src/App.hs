@@ -16,6 +16,7 @@ import Data.Time
 
 import Happstack.Server
 
+import System.Directory
 import System.Environment
 
 import Web.Routes
@@ -56,11 +57,11 @@ siteAddress = do
     addr <- fmap (fmap T.pack) $ lookupEnv "SITE_URL"
     return $ fromMaybe "http://localhost:8000" addr
 
--- TODO: directory name as parameter?
 loadAppDefault :: IO AppData
 loadAppDefault = do
     address <- siteAddress
-    loadApp "content" address
+    directory <- getCurrentDirectory
+    loadApp directory address
 
 initAppCache :: IO AppCache
 initAppCache = do
