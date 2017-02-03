@@ -1,8 +1,3 @@
----
-lang: en
-slug: first-test
----
-
 First test article
 ==================
 

@@ -1,7 +1,3 @@
----
-lang: en
----
-
 Very early article
 ==================
 

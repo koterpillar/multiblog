@@ -1,7 +1,3 @@
----
-lang: en
----
-
 Filler article
 ==============
 

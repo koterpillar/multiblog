@@ -30,12 +30,12 @@ mapKeysM kfunc = liftM M.fromList . mapM kvfunc . M.toList
     kvfunc (k, v) = liftM (\k' -> (k', v)) $ kfunc k
 
 instance Y.FromJSON ISO639_1 where
-    parseJSON v@(Y.String _) = Y.parseJSON v >>= parseLanguage
+    parseJSON v@(Y.String _) = Y.parseJSON v >>= parseLanguageM
     parseJSON _ = mzero
 
 instance (Y.FromJSON v) =>
          Y.FromJSON (M.Map Language v) where
-    parseJSON v@(Y.Object _) = Y.parseJSON v >>= mapKeysM parseLanguage
+    parseJSON v@(Y.Object _) = Y.parseJSON v >>= mapKeysM parseLanguageM
     parseJSON v@(Y.String _) = M.singleton defaultLanguage <$> Y.parseJSON v
     parseJSON _ = mzero
 
@@ -69,15 +69,21 @@ matchLanguageFunc quality pref values = liftM fst $ M.maxView ranked
     ranked = M.fromList $ M.elems $ M.mapWithKey rank values
     rank lang value = (rankLanguage lang pref * quality value, value)
 
-parseLanguage
+parseLanguage :: String -> Either String Language
+parseLanguage langStr =
+    case parseLanguageM langStr :: Maybe Language of
+        (Just lang) -> pure lang
+        Nothing -> Left $ langStr ++ " is not a valid language code."
+
+parseLanguageM
     :: MonadPlus m
     => String -> m Language
-parseLanguage [c1, c2] =
+parseLanguageM [c1, c2] =
     case fromChars c1 c2 of
         Just lang -> return lang
         Nothing -> mzero
-parseLanguage (c1:c2:'-':_) = parseLanguage [c1, c2]
-parseLanguage _ = mzero
+parseLanguageM (c1:c2:'-':_) = parseLanguageM [c1, c2]
+parseLanguageM _ = mzero
 
 showLanguage :: Language -> String
 showLanguage = (\(a, b) -> a : b : []) . toChars
@@ -95,8 +101,8 @@ languageHeader (Just str) =
   where
     parsePref pref =
         case splitOn ";q=" pref of
-            [lang] -> (pairWith 1) <$> parseLanguage lang
-            [lang, qvalue] -> (pairWith (read qvalue)) <$> parseLanguage lang
+            [lang] -> (pairWith 1) <$> parseLanguageM lang
+            [lang, qvalue] -> (pairWith (read qvalue)) <$> parseLanguageM lang
             _ -> Nothing
     pairWith y x = (x, y)
 
