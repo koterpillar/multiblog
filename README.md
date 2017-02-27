@@ -70,9 +70,9 @@ To obtain the authorization for cross-posting to a particular account on a
 service, run `multiblog authorize <service>`.
 
 To post all unposted articles to every configured service, run `multiblog
-cross-post`. An article is considered posted if a link to it or a _newer_
-article is found in the external service account. Note that the `SITE_URL` must
-be set correctly so that the link in the cross post is valid.
+crosspost`. An article is considered posted if a link to it or a _newer_ article
+is found in the external service account. Note that the `SITE_URL` must be set
+correctly so that the link in the cross post is valid.
 
 The following services are supported:
 

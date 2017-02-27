@@ -33,6 +33,7 @@ Executable multiblog
                , lens
                , mtl
                , network
+               , optparse-generic
                , pandoc
                , pandoc-types
                , process
@@ -61,6 +62,7 @@ Executable multiblog
                , CrossPost
                , Import
                , Models
+               , Options.Generic.Default
                , ReloadHup
                , Routes
                , Serve
