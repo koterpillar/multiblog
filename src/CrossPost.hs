@@ -38,7 +38,9 @@ import Types.Services
 
 crossPost :: App ()
 crossPost = do
+    liftIO $ putStrLn $ "Cross-posting new articles..."
     runRoute $ crossPostTwitter
+    liftIO $ putStrLn $ "All new articles cross-posted."
 
 crossPostTwitter
     :: (MonadRoute m, URL m ~ Sitemap, MonadIO m, MonadReader AppData m)

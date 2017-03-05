@@ -33,6 +33,7 @@ crossPostAndServe = do
 serve :: App ()
 serve = do
     lport <- liftIO listenPort
+    liftIO $ putStrLn $ "Serving on port " ++ show lport ++ "."
     let conf =
             nullConf
             { port = lport
