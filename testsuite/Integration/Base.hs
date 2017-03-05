@@ -49,7 +49,7 @@ testAddress = "http://test"
 makeRequest :: TestRequest -> IO String
 makeRequest req = do
     happstackReq <- mkRequest req
-    app <- loadApp "testsuite/Integration/content" testAddress
+    app <- loadApp "testsuite/Integration/content" testAddress False
     cache <- initAppCache
     rsp <- runApp cache app $ simpleHTTP'' site happstackReq
     content <- responseContent rsp

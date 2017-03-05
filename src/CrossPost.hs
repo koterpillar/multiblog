@@ -1,5 +1,5 @@
 {-|
-Subcommand to cross-post the latest article to all external services.
+Action to cross-post the latest article to all external services.
 -}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -38,7 +38,9 @@ import Types.Services
 
 crossPost :: App ()
 crossPost = do
+    liftIO $ putStrLn $ "Cross-posting new articles..."
     runRoute $ crossPostTwitter
+    liftIO $ putStrLn $ "All new articles cross-posted."
 
 crossPostTwitter
     :: (MonadRoute m, URL m ~ Sitemap, MonadIO m, MonadReader AppData m)

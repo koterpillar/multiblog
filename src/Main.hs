@@ -9,14 +9,12 @@ import Options.Generic.Default
 
 import App
 import Authorize
-import CrossPost
 import ReloadHup
 import Serve
 
 data Args
     = Authorize String
-    | CrossPost
-    | Serve
+    | Main
     deriving (Generic)
 
 instance ParseRecord Args
@@ -27,8 +25,7 @@ main =
         app <- loadAppDefault
         cache <- initAppCache
         runApp cache app $ do
-            args <- liftIO $ getRecordDefault Serve "Multiblog"
+            args <- liftIO $ getRecordDefault Main "Multiblog"
             case args of
                 Authorize service -> authorize service
-                CrossPost -> crossPost
-                Serve -> serve
+                Main -> crossPostAndServe

@@ -69,10 +69,11 @@ Each entry has the following format:
 To obtain the authorization for cross-posting to a particular account on a
 service, run `multiblog authorize <service>`.
 
-To post all unposted articles to every configured service, run `multiblog
-crosspost`. An article is considered posted if a link to it or a _newer_ article
-is found in the external service account. Note that the `SITE_URL` must be set
-correctly so that the link in the cross post is valid.
+All new articles are cross-posted to every configured service when running the
+server. An article is considered already posted if a link to it or a _newer_
+article is found in the external service account. Note that the `SITE_URL` must
+be set correctly so that the link in the cross post is valid; articles are not
+posted if it is not set.
 
 The following services are supported:
 
@@ -179,5 +180,3 @@ An example of the analytics file, `content/analytics.yaml`:
 ```yaml
 google: UA-12345678-9
 ```
-
-[yaml-metadata]: http://johnmacfarlane.net/pandoc/demo/example9/pandocs-markdown.html#extension-yaml_metadata_block

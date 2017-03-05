@@ -1,9 +1,9 @@
 {-|
-Command to serve the blog.
+Action to serve the blog.
 -}
 module Serve where
 
-import Control.Monad.IO.Class
+import Control.Concurrent.Lifted
 import Control.Exception
 import Control.Monad
 import Control.Monad.Reader
@@ -18,11 +18,22 @@ import Network.Socket
 import System.Environment
 
 import App
+import Models
+import CrossPost
+
+
+crossPostAndServe :: App ()
+crossPostAndServe = do
+    isRealAddress <- asks appRealAddress
+    when isRealAddress $ do
+        void $ fork crossPost
+    serve
 
 -- Serve the site contents, handling SIGHUP
 serve :: App ()
 serve = do
     lport <- liftIO listenPort
+    liftIO $ putStrLn $ "Serving on port " ++ show lport ++ "."
     let conf =
             nullConf
             { port = lport
