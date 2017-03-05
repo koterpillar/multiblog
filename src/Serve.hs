@@ -18,12 +18,15 @@ import Network.Socket
 import System.Environment
 
 import App
+import Models
 import CrossPost
 
 
 crossPostAndServe :: App ()
 crossPostAndServe = do
-    _ <- fork crossPost
+    isRealAddress <- asks appRealAddress
+    when isRealAddress $ do
+        void $ fork crossPost
     serve
 
 -- Serve the site contents, handling SIGHUP
