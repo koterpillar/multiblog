@@ -39,6 +39,7 @@ instance FromJSON Analytics where
 data AppData = AppData
     { appDirectory :: String
     , appAddress :: T.Text
+    , appRealAddress :: Bool
     , appArticles :: [Article]
     , appMeta :: [Meta]
     , appStrings :: M.Map String LanguageString
@@ -53,6 +54,7 @@ instance Default AppData where
         AppData
         { appDirectory = def
         , appAddress = T.empty
+        , appRealAddress = False
         , appArticles = def
         , appMeta = def
         , appStrings = def

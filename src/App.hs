@@ -41,8 +41,9 @@ type AppPart a = RouteT Sitemap (ServerPartT App) a
 loadApp
     :: String -- directory to load from
     -> T.Text -- site address
+    -> Bool -- whether the address was explicitly specified
     -> IO AppData
-loadApp dataDirectory address = do
+loadApp dataDirectory address isRealAddress = do
     app <- loadFromDirectory dataDirectory
     case app of
         Left err -> error err
@@ -50,18 +51,22 @@ loadApp dataDirectory address = do
             return
                 appState
                 { appAddress = address
+                , appRealAddress = isRealAddress
                 }
 
-siteAddress :: IO T.Text
+-- | Application address, and whether it's specified explicitly
+siteAddress :: IO (T.Text, Bool)
 siteAddress = do
     addr <- fmap (fmap T.pack) $ lookupEnv "SITE_URL"
-    return $ fromMaybe "http://localhost:8000" addr
+    return $ case addr of
+        Just realAddr -> (realAddr, True)
+        Nothing -> ("http://localhost:8000", False)
 
 loadAppDefault :: IO AppData
 loadAppDefault = do
-    address <- siteAddress
+    (address, isRealAddress) <- siteAddress
     directory <- getCurrentDirectory
-    loadApp directory address
+    loadApp directory address isRealAddress
 
 initAppCache :: IO AppCache
 initAppCache = do
