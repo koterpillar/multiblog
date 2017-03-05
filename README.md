@@ -180,5 +180,3 @@ An example of the analytics file, `content/analytics.yaml`:
 ```yaml
 google: UA-12345678-9
 ```
-
-[yaml-metadata]: http://johnmacfarlane.net/pandoc/demo/example9/pandocs-markdown.html#extension-yaml_metadata_block
