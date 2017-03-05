@@ -1,5 +1,5 @@
 {-|
-Subcommand to cross-post the latest article to all external services.
+Action to cross-post the latest article to all external services.
 -}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}

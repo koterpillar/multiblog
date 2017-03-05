@@ -31,6 +31,7 @@ Executable multiblog
                , http-conduit
                , iso639
                , lens
+               , lifted-base
                , mtl
                , network
                , optparse-generic

@@ -1,9 +1,9 @@
 {-|
-Command to serve the blog.
+Action to serve the blog.
 -}
 module Serve where
 
-import Control.Monad.IO.Class
+import Control.Concurrent.Lifted
 import Control.Exception
 import Control.Monad
 import Control.Monad.Reader
@@ -18,6 +18,13 @@ import Network.Socket
 import System.Environment
 
 import App
+import CrossPost
+
+
+crossPostAndServe :: App ()
+crossPostAndServe = do
+    _ <- fork crossPost
+    serve
 
 -- Serve the site contents, handling SIGHUP
 serve :: App ()
