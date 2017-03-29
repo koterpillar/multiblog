@@ -82,7 +82,7 @@ site = do
     address <- lift $ asks appAddress
     appDir <- lift $ asks appDirectory
     let routedSite = boomerangSiteRouteT handler sitemap
-    let staticSite = serveDirectory DisableBrowsing [] $ appDir ++ "/static"
+    let staticSite = serveDirectory DisableBrowsing ["index.html"] $ appDir ++ "/static"
     implSite address "" routedSite `mplus` staticSite
 
 -- Run an action in application routing context
