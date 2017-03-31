@@ -56,6 +56,14 @@ parseContent c =
         Just dt -> Left $ Article (coSlug c) (coContent c) dt
         Nothing -> Right $ Meta (coSlug c) (coContent c)
 
+invalidArticleDirectory :: String -> Either String a
+invalidArticleDirectory dir =
+    Left $ "Invalid article directory name format: " ++ dir
+
+invalidFilePath :: String -> Either String a
+invalidFilePath path =
+    Left $ "File path corresponds to neither article nor meta: " ++ path
+
 extractContent :: ContentSource -> Either String Content
 extractContent cs = do
     let path = csPath cs
@@ -70,17 +78,14 @@ extractContent cs = do
     case pathComponents of
         ["meta", slug, langStr] -> makeContent slug Nothing langStr
         [slugDate, langStr] ->
-            let directoryNameError =
-                    Left $ "Invalid article directory name format: " ++ slugDate
-            in case reads slugDate of
+            case reads slugDate of
                    [(day, slugDateRest)] ->
                        case slugDateRest of
                            '-':slug ->
                                makeContent slug (Just $ atMidnight day) langStr
-                           _ -> directoryNameError
-                   _ -> directoryNameError
-        _ ->
-            Left $ "File path corresponds to neither article nor meta: " ++ path
+                           _ -> invalidArticleDirectory slugDate
+                   _ -> invalidArticleDirectory slugDate
+        _ -> invalidFilePath path
 
 extractSlugDateLang :: FilePath
                     -> Either String (String, Maybe UTCTime, Language)
@@ -95,19 +100,15 @@ extractSlugDateLang path = do
                         '-':slug ->
                             (,,) slug (Just $ atMidnight day) <$>
                             parseLanguage langStr
-                        _ ->
-                            Left $
-                            "Invalid article directory name format: " ++
-                            slugDate
-                _ ->
-                    Left $ "Invalid article directory name format: " ++ slugDate
-        _ ->
-            Left $ "File path corresponds to neither article nor meta: " ++ path
+                        _ -> invalidArticleDirectory slugDate
+                _ -> invalidArticleDirectory slugDate
+        _ -> invalidFilePath path
 
 -- Load the application state from a directory
 loadFromDirectory :: FilePath -> IO (Either String AppData)
 loadFromDirectory path = do
-    sources <- sourcesFromDirectory path
+    let static = path </> "static"
+    sources <- sourcesFromDirectory path [static]
     stringsFile <- readFileOrEmpty $ path </> "strings.yaml"
     linksFile <- readFileOrEmpty $ path </> "links.yaml"
     analyticsFile <- readFileOrEmpty $ path </> "analytics.yaml"
@@ -143,21 +144,25 @@ fromSources css = do
   where
     coKey c = (coSlug c, coDate c)
 
--- All content sources from a directory
-sourcesFromDirectory :: FilePath -> IO [ContentSource]
-sourcesFromDirectory root = execWriterT $ sourcesFromDirectory' root root
+-- All content sources from a directory, except from the ignored directories
+sourcesFromDirectory :: FilePath -> [FilePath] -> IO [ContentSource]
+sourcesFromDirectory root ignored =
+    execWriterT $ sourcesFromDirectory' root ignored root
 
 -- Read all content sources from a specified directory, considering the given
 -- root
-sourcesFromDirectory' :: FilePath -> FilePath -> WriterT [ContentSource] IO ()
-sourcesFromDirectory' root d = do
-    isDir <- liftIO $ doesDirectoryExist d
-    when isDir $
-        do files <- liftIO $ getDirectoryContents d
-           let toTraverse = map (d </>) $ filter (not . isSpecial) files
-           mapM_ (sourcesFromDirectory' root) toTraverse
-    isFile <- liftIO $ doesFileExist d
-    when isFile $ sourceFromFile root d
+sourcesFromDirectory' :: FilePath -> [FilePath] -> FilePath -> WriterT [ContentSource] IO ()
+sourcesFromDirectory' root ignored d =
+    if d `elem` ignored
+        then pure ()
+        else do
+            isDir <- liftIO $ doesDirectoryExist d
+            when isDir $ do
+                files <- liftIO $ getDirectoryContents d
+                let toTraverse = map (d </>) $ filter (not . isSpecial) files
+                mapM_ (sourcesFromDirectory' root ignored) toTraverse
+            isFile <- liftIO $ doesFileExist d
+            when isFile $ sourceFromFile root d
 
 -- Read a content source from a file, considering the given root
 sourceFromFile :: FilePath -> FilePath -> WriterT [ContentSource] IO ()

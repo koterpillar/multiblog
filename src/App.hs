@@ -18,9 +18,10 @@ import Happstack.Server
 
 import System.Directory
 import System.Environment
+import System.FilePath
 
 import Web.Routes
-import Web.Routes.Boomerang
+import Web.Routes.Boomerang (boomerangSiteRouteT)
 import Web.Routes.Happstack
 
 import Cache
@@ -82,7 +83,8 @@ site = do
     address <- lift $ asks appAddress
     appDir <- lift $ asks appDirectory
     let routedSite = boomerangSiteRouteT handler sitemap
-    let staticSite = serveDirectory DisableBrowsing ["index.html"] $ appDir ++ "/static"
+    let staticDir = appDir </> "static"
+    let staticSite = serveDirectory DisableBrowsing ["index.html"] staticDir
     implSite address "" routedSite `mplus` staticSite
 
 -- Run an action in application routing context
