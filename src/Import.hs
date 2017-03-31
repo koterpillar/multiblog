@@ -56,6 +56,14 @@ parseContent c =
         Just dt -> Left $ Article (coSlug c) (coContent c) dt
         Nothing -> Right $ Meta (coSlug c) (coContent c)
 
+invalidArticleDirectory :: String -> Either String a
+invalidArticleDirectory dir =
+    Left $ "Invalid article directory name format: " ++ dir
+
+invalidFilePath :: String -> Either String a
+invalidFilePath path =
+    Left $ "File path corresponds to neither article nor meta: " ++ path
+
 extractContent :: ContentSource -> Either String Content
 extractContent cs = do
     let path = csPath cs
@@ -70,17 +78,14 @@ extractContent cs = do
     case pathComponents of
         ["meta", slug, langStr] -> makeContent slug Nothing langStr
         [slugDate, langStr] ->
-            let directoryNameError =
-                    Left $ "Invalid article directory name format: " ++ slugDate
-            in case reads slugDate of
+            case reads slugDate of
                    [(day, slugDateRest)] ->
                        case slugDateRest of
                            '-':slug ->
                                makeContent slug (Just $ atMidnight day) langStr
-                           _ -> directoryNameError
-                   _ -> directoryNameError
-        _ ->
-            Left $ "File path corresponds to neither article nor meta: " ++ path
+                           _ -> invalidArticleDirectory slugDate
+                   _ -> invalidArticleDirectory slugDate
+        _ -> invalidFilePath path
 
 extractSlugDateLang :: FilePath
                     -> Either String (String, Maybe UTCTime, Language)
@@ -95,14 +100,9 @@ extractSlugDateLang path = do
                         '-':slug ->
                             (,,) slug (Just $ atMidnight day) <$>
                             parseLanguage langStr
-                        _ ->
-                            Left $
-                            "Invalid article directory name format: " ++
-                            slugDate
-                _ ->
-                    Left $ "Invalid article directory name format: " ++ slugDate
-        _ ->
-            Left $ "File path corresponds to neither article nor meta: " ++ path
+                        _ -> invalidArticleDirectory slugDate
+                _ -> invalidArticleDirectory slugDate
+        _ -> invalidFilePath path
 
 -- Load the application state from a directory
 loadFromDirectory :: FilePath -> IO (Either String AppData)
