@@ -107,7 +107,8 @@ extractSlugDateLang path = do
 -- Load the application state from a directory
 loadFromDirectory :: FilePath -> IO (Either String AppData)
 loadFromDirectory path = do
-    sources <- sourcesFromDirectory path
+    let static = path </> "static"
+    sources <- sourcesFromDirectory path [static]
     stringsFile <- readFileOrEmpty $ path </> "strings.yaml"
     linksFile <- readFileOrEmpty $ path </> "links.yaml"
     analyticsFile <- readFileOrEmpty $ path </> "analytics.yaml"
@@ -143,21 +144,25 @@ fromSources css = do
   where
     coKey c = (coSlug c, coDate c)
 
--- All content sources from a directory
-sourcesFromDirectory :: FilePath -> IO [ContentSource]
-sourcesFromDirectory root = execWriterT $ sourcesFromDirectory' root root
+-- All content sources from a directory, except from the ignored directories
+sourcesFromDirectory :: FilePath -> [FilePath] -> IO [ContentSource]
+sourcesFromDirectory root ignored =
+    execWriterT $ sourcesFromDirectory' root ignored root
 
 -- Read all content sources from a specified directory, considering the given
 -- root
-sourcesFromDirectory' :: FilePath -> FilePath -> WriterT [ContentSource] IO ()
-sourcesFromDirectory' root d = do
-    isDir <- liftIO $ doesDirectoryExist d
-    when isDir $
-        do files <- liftIO $ getDirectoryContents d
-           let toTraverse = map (d </>) $ filter (not . isSpecial) files
-           mapM_ (sourcesFromDirectory' root) toTraverse
-    isFile <- liftIO $ doesFileExist d
-    when isFile $ sourceFromFile root d
+sourcesFromDirectory' :: FilePath -> [FilePath] -> FilePath -> WriterT [ContentSource] IO ()
+sourcesFromDirectory' root ignored d =
+    if d `elem` ignored
+        then pure ()
+        else do
+            isDir <- liftIO $ doesDirectoryExist d
+            when isDir $ do
+                files <- liftIO $ getDirectoryContents d
+                let toTraverse = map (d </>) $ filter (not . isSpecial) files
+                mapM_ (sourcesFromDirectory' root ignored) toTraverse
+            isFile <- liftIO $ doesFileExist d
+            when isFile $ sourceFromFile root d
 
 -- Read a content source from a file, considering the given root
 sourceFromFile :: FilePath -> FilePath -> WriterT [ContentSource] IO ()
