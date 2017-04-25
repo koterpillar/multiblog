@@ -1,3 +1,4 @@
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -10,6 +11,7 @@ import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
 
+import Data.Default.Class
 import Data.LanguageCodes
 import qualified Data.Map as M
 import Data.Maybe
@@ -31,10 +33,7 @@ import Types.Content
 import Types.Language
 import Routes
 
-data PageContent = PageContent
-    { pcTitle :: Maybe String
-    , pcContent :: HtmlUrl Sitemap
-    }
+data Layout = BaseLayout | TalkLayout deriving (Eq)
 
 class Linkable a  where
     link :: a -> Sitemap
@@ -48,19 +47,18 @@ instance Linkable Article where
 instance Linkable Meta where
     link m = MetaView (mtSlug m) Nothing
 
-defaultPage :: PageContent
-defaultPage =
-    PageContent
-    { pcTitle = Nothing
-    , pcContent = mempty
+type AppRoute m = (MonadRoute m, URL m ~ Sitemap)
+
+data PageContent = PageContent
+    { pcTitle :: Maybe String
+    , pcLayout :: Layout
+    , pcContent :: HtmlUrl Sitemap
     }
 
-mkPage :: Maybe String -> HtmlUrl Sitemap -> PageContent
-mkPage title content =
-    defaultPage
-    { pcTitle = title
-    , pcContent = content
-    }
+instance Default PageContent where
+    def =
+        PageContent
+        {pcTitle = Nothing, pcLayout = BaseLayout, pcContent = mempty}
 
 type PageNumber = Int
 
@@ -116,7 +114,7 @@ linkTitle lang (MetaLink slug) = do
     return $ langTitle lang meta
 
 linkDestination
-    :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m)
+    :: (AppRoute m, MonadReader AppData m, MonadPlus m)
     => Link -> m String
 linkDestination (ExternalLink url _) = return url
 linkDestination (MetaLink slug) = do
@@ -125,13 +123,12 @@ linkDestination (MetaLink slug) = do
     return $ T.unpack $ route (link meta) []
 
 template
-    :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m)
+    :: (AppRoute m, MonadReader AppData m, MonadPlus m)
     => LanguagePreference -> PageContent -> m Markup
 template lang page = do
     links <- asks appLinks
     linkTitleUrls <-
-        forM links $
-        \l -> do
+        forM links $ \l -> do
             title <- linkTitle lang l
             destination <- linkDestination l
             return (title, destination)
@@ -139,35 +136,41 @@ template lang page = do
     langString <- askLangStringFn lang
     analyticsIDs <- asks appAnalytics
     let analytics = $(hamletFile "templates/analytics.hamlet")
-    render $(hamletFile "templates/base.hamlet")
+    case pcLayout page of
+        BaseLayout -> render $(hamletFile "templates/base.hamlet")
+        TalkLayout -> error "Talk layout not implemented"
 
 articleListDisplay
-    :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m)
+    :: (AppRoute m, MonadReader AppData m, MonadPlus m)
     => LanguagePreference -> Paginated Article -> m Markup
 articleListDisplay lang articles = do
     articlesContent <- mapM (linkedContent lang) (pageItems articles)
     langString <- askLangStringFn lang
-    template lang $ mkPage Nothing $(hamletFile "templates/list.hamlet")
+    template lang $ def {pcContent = $(hamletFile "templates/list.hamlet")}
 
 articleDisplay
-    :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m)
+    :: (AppRoute m, MonadReader AppData m, MonadPlus m)
     => LanguagePreference -> Article -> m Markup
 articleDisplay lang article =
     template lang $
-    mkPage
-        (Just $ langTitle lang article)
-        $(hamletFile "templates/article.hamlet")
+    def
+    { pcTitle = Just $ langTitle lang article
+    , pcContent = $(hamletFile "templates/article.hamlet")
+    }
 
 metaDisplay
-    :: (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m, MonadPlus m)
+    :: (AppRoute m, MonadReader AppData m, MonadPlus m)
     => LanguagePreference -> Meta -> m Markup
 metaDisplay lang meta =
     template lang $
-    mkPage (Just $ langTitle lang meta) $(hamletFile "templates/meta.hamlet")
+    def
+    { pcTitle = Just $ langTitle lang meta
+    , pcContent = $(hamletFile "templates/meta.hamlet")
+    }
 
 -- Generate a link to some content
 linkTo
-    :: (Linkable a, MonadRoute m, URL m ~ Sitemap)
+    :: (Linkable a, AppRoute m)
     => a -> m String
 linkTo a = do
     routeFn <- askRouteFn
@@ -175,7 +178,7 @@ linkTo a = do
 
 -- Modify the content to have a link to itself and have no anchors
 linkedContent
-    :: (HasContent a, Linkable a, MonadRoute m, URL m ~ Sitemap)
+    :: (HasContent a, Linkable a, AppRoute m)
     => LanguagePreference -> a -> m Pandoc
 linkedContent lang a = do
     target <- linkTo a
