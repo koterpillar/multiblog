@@ -48,8 +48,14 @@ instance HasContent Article where
 instance HasSlug Article where
     getSlug = arSlug
 
+data Layout
+    = BaseLayout
+    | TalkLayout
+    deriving (Eq, Show)
+
 data Meta = Meta
     { mtSlug :: String
+    , mtLayout :: Layout
     , mtContent :: LanguageContent
     } deriving (Eq, Show)
 

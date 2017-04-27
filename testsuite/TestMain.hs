@@ -12,7 +12,6 @@ import {-@ HTF_TESTS @-} TestImport
 import {-@ HTF_TESTS @-} TestLanguage
 import {-@ HTF_TESTS @-} TestModels
 import {-@ HTF_TESTS @-} TestRoutes
-import {-@ HTF_TESTS @-} TestUtils
 import {-@ HTF_TESTS @-} TestViews
 import {-@ HTF_TESTS @-} TestViewsExport
 

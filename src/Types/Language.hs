@@ -1,12 +1,15 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 {-|
 Language-related types.
 -}
-{-# LANGUAGE FlexibleInstances #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Types.Language where
 
 import Control.Monad
+import Control.Monad.Except
 
 import Data.Function
 import Data.LanguageCodes
@@ -69,11 +72,11 @@ matchLanguageFunc quality pref values = liftM fst $ M.maxView ranked
     ranked = M.fromList $ M.elems $ M.mapWithKey rank values
     rank lang value = (rankLanguage lang pref * quality value, value)
 
-parseLanguage :: String -> Either String Language
+parseLanguage :: MonadError String m => String -> m Language
 parseLanguage langStr =
     case parseLanguageM langStr :: Maybe Language of
         (Just lang) -> pure lang
-        Nothing -> Left $ langStr ++ " is not a valid language code."
+        Nothing -> throwError $ langStr ++ " is not a valid language code."
 
 parseLanguageM
     :: MonadPlus m

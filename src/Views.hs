@@ -33,8 +33,6 @@ import Types.Content
 import Types.Language
 import Routes
 
-data Layout = BaseLayout | TalkLayout deriving (Eq)
-
 class Linkable a  where
     link :: a -> Sitemap
 
@@ -165,6 +163,7 @@ metaDisplay lang meta =
     template lang $
     def
     { pcTitle = Just $ langTitle lang meta
+    , pcLayout = mtLayout meta
     , pcContent = $(hamletFile "templates/meta.hamlet")
     }
 

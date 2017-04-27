@@ -5,7 +5,8 @@
 
 module TestImport where
 
-import Control.Arrow
+import Control.Monad.Except
+import Control.Monad.Identity
 
 import qualified Data.ByteString.UTF8 as U
 import Data.LanguageCodes
@@ -46,41 +47,68 @@ modifyAppData f st =
     , appMeta = map f $ appMeta st
     }
 
-testSource :: FilePath -> String -> ContentSource
-testSource path content = ContentSource path $ unsafeReadMarkdown content
-
-test_loadContent = do
-    let sources =
-            [ testSource "meta/about/en.md" "This is meta"
-            , testSource "meta/about/ru.md" "Это мета"
-            , testSource "2015-03-01-article-one/en.md" "Article One"
-            , testSource "2015-03-01-article-one/ru.md" "Статья Один"
-            ]
-    let imported =
-            fmap (first (map textOnlyContent) . second (map textOnlyContent)) $
-            fromSources sources
+test_loadMeta = do
+    let directory =
+            SourceDirectory
+            { sdName = "about"
+            , sdFiles =
+                  [ SourceFile {sfName = "en.md", sfContent = "This is meta"}
+                  , SourceFile {sfName = "ru.md", sfContent = "Это мета"}
+                  ]
+            }
+    let (Identity result) = runExceptT $ parseMeta directory
     assertEqual
         (Right
-             ( [ Article
-                 { arSlug = "article-one"
-                 , arAuthored = mkDate 2015 03 01
-                 , arContent =
-                       M.fromList
-                           [ (EN, unsafeReadMarkdown "Article One")
-                           , (RU, unsafeReadMarkdown "Статья Один")
-                           ]
-                 }
-               ]
-             , [ Meta
-                 { mtSlug = "about"
-                 , mtContent =
-                       M.fromList
-                           [ (EN, unsafeReadMarkdown "This is meta")
-                           , (RU, unsafeReadMarkdown "Это мета")
-                           ]
-                 }
-               ]))
-        imported
+             (Meta
+              { mtSlug = "about"
+              , mtLayout = BaseLayout
+              , mtContent =
+                    M.fromList
+                        [ (EN, unsafeReadMarkdown "This is meta")
+                        , (RU, unsafeReadMarkdown "Это мета")
+                        ]
+              }))
+        result
+
+test_loadMetaTalkLayout = do
+    let directory =
+            SourceDirectory
+            { sdName = "talk"
+            , sdFiles =
+                  [SourceFile {sfName = "en.md", sfContent = "Talk content"}]
+            }
+    let (Identity result) = runExceptT $ parseMeta directory
+    assertEqual
+        (Right
+             (Meta
+              { mtSlug = "talk"
+              , mtLayout = TalkLayout
+              , mtContent = M.fromList [(EN, unsafeReadMarkdown "Talk content")]
+              }))
+        result
+
+test_loadArticle = do
+    let directory =
+            SourceDirectory
+            { sdName = "2015-03-01-article-one"
+            , sdFiles =
+                  [ SourceFile {sfName = "en.md", sfContent = "Article One"}
+                  , SourceFile {sfName = "ru.md", sfContent = "Статья Один"}
+                  ]
+            }
+    let (Identity result) = runExceptT $ parseArticle directory
+    assertEqual
+        (Right
+             (Article
+              { arSlug = "article-one"
+              , arAuthored = mkDate 2015 03 01
+              , arContent =
+                    M.fromList
+                        [ (EN, unsafeReadMarkdown "Article One")
+                        , (RU, unsafeReadMarkdown "Статья Один")
+                        ]
+              }))
+        result
 
 test_loadStrings = do
     let strings =

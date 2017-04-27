@@ -3,6 +3,7 @@
 module App where
 
 import Control.Applicative (optional)
+import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.State
 
@@ -45,7 +46,7 @@ loadApp
     -> Bool -- whether the address was explicitly specified
     -> IO AppData
 loadApp dataDirectory address isRealAddress = do
-    app <- loadFromDirectory dataDirectory
+    app <- runExceptT $ loadFromDirectory dataDirectory
     case app of
         Left err -> error err
         Right appState ->
