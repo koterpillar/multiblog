@@ -14,7 +14,6 @@ import qualified Data.Map as M
 import Data.Yaml
 
 import Text.Pandoc hiding (Meta)
-import Text.Pandoc.Error
 
 import Import
 import Models

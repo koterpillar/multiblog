@@ -17,7 +17,6 @@ import Data.Time
 import qualified Data.Yaml as Y
 
 import Text.Pandoc hiding (Meta, readers)
-import Text.Pandoc.Error
 
 import System.Directory
 import System.FilePath.Posix

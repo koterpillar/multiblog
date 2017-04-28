@@ -77,7 +77,10 @@ data Link
 
 instance FromJSON Link where
     parseJSON (Object v) =
-        MetaLink <$> v .: "page" <|> ExternalLink <$> v .: "url" <*> v .: "text"
+        MetaLink <$> v .: "page" <|> do
+            url <- v .: "url"
+            LanguageChoices text <- v .: "text"
+            return $ ExternalLink url text
     parseJSON _ = mzero
 
 byDate :: Day -> Article -> Bool
