@@ -136,7 +136,7 @@ template lang page = do
     let analytics = $(hamletFile "templates/analytics.hamlet")
     case pcLayout page of
         BaseLayout -> render $(hamletFile "templates/base.hamlet")
-        TalkLayout -> error "Talk layout not implemented"
+        TalkLayout -> render $(hamletFile "templates/base_talk.hamlet")
 
 articleListDisplay
     :: (AppRoute m, MonadReader AppData m, MonadPlus m)
@@ -164,8 +164,13 @@ metaDisplay lang meta =
     def
     { pcTitle = Just $ langTitle lang meta
     , pcLayout = mtLayout meta
-    , pcContent = $(hamletFile "templates/meta.hamlet")
+    , pcContent = content
     }
+  where
+    content =
+        case mtLayout meta of
+            BaseLayout -> $(hamletFile "templates/meta.hamlet")
+            TalkLayout -> $(hamletFile "templates/meta_talk.hamlet")
 
 -- Generate a link to some content
 linkTo
