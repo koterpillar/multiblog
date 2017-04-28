@@ -30,11 +30,6 @@ modifyAllContent
     => (Pandoc -> Pandoc) -> a -> a
 modifyAllContent f = modifyContent (M.map f)
 
-textOnlyContent
-    :: HasContent a
-    => a -> a
-textOnlyContent = modifyAllContent $ unsafeReadMarkdown . writePlain def
-
 modifyAppData
     :: (forall a. HasContent a =>
                   a -> a)
@@ -46,13 +41,17 @@ modifyAppData f st =
     , appMeta = map f $ appMeta st
     }
 
+testSource :: String -> String -> SourceFile
+testSource name content =
+    SourceFile {sfName = name, sfContent = U.fromString content}
+
 test_loadMeta = do
     let directory =
             SourceDirectory
             { sdName = "about"
             , sdFiles =
-                  [ SourceFile {sfName = "en.md", sfContent = "This is meta"}
-                  , SourceFile {sfName = "ru.md", sfContent = "Это мета"}
+                  [ testSource "en.md" "This is meta"
+                  , testSource "ru.md" "Это мета"
                   ]
             }
     let (Identity result) = runExceptT $ parseMeta directory
@@ -74,7 +73,7 @@ test_loadMetaTalkLayout = do
             SourceDirectory
             { sdName = "talk"
             , sdFiles =
-                  [SourceFile {sfName = "en.md", sfContent = "Talk content"}]
+                  [testSource "en.md" "Talk content"]
             }
     let (Identity result) = runExceptT $ parseMeta directory
     assertEqual
@@ -91,8 +90,8 @@ test_loadArticle = do
             SourceDirectory
             { sdName = "2015-03-01-article-one"
             , sdFiles =
-                  [ SourceFile {sfName = "en.md", sfContent = "Article One"}
-                  , SourceFile {sfName = "ru.md", sfContent = "Статья Один"}
+                  [ testSource "en.md" "Article One"
+                  , testSource "ru.md" "Статья Один"
                   ]
             }
     let (Identity result) = runExceptT $ parseArticle directory
