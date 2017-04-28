@@ -8,6 +8,7 @@ module Import where
 import Control.Monad
 import Control.Monad.Except
 
+import Data.Aeson
 import qualified Data.ByteString as B
 import qualified Data.ByteString.UTF8 as B
 import Data.Default.Class
@@ -37,14 +38,33 @@ data SourceDirectory = SourceDirectory
     , sdFiles :: [SourceFile] -- ^ Files inside
     } deriving (Show)
 
+-- | Get file contents by name from a directory
+sdFile :: FilePath -> SourceDirectory -> Maybe B.ByteString
+sdFile name =
+    fmap sfContent . listToMaybe . filter (\f -> sfName f == name) . sdFiles
+
 type ParseT m a = ExceptT String m a
+
+data MetaOptions = MetaOptions
+    { moLayout :: Layout
+    }
+
+instance Default MetaOptions where
+    def = MetaOptions {moLayout = BaseLayout}
+
+instance FromJSON MetaOptions where
+    parseJSON (Object v) = do
+        layout <- v .: "layout"
+        return $ MetaOptions { moLayout = layout }
+    parseJSON _ = mzero
 
 -- | Parse meta from a directory
 parseMeta :: Monad m => SourceDirectory -> ParseT m Meta
 parseMeta dir = do
     content <- parseContent dir
+    options <- decodeOrDefault $ sdFile "options.yaml" dir
     pure $
-        Meta {mtSlug = sdName dir, mtLayout = BaseLayout, mtContent = content}
+        Meta {mtSlug = sdName dir, mtLayout = moLayout options, mtContent = content}
 
 -- | Parse an article from a directory
 parseArticle
@@ -91,7 +111,7 @@ extractSlugDate name =
     case reads name of
         [(day, slugDateRest)] ->
             case slugDateRest of
-                '-':slug -> return (slug, atMidnight day)
+                '-':slug -> pure (slug, atMidnight day)
                 _ -> invalidArticleDirectory name
         _ -> invalidArticleDirectory name
 
@@ -111,7 +131,7 @@ parseTree root
             else pure []
     articleDirs <- buildDirs root ["meta", "static"]
     articles <- forM articleDirs parseArticle
-    return (articles, metas)
+    pure (articles, metas)
 
 -- | Enumerate the directories
 buildDirs
@@ -151,17 +171,14 @@ buildDir dir =
 loadFromDirectory :: FilePath -> ParseT IO AppData
 loadFromDirectory path = do
     (articles, metas) <- parseTree path
-    stringsFile <- lift $ readFileOrEmpty $ path </> "strings.yaml"
-    linksFile <- lift $ readFileOrEmpty $ path </> "links.yaml"
-    analyticsFile <- lift $ readFileOrEmpty $ path </> "analytics.yaml"
-    servicesFile <- lift $ readFileOrEmpty $ path </> "services.yaml"
-    crossPostFile <- lift $ readFileOrEmpty $ path </> "cross-posting.yaml"
-    strings <- decodeOrDefault stringsFile
-    links <- decodeOrDefault linksFile
-    analytics <- decodeOrDefault analyticsFile
-    services <- decodeOrDefault servicesFile
-    crossPost <- decodeOrDefault crossPostFile
-    return $
+    root <- buildDir path
+    let rootFile name = sdFile name root
+    strings <- decodeOrDefault $ rootFile "strings.yaml"
+    links <- decodeOrDefault $ rootFile "links.yaml"
+    analytics <- decodeOrDefault $ rootFile "analytics.yaml"
+    services <- decodeOrDefault $ rootFile "services.yaml"
+    crossPost <- decodeOrDefault $ rootFile "cross-posting.yaml"
+    pure $
         def
         { appDirectory = path
         , appAddress = ""
@@ -188,10 +205,10 @@ readFileOrEmpty path = do
 -- Decode YAML, returning a default value on empty content (empty files are not
 -- valid YAML)
 decodeOrDefault
-    :: (Default a, Y.FromJSON a, Monad m)
-    => B.ByteString -> ParseT m a
-decodeOrDefault "" = pure def
-decodeOrDefault s =
+    :: (Default a, FromJSON a, Monad m)
+    => Maybe B.ByteString -> ParseT m a
+decodeOrDefault Nothing = pure def
+decodeOrDefault (Just s) =
     case Y.decodeEither s of
         Left err -> throwError err
         Right res -> pure res

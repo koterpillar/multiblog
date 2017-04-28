@@ -53,6 +53,12 @@ data Layout
     | TalkLayout
     deriving (Eq, Show)
 
+instance FromJSON Layout where
+    parseJSON (String v) | v == "base" = pure BaseLayout
+                         | v == "talk" = pure TalkLayout
+                         | otherwise = mzero
+    parseJSON _ = mzero
+
 data Meta = Meta
     { mtSlug :: String
     , mtLayout :: Layout

@@ -73,7 +73,9 @@ test_loadMetaTalkLayout = do
             SourceDirectory
             { sdName = "talk"
             , sdFiles =
-                  [testSource "en.md" "Talk content"]
+                  [ testSource "en.md" "Talk content"
+                  , testSource "options.yaml" "layout: talk"
+                  ]
             }
     let (Identity result) = runExceptT $ parseMeta directory
     assertEqual
