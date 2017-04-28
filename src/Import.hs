@@ -127,7 +127,7 @@ buildDirs dir ignore =
             filterM doesDirectoryExist $ map dirPath $ filter wantDir contents
         forM subdirs buildDir
   where
-    wantDir subdir = not $ elem subdir ignore
+    wantDir subdir = not (elem subdir ignore) && head subdir /= '.'
     dirPath subdir = dir </> subdir
 
 -- | Enumerate files in a directory
