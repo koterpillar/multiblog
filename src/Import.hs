@@ -41,9 +41,9 @@ type ParseT m a = ExceptT String m a
 
 -- | Parse meta from a directory
 parseMeta :: Monad m => SourceDirectory -> ParseT m Meta
-parseMeta dir = parseContent mkMeta dir
-  where
-    mkMeta content =
+parseMeta dir = do
+    content <- parseContent dir
+    pure $
         Meta {mtSlug = sdName dir, mtLayout = BaseLayout, mtContent = content}
 
 -- | Parse an article from a directory
@@ -52,13 +52,12 @@ parseArticle
     => SourceDirectory -> ParseT m Article
 parseArticle dir = do
     (slug, date) <- extractSlugDate $ sdName dir
-    let mkArticle content =
-            Article {arSlug = slug, arAuthored = date, arContent = content}
-    parseContent mkArticle dir
+    content <- parseContent dir
+    pure $ Article {arSlug = slug, arAuthored = date, arContent = content}
 
 -- | Parse a multilingual content from a directory
-parseContent :: Monad m => (LanguageContent -> r) -> SourceDirectory -> ParseT m r
-parseContent mkContent dir = do
+parseContent :: Monad m => SourceDirectory -> ParseT m LanguageContent
+parseContent dir = do
     content <-
         fmap catMaybes $
         forM (sdFiles dir) $ \file -> do
@@ -70,7 +69,7 @@ parseContent mkContent dir = do
                     case reader (B.toString $ sfContent file) of
                         Left err -> throwError $ show err
                         Right res -> pure (Just (lang, res))
-    pure $ mkContent $ M.fromList content
+    pure $ M.fromList content
 
 invalidArticleDirectory
     :: Monad m
