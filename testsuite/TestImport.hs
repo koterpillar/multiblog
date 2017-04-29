@@ -68,13 +68,13 @@ test_loadMeta = do
               }))
         result
 
-test_loadMetaTalkLayout = do
+test_loadMetaPresentationLayout = do
     let directory =
             SourceDirectory
             { sdName = "talk"
             , sdFiles =
                   [ testSource "en.md" "Talk content"
-                  , testSource "options.yaml" "layout: talk"
+                  , testSource "options.yaml" "layout: presentation"
                   ]
             }
     let (Identity result) = runExceptT $ parseMeta directory
@@ -82,7 +82,7 @@ test_loadMetaTalkLayout = do
         (Right
              (Meta
               { mtSlug = "talk"
-              , mtLayout = TalkLayout
+              , mtLayout = PresentationLayout
               , mtContent = M.fromList [(EN, unsafeReadMarkdown "Talk content")]
               }))
         result

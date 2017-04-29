@@ -137,7 +137,7 @@ template lang page = do
     let analytics = $(hamletFile "templates/analytics.hamlet")
     case pcLayout page of
         BaseLayout -> render $(hamletFile "templates/base.hamlet")
-        TalkLayout -> render $(hamletFile "templates/base_talk.hamlet")
+        PresentationLayout -> render $(hamletFile "templates/base_presentation.hamlet")
 
 articleListDisplay
     :: (AppRoute m, MonadReader AppData m, MonadPlus m)
@@ -171,7 +171,7 @@ metaDisplay lang meta =
     content =
         case mtLayout meta of
             BaseLayout -> $(hamletFile "templates/meta.hamlet")
-            TalkLayout -> $(hamletFile "templates/meta_talk.hamlet")
+            PresentationLayout -> $(hamletFile "templates/meta_presentation.hamlet")
 
 -- Generate a link to some content
 linkTo

@@ -50,12 +50,12 @@ instance HasSlug Article where
 
 data Layout
     = BaseLayout
-    | TalkLayout
+    | PresentationLayout
     deriving (Eq, Show)
 
 instance FromJSON Layout where
     parseJSON (String v) | v == "base" = pure BaseLayout
-                         | v == "talk" = pure TalkLayout
+                         | v == "presentation" = pure PresentationLayout
                          | otherwise = mzero
     parseJSON _ = mzero
 
