@@ -1,20 +1,24 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 {-|
 Language-related types.
 -}
-{-# LANGUAGE FlexibleInstances #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Types.Language where
 
 import Control.Monad
+import Control.Monad.Except
 
+import qualified Data.Aeson.Types as A
 import Data.Function
 import Data.LanguageCodes
 import Data.List
 import Data.List.Split
 import qualified Data.Map as M
 import Data.Maybe
-import qualified Data.Yaml as Y
+import qualified Data.Text as T
 
 import Utils
 
@@ -29,14 +33,22 @@ mapKeysM kfunc = liftM M.fromList . mapM kvfunc . M.toList
   where
     kvfunc (k, v) = liftM (\k' -> (k', v)) $ kfunc k
 
-instance Y.FromJSON ISO639_1 where
-    parseJSON v@(Y.String _) = Y.parseJSON v >>= parseLanguageM
+instance A.FromJSON ISO639_1 where
+    parseJSON v@(A.String _) = A.parseJSON v >>= parseLanguageM
     parseJSON _ = mzero
 
-instance (Y.FromJSON v) =>
-         Y.FromJSON (M.Map Language v) where
-    parseJSON v@(Y.Object _) = Y.parseJSON v >>= mapKeysM parseLanguageM
-    parseJSON v@(Y.String _) = M.singleton defaultLanguage <$> Y.parseJSON v
+instance A.FromJSONKey ISO639_1 where
+    fromJSONKey = A.FromJSONKeyTextParser $ parseLanguageM . T.unpack
+
+-- | Newtype for parsing either a single value or a map of values
+newtype LanguageChoices a = LanguageChoices (LanguageMap a)
+
+instance A.FromJSON v =>
+         A.FromJSON (LanguageChoices v) where
+    parseJSON v@(A.Object _) =
+        A.parseJSON v >>= mapKeysM parseLanguageM >>= pure . LanguageChoices
+    parseJSON v@(A.String _) =
+        (LanguageChoices . M.singleton defaultLanguage) <$> A.parseJSON v
     parseJSON _ = mzero
 
 newtype LanguagePreference = LanguagePreference
@@ -69,11 +81,11 @@ matchLanguageFunc quality pref values = liftM fst $ M.maxView ranked
     ranked = M.fromList $ M.elems $ M.mapWithKey rank values
     rank lang value = (rankLanguage lang pref * quality value, value)
 
-parseLanguage :: String -> Either String Language
+parseLanguage :: MonadError String m => String -> m Language
 parseLanguage langStr =
     case parseLanguageM langStr :: Maybe Language of
         (Just lang) -> pure lang
-        Nothing -> Left $ langStr ++ " is not a valid language code."
+        Nothing -> throwError $ langStr ++ " is not a valid language code."
 
 parseLanguageM
     :: MonadPlus m

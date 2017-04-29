@@ -122,7 +122,6 @@ Test-Suite tests
                , TestLanguage
                , TestModels
                , TestRoutes
-               , TestUtils
                , TestViews
                , TestViewsExport
                , Types.Content

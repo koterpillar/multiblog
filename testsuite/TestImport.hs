@@ -5,7 +5,8 @@
 
 module TestImport where
 
-import Control.Arrow
+import Control.Monad.Except
+import Control.Monad.Identity
 
 import qualified Data.ByteString.UTF8 as U
 import Data.LanguageCodes
@@ -13,7 +14,6 @@ import qualified Data.Map as M
 import Data.Yaml
 
 import Text.Pandoc hiding (Meta)
-import Text.Pandoc.Error
 
 import Import
 import Models
@@ -30,11 +30,6 @@ modifyAllContent
     => (Pandoc -> Pandoc) -> a -> a
 modifyAllContent f = modifyContent (M.map f)
 
-textOnlyContent
-    :: HasContent a
-    => a -> a
-textOnlyContent = modifyAllContent $ unsafeReadMarkdown . writePlain def
-
 modifyAppData
     :: (forall a. HasContent a =>
                   a -> a)
@@ -46,41 +41,74 @@ modifyAppData f st =
     , appMeta = map f $ appMeta st
     }
 
-testSource :: FilePath -> String -> ContentSource
-testSource path content = ContentSource path $ unsafeReadMarkdown content
+testSource :: String -> String -> SourceFile
+testSource name content =
+    SourceFile {sfName = name, sfContent = U.fromString content}
 
-test_loadContent = do
-    let sources =
-            [ testSource "meta/about/en.md" "This is meta"
-            , testSource "meta/about/ru.md" "Это мета"
-            , testSource "2015-03-01-article-one/en.md" "Article One"
-            , testSource "2015-03-01-article-one/ru.md" "Статья Один"
-            ]
-    let imported =
-            fmap (first (map textOnlyContent) . second (map textOnlyContent)) $
-            fromSources sources
+test_loadMeta = do
+    let directory =
+            SourceDirectory
+            { sdName = "about"
+            , sdFiles =
+                  [ testSource "en.md" "This is meta"
+                  , testSource "ru.md" "Это мета"
+                  ]
+            }
+    let (Identity result) = runExceptT $ parseMeta directory
     assertEqual
         (Right
-             ( [ Article
-                 { arSlug = "article-one"
-                 , arAuthored = mkDate 2015 03 01
-                 , arContent =
-                       M.fromList
-                           [ (EN, unsafeReadMarkdown "Article One")
-                           , (RU, unsafeReadMarkdown "Статья Один")
-                           ]
-                 }
-               ]
-             , [ Meta
-                 { mtSlug = "about"
-                 , mtContent =
-                       M.fromList
-                           [ (EN, unsafeReadMarkdown "This is meta")
-                           , (RU, unsafeReadMarkdown "Это мета")
-                           ]
-                 }
-               ]))
-        imported
+             (Meta
+              { mtSlug = "about"
+              , mtLayout = BaseLayout
+              , mtContent =
+                    M.fromList
+                        [ (EN, unsafeReadMarkdown "This is meta")
+                        , (RU, unsafeReadMarkdown "Это мета")
+                        ]
+              }))
+        result
+
+test_loadMetaPresentationLayout = do
+    let directory =
+            SourceDirectory
+            { sdName = "talk"
+            , sdFiles =
+                  [ testSource "en.md" "Talk content"
+                  , testSource "options.yaml" "layout: presentation"
+                  ]
+            }
+    let (Identity result) = runExceptT $ parseMeta directory
+    assertEqual
+        (Right
+             (Meta
+              { mtSlug = "talk"
+              , mtLayout = PresentationLayout
+              , mtContent = M.fromList [(EN, unsafeReadMarkdown "Talk content")]
+              }))
+        result
+
+test_loadArticle = do
+    let directory =
+            SourceDirectory
+            { sdName = "2015-03-01-article-one"
+            , sdFiles =
+                  [ testSource "en.md" "Article One"
+                  , testSource "ru.md" "Статья Один"
+                  ]
+            }
+    let (Identity result) = runExceptT $ parseArticle directory
+    assertEqual
+        (Right
+             (Article
+              { arSlug = "article-one"
+              , arAuthored = mkDate 2015 03 01
+              , arContent =
+                    M.fromList
+                        [ (EN, unsafeReadMarkdown "Article One")
+                        , (RU, unsafeReadMarkdown "Статья Один")
+                        ]
+              }))
+        result
 
 test_loadStrings = do
     let strings =

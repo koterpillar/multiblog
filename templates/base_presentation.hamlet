@@ -1,0 +1,27 @@
+$doctype 5
+<html lang="#{showLanguage $ bestLanguage lang}">
+  <head>
+    <meta charset="utf-8">
+    <title>
+      $maybe title <- pcTitle page
+        #{title} - #{langString "siteName"}
+      $nothing
+        #{langString "siteName"}
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    ^{analytics}
+  <body>
+    <textarea #source>
+      ^{pcContent page}
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    <script>
+      var slideshow = remark.create();

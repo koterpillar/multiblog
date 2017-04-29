@@ -48,8 +48,20 @@ instance HasContent Article where
 instance HasSlug Article where
     getSlug = arSlug
 
+data Layout
+    = BaseLayout
+    | PresentationLayout
+    deriving (Eq, Show)
+
+instance FromJSON Layout where
+    parseJSON (String v) | v == "base" = pure BaseLayout
+                         | v == "presentation" = pure PresentationLayout
+                         | otherwise = mzero
+    parseJSON _ = mzero
+
 data Meta = Meta
     { mtSlug :: String
+    , mtLayout :: Layout
     , mtContent :: LanguageContent
     } deriving (Eq, Show)
 
@@ -71,7 +83,10 @@ data Link
 
 instance FromJSON Link where
     parseJSON (Object v) =
-        MetaLink <$> v .: "page" <|> ExternalLink <$> v .: "url" <*> v .: "text"
+        MetaLink <$> v .: "page" <|> do
+            url <- v .: "url"
+            LanguageChoices text <- v .: "text"
+            return $ ExternalLink url text
     parseJSON _ = mzero
 
 byDate :: Day -> Article -> Bool

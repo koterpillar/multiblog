@@ -16,6 +16,7 @@ current directory. The following environment variables can be given:
 
 - `LISTEN_PORT` - the port to listen on, default 8000.
 - `SITE_URL` - the site URL used for the links, default `http://localhost:8000`.
+- `CONTENT_DIRECTORY` - the directory to look for content in instead.
 
 ### Content
 
@@ -37,28 +38,32 @@ directly to be their slugs.
 Individual Markdown files inside the directories are named after their content
 language code, for example, `en.md`.
 
-Some elements of the blog other than content itself must also be translated.
-The translations use the file `content/strings.yaml` which must contain hashes
-of the following structure: string - language - translation.
+Metas support rendering as slideshows via [remark](https://remarkjs.com/). To
+switch a meta to presentation mode, add `layout: presentation` to `options.yaml`
+in the meta directory.
 
-The sidebar links are specified in `content/links.yaml`. They can point either
-to metas or to any external address.
+Some elements of the blog other than content itself must also be translated. The
+translations use the file `strings.yaml` which must contain hashes of the
+following structure: string - language - translation.
+
+The sidebar links are specified in `links.yaml`. They can point either to metas
+or to any external address.
 
 ### Analytics
 
 Google Analytics is supported for the site. The ID must be specified in
-`content/analytics.yaml`.
+`analytics.yaml`.
 
 ### Cross-posting
 
 The blog supports cross-posting the articles to an external service. In order to
 do that, it needs the credentials of both the service and the user on that
-service. The service credentials are provided in `content/services.yaml` and are
+service. The service credentials are provided in `services.yaml` and are
 specific to each service.
 
 The content can be posted to multiple accounts across one or more services.
-Cross-posting settings are specified separately in `content/cross-posting.yaml`.
-Each entry has the following format:
+Cross-posting settings are specified separately in `cross-posting.yaml`. Each
+entry has the following format:
 
 ```yaml
 - service: xxxxxxxx
@@ -151,7 +156,7 @@ This is the site introduction in English.
 
 ### Strings
 
-This is an example of string translation file, `content/strings.yaml`:
+This is an example of string translation file, `strings.yaml`:
 
 ```yaml
 home:
@@ -161,7 +166,7 @@ home:
 
 ### Links
 
-An example of links file, `content/links.yaml`:
+An example of links file, `links.yaml`:
 
 ```yaml
 - page: about
@@ -175,7 +180,7 @@ An example of links file, `content/links.yaml`:
 
 ### Analytics
 
-An example of the analytics file, `content/analytics.yaml`:
+An example of the analytics file, `analytics.yaml`:
 
 ```yaml
 google: UA-12345678-9

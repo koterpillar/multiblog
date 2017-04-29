@@ -23,6 +23,8 @@ import Arbitrary ()
 
 derive makeArbitrary ''Article
 
+derive makeArbitrary ''Layout
+
 derive makeArbitrary ''Meta
 
 derive makeArbitrary ''Link

@@ -1,4 +1,6 @@
 flags: {}
 packages:
 - '.'
-resolver: lts-7.12
+extra-deps:
+- twitter-conduit-0.2.2
+resolver: lts-8.12

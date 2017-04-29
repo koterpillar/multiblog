@@ -6,18 +6,18 @@
 module Import where
 
 import Control.Monad
-import Control.Monad.State
-import Control.Monad.Writer
+import Control.Monad.Except
 
+import Data.Aeson
 import qualified Data.ByteString as B
+import qualified Data.ByteString.UTF8 as B
 import Data.Default.Class
-import Data.Either
 import qualified Data.Map as M
+import Data.Maybe
 import Data.Time
 import qualified Data.Yaml as Y
 
 import Text.Pandoc hiding (Meta, readers)
-import Text.Pandoc.Error
 
 import System.Directory
 import System.FilePath.Posix
@@ -25,161 +25,171 @@ import System.FilePath.Posix
 import Models
 import Types.Content
 import Types.Language
-import Utils
 
--- Each file gets imported into a ContentSource
-data ContentSource = ContentSource
-    { csPath :: FilePath
-    , csContent :: Pandoc
+-- | A file read from the content directory
+data SourceFile = SourceFile
+    { sfName :: FilePath -- ^ File name
+    , sfContent :: B.ByteString -- ^ File contents
     } deriving (Eq, Ord, Show)
 
--- Each language group of ContentSources becomes either Article or Meta
--- later
-data Content = Content
-    { coSlug :: String
-    , coDate :: Maybe UTCTime
-    , coContent :: LanguageContent
-    } deriving (Eq, Ord, Show)
+-- | Read directory with a list of files
+data SourceDirectory = SourceDirectory
+    { sdName :: FilePath -- ^ Directory name
+    , sdFiles :: [SourceFile] -- ^ Files inside
+    } deriving (Show)
 
--- Merge content belonging to the same article/meta
-mergeContent :: Content -> Content -> Content
-mergeContent c1 c2 =
-    Content
-    { coSlug = coSlug c1
-    , coDate = coDate c1
-    , coContent = M.union (coContent c1) (coContent c2)
+-- | Get file contents by name from a directory
+sdFile :: FilePath -> SourceDirectory -> Maybe B.ByteString
+sdFile name =
+    fmap sfContent . listToMaybe . filter (\f -> sfName f == name) . sdFiles
+
+type ParseT m a = ExceptT String m a
+
+data MetaOptions = MetaOptions
+    { moLayout :: Layout
     }
 
-parseContent :: Content -> Either Article Meta
-parseContent c =
-    case coDate c of
-        Just dt -> Left $ Article (coSlug c) (coContent c) dt
-        Nothing -> Right $ Meta (coSlug c) (coContent c)
+instance Default MetaOptions where
+    def = MetaOptions {moLayout = BaseLayout}
 
-invalidArticleDirectory :: String -> Either String a
-invalidArticleDirectory dir =
-    Left $ "Invalid article directory name format: " ++ dir
+instance FromJSON MetaOptions where
+    parseJSON (Object v) = do
+        layout <- v .: "layout"
+        return $ MetaOptions { moLayout = layout }
+    parseJSON _ = mzero
 
-invalidFilePath :: String -> Either String a
-invalidFilePath path =
-    Left $ "File path corresponds to neither article nor meta: " ++ path
+-- | Parse meta from a directory
+parseMeta :: Monad m => SourceDirectory -> ParseT m Meta
+parseMeta dir = do
+    content <- parseContent dir
+    options <- decodeOrDefault $ sdFile "options.yaml" dir
+    pure $
+        Meta {mtSlug = sdName dir, mtLayout = moLayout options, mtContent = content}
 
-extractContent :: ContentSource -> Either String Content
-extractContent cs = do
-    let path = csPath cs
-    let pathComponents = splitDirectories $ dropExtension path
-    let makeContent :: String
-                    -> Maybe UTCTime
-                    -> String
-                    -> Either String Content
-        makeContent slug date langStr = do
-            lang <- parseLanguage langStr
-            return $ Content slug date (M.singleton lang $ csContent cs)
-    case pathComponents of
-        ["meta", slug, langStr] -> makeContent slug Nothing langStr
-        [slugDate, langStr] ->
-            case reads slugDate of
-                   [(day, slugDateRest)] ->
-                       case slugDateRest of
-                           '-':slug ->
-                               makeContent slug (Just $ atMidnight day) langStr
-                           _ -> invalidArticleDirectory slugDate
-                   _ -> invalidArticleDirectory slugDate
-        _ -> invalidFilePath path
+-- | Parse an article from a directory
+parseArticle
+    :: Monad m
+    => SourceDirectory -> ParseT m Article
+parseArticle dir = do
+    (slug, date) <- extractSlugDate $ sdName dir
+    content <- parseContent dir
+    pure $ Article {arSlug = slug, arAuthored = date, arContent = content}
 
-extractSlugDateLang :: FilePath
-                    -> Either String (String, Maybe UTCTime, Language)
-extractSlugDateLang path = do
-    let pathComponents = splitDirectories $ dropExtension path
-    case pathComponents of
-        ["meta", slug, langStr] -> (,,) slug Nothing <$> parseLanguage langStr
-        [slugDate, langStr] ->
-            case reads slugDate of
-                [(day, slugDateRest)] ->
-                    case slugDateRest of
-                        '-':slug ->
-                            (,,) slug (Just $ atMidnight day) <$>
-                            parseLanguage langStr
-                        _ -> invalidArticleDirectory slugDate
-                _ -> invalidArticleDirectory slugDate
-        _ -> invalidFilePath path
-
--- Load the application state from a directory
-loadFromDirectory :: FilePath -> IO (Either String AppData)
-loadFromDirectory path = do
-    let static = path </> "static"
-    sources <- sourcesFromDirectory path [static]
-    stringsFile <- readFileOrEmpty $ path </> "strings.yaml"
-    linksFile <- readFileOrEmpty $ path </> "links.yaml"
-    analyticsFile <- readFileOrEmpty $ path </> "analytics.yaml"
-    servicesFile <- readFileOrEmpty $ path </> "services.yaml"
-    crossPostFile <- readFileOrEmpty $ path </> "cross-posting.yaml"
-    return $
-        do (articles, metas) <- fromSources sources
-           strings <- decodeOrDefault stringsFile
-           links <- decodeOrDefault linksFile
-           analytics <- decodeOrDefault analyticsFile
-           services <- decodeOrDefault servicesFile
-           crossPost <- decodeOrDefault crossPostFile
-           return $
-               def
-               { appDirectory = path
-               , appAddress = ""
-               , appArticles = articles
-               , appMeta = metas
-               , appStrings = strings
-               , appLinks = links
-               , appAnalytics = analytics
-               , appServices = services
-               , appCrossPost = crossPost
-               }
-
--- Group sources by slug/date and make Articles or Metas out of them
-fromSources :: [ContentSource] -> Either String ([Article], [Meta])
-fromSources css = do
-    cs <- mapM extractContent css
-    let grouped = map (foldr1 mergeContent) $ groupBy coKey cs
-    let parsed = map parseContent grouped
-    return (lefts parsed, rights parsed)
-  where
-    coKey c = (coSlug c, coDate c)
-
--- All content sources from a directory, except from the ignored directories
-sourcesFromDirectory :: FilePath -> [FilePath] -> IO [ContentSource]
-sourcesFromDirectory root ignored =
-    execWriterT $ sourcesFromDirectory' root ignored root
-
--- Read all content sources from a specified directory, considering the given
--- root
-sourcesFromDirectory' :: FilePath -> [FilePath] -> FilePath -> WriterT [ContentSource] IO ()
-sourcesFromDirectory' root ignored d =
-    if d `elem` ignored
-        then pure ()
-        else do
-            isDir <- liftIO $ doesDirectoryExist d
-            when isDir $ do
-                files <- liftIO $ getDirectoryContents d
-                let toTraverse = map (d </>) $ filter (not . isSpecial) files
-                mapM_ (sourcesFromDirectory' root ignored) toTraverse
-            isFile <- liftIO $ doesFileExist d
-            when isFile $ sourceFromFile root d
-
--- Read a content source from a file, considering the given root
-sourceFromFile :: FilePath -> FilePath -> WriterT [ContentSource] IO ()
-sourceFromFile root fp =
-    case takeExtension fp of
-        "" -> return ()
-        '.':ext ->
-            case M.lookup ext readers of
-                Nothing -> return ()
+-- | Parse a multilingual content from a directory
+parseContent :: Monad m => SourceDirectory -> ParseT m LanguageContent
+parseContent dir = do
+    content <-
+        fmap catMaybes $
+        forM (sdFiles dir) $ \file -> do
+            let (fileName, ext) = splitExtension $ sfName file
+            case M.lookup (tail ext) readers of
+                Nothing -> pure Nothing
                 Just reader -> do
-                    content <- liftM reader $ liftIO $ readFile fp
-                    case content of
-                        Left err ->
-                            fail $ "Error reading " ++ fp ++ ": " ++ show err
-                        Right pandoc ->
-                            tell [ContentSource (makeRelative root fp) pandoc]
-        ext -> fail $ "Invalid extension " ++ ext
+                    lang <- parseLanguage fileName
+                    case reader (B.toString $ sfContent file) of
+                        Left err -> throwError $ show err
+                        Right res -> pure (Just (lang, res))
+    pure $ M.fromList content
+
+invalidArticleDirectory
+    :: Monad m
+    => FilePath -> ParseT m a
+invalidArticleDirectory dir =
+    throwError $ "Invalid article directory name format: " ++ dir
+
+invalidFilePath
+    :: Monad m
+    => FilePath -> ParseT m a
+invalidFilePath path =
+    throwError $ "File path corresponds to neither article nor meta: " ++ path
+
+-- | Get slug and date from a directory path
+extractSlugDate
+    :: Monad m
+    => FilePath -> ParseT m (String, UTCTime)
+extractSlugDate name =
+    case reads name of
+        [(day, slugDateRest)] ->
+            case slugDateRest of
+                '-':slug -> pure (slug, atMidnight day)
+                _ -> invalidArticleDirectory name
+        _ -> invalidArticleDirectory name
+
+-- | Parse all articles and metas from the contents directory
+parseTree
+    :: FilePath -- ^ Root directory
+    -> ParseT IO ([Article], [Meta])
+parseTree root
+ = do
+    let metaDir = root </> "meta"
+    metaExists <- liftIO $ doesDirectoryExist metaDir
+    metas <-
+        if metaExists
+            then do
+                metasDirs <- buildDirs metaDir []
+                forM metasDirs parseMeta
+            else pure []
+    articleDirs <- buildDirs root ["meta", "static"]
+    articles <- forM articleDirs parseArticle
+    pure (articles, metas)
+
+-- | Enumerate the directories
+buildDirs
+    :: MonadIO m
+    => FilePath -- ^ Directory to traverse
+    -> [FilePath] -- ^ Directories to ignore
+    -> m [SourceDirectory]
+buildDirs dir ignore =
+    liftIO $ do
+        contents <- listDirectory dir
+        subdirs <-
+            filterM doesDirectoryExist $ map dirPath $ filter wantDir contents
+        forM subdirs buildDir
+  where
+    wantDir subdir = not (elem subdir ignore) && head subdir /= '.'
+    dirPath subdir = dir </> subdir
+
+-- | Enumerate files in a directory
+buildDir
+    :: MonadIO m
+    => FilePath -- ^ Directory to traverse
+    -> m SourceDirectory
+buildDir dir =
+    liftIO $ do
+        contents <- listDirectory dir
+        files <- filterM doesFileExist $ map dirPath contents
+        sources <-
+            forM files $ \file -> do
+                content <- B.readFile file
+                pure $
+                    SourceFile {sfName = takeFileName file, sfContent = content}
+        pure $ SourceDirectory {sdName = takeFileName dir, sdFiles = sources}
+  where
+    dirPath subdir = dir </> subdir
+
+-- | Load the application state from a directory
+loadFromDirectory :: FilePath -> ParseT IO AppData
+loadFromDirectory path = do
+    (articles, metas) <- parseTree path
+    root <- buildDir path
+    let rootFile name = sdFile name root
+    strings <- decodeOrDefault $ rootFile "strings.yaml"
+    links <- decodeOrDefault $ rootFile "links.yaml"
+    analytics <- decodeOrDefault $ rootFile "analytics.yaml"
+    services <- decodeOrDefault $ rootFile "services.yaml"
+    crossPost <- decodeOrDefault $ rootFile "cross-posting.yaml"
+    pure $
+        def
+        { appDirectory = path
+        , appAddress = ""
+        , appArticles = articles
+        , appMeta = metas
+        , appStrings = strings
+        , appLinks = links
+        , appAnalytics = analytics
+        , appServices = services
+        , appCrossPost = crossPost
+        }
 
 -- A map of supported file formats and corresponding Pandoc readers
 readers :: M.Map String (String -> Either PandocError Pandoc)
@@ -194,6 +204,11 @@ readFileOrEmpty path = do
 
 -- Decode YAML, returning a default value on empty content (empty files are not
 -- valid YAML)
-decodeOrDefault :: (Default a, Y.FromJSON a) => B.ByteString -> Either String a
-decodeOrDefault "" = Right def
-decodeOrDefault s = Y.decodeEither s
+decodeOrDefault
+    :: (Default a, FromJSON a, Monad m)
+    => Maybe B.ByteString -> ParseT m a
+decodeOrDefault Nothing = pure def
+decodeOrDefault (Just s) =
+    case Y.decodeEither s of
+        Left err -> throwError err
+        Right res -> pure res
