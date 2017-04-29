@@ -41,9 +41,9 @@ type App = StateT AppCache (ReaderT AppData IO)
 type AppPart a = RouteT Sitemap (ServerPartT App) a
 
 loadApp
-    :: String -- directory to load from
-    -> T.Text -- site address
-    -> Bool -- whether the address was explicitly specified
+    :: String -- ^ directory to load from
+    -> T.Text -- ^ site address
+    -> Bool -- ^ whether the address was explicitly specified
     -> IO AppData
 loadApp dataDirectory address isRealAddress = do
     app <- runExceptT $ loadFromDirectory dataDirectory
@@ -64,10 +64,18 @@ siteAddress = do
         Just realAddr -> (realAddr, True)
         Nothing -> ("http://localhost:8000", False)
 
+-- | Application directory to use
+getAppDirectory :: IO FilePath
+getAppDirectory = do
+    val <- lookupEnv "CONTENT_DIRECTORY"
+    case val of
+        Just contentDir -> return contentDir
+        Nothing -> getCurrentDirectory
+
 loadAppDefault :: IO AppData
 loadAppDefault = do
     (address, isRealAddress) <- siteAddress
-    directory <- getCurrentDirectory
+    directory <- getAppDirectory
     loadApp directory address isRealAddress
 
 initAppCache :: IO AppCache
