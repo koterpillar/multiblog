@@ -15,6 +15,7 @@ import Data.Default.Class
 import Data.LanguageCodes
 import qualified Data.Map as M
 import Data.Maybe
+import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Data.Time
@@ -221,3 +222,20 @@ renderPrintStylesheet
 renderPrintStylesheet = do
     route <- liftM convRender askRouteFn
     return $ renderCssUrl route $(luciusFile "templates/print.lucius")
+
+-- | Remark can only render the pipe tables. Disable the other kinds
+remarkOptions :: WriterOptions
+remarkOptions =
+    def {writerExtensions = writerExtensions def S.\\ otherTableExtensions}
+  where
+    otherTableExtensions =
+        S.fromList [Ext_simple_tables, Ext_multiline_tables, Ext_grid_tables]
+
+-- | Remark relies on "---" being a slide separator, Pandoc makes it into a
+-- horizontal line
+fixSlideSeparators :: Pandoc -> Pandoc
+fixSlideSeparators = walk fixSeparators
+  where
+    fixSeparators :: Block -> Block
+    fixSeparators HorizontalRule = Para [Str "---"]
+    fixSeparators x = x

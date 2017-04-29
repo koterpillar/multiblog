@@ -1,1 +1,1 @@
-#{writeMarkdown def $ langContent lang meta}
+#{writeMarkdown remarkOptions $ fixSlideSeparators $ langContent lang meta}
