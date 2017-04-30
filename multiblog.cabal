@@ -41,8 +41,6 @@ Executable multiblog
                , process-extras
                , shakespeare
                , split
-               , system-argv0
-               , system-filepath
                , tagsoup
                , text
                , time

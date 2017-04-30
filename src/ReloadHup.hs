@@ -7,13 +7,10 @@ module ReloadHup
 
 import Control.Concurrent
 import Control.Exception
-import Control.Monad
 
 import Data.Typeable
 
-import Filesystem.Path.CurrentOS
-
-import System.Argv0
+import System.Environment
 import System.Posix.Process
 import System.Posix.Signals
 
@@ -39,5 +36,5 @@ reloadHup main = do
 reloadExecutable :: ThreadId -> IO ()
 reloadExecutable mainThread = do
     throwTo mainThread Reload
-    ownPath <- liftM encodeString getArgv0
+    ownPath <- getExecutablePath
     executeFile ownPath False [] Nothing
