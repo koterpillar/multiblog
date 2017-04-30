@@ -226,10 +226,15 @@ renderPrintStylesheet = do
 -- | Remark can only render the pipe tables. Disable the other kinds
 remarkOptions :: WriterOptions
 remarkOptions =
-    def {writerExtensions = writerExtensions def S.\\ otherTableExtensions}
+    def {writerExtensions = writerExtensions def S.\\ remarkUnsupported}
   where
-    otherTableExtensions =
-        S.fromList [Ext_simple_tables, Ext_multiline_tables, Ext_grid_tables]
+    remarkUnsupported =
+        S.fromList
+            [ Ext_simple_tables
+            , Ext_multiline_tables
+            , Ext_grid_tables
+            , Ext_fenced_code_attributes
+            ]
 
 -- | Remark relies on "---" being a slide separator, Pandoc makes it into a
 -- horizontal line
