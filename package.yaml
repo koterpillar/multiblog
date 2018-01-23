@@ -1,0 +1,69 @@
+name: multiblog
+version: '0.1'
+synopsis: Blog engine for koterpillar.com
+description: Static blog engine with multilingual support
+category: Web
+author: Alexey Kotlyarov
+maintainer: a@koterpillar.com
+license: MIT
+dependencies:
+- base >=4.7 && <5
+- blaze-html
+- bytestring
+- containers
+- data-default-class
+- directory
+- filepath
+- happstack-server
+- http-conduit
+- iso639
+- lens
+- mtl
+- pandoc
+- pandoc-types
+- shakespeare
+- split
+- time
+- twitter-conduit
+- twitter-types
+- xml
+executables:
+  multiblog:
+    main: Main.hs
+    source-dirs: src
+    ghc-options:
+    - -Wall
+    - -Werror
+    dependencies:
+    - aeson
+    - authenticate-oauth
+    - blaze-markup
+    - boomerang
+    - feed
+    - lifted-base
+    - network
+    - optparse-generic
+    - process
+    - process-extras
+    - tagsoup
+    - text
+    - transformers
+    - unix
+    - utf8-string
+    - web-routes
+    - web-routes-boomerang
+    - web-routes-happstack
+    - web-routes-th
+    - yaml
+tests:
+  tests:
+    main: TestMain.hs
+    source-dirs:
+    - src
+    - testsuite
+    dependencies:
+    - HTF
+    - HUnit
+    - derive
+    - quickcheck-instances
+stability: Experimental
