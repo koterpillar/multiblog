@@ -11,6 +11,8 @@ import Control.Monad.Identity
 import qualified Data.ByteString.UTF8 as U
 import Data.LanguageCodes
 import qualified Data.Map as M
+import Data.Text (Text)
+import qualified Data.Text.Encoding as Text
 import Data.Yaml
 
 import Text.Pandoc hiding (Meta)
@@ -22,28 +24,23 @@ import Types.Services
 
 import Test.Framework
 
-unsafeReadMarkdown :: String -> Pandoc
-unsafeReadMarkdown = handleError . readMarkdown def
+unsafeReadMarkdown :: Text -> Pandoc
+unsafeReadMarkdown = runPandocPure' . readMarkdown def
 
-modifyAllContent
-    :: HasContent a
-    => (Pandoc -> Pandoc) -> a -> a
+modifyAllContent :: HasContent a => (Pandoc -> Pandoc) -> a -> a
 modifyAllContent f = modifyContent (M.map f)
 
-modifyAppData
-    :: (forall a. HasContent a =>
-                  a -> a)
+modifyAppData ::
+       (forall a. HasContent a =>
+                      a -> a)
     -> AppData
     -> AppData
 modifyAppData f st =
-    st
-    { appArticles = map f $ appArticles st
-    , appMeta = map f $ appMeta st
-    }
+    st {appArticles = map f $ appArticles st, appMeta = map f $ appMeta st}
 
-testSource :: String -> String -> SourceFile
+testSource :: Text -> Text -> SourceFile
 testSource name content =
-    SourceFile {sfName = name, sfContent = U.fromString content}
+    SourceFile {sfName = name, sfContent = Text.encodeUtf8 content}
 
 test_loadMeta = do
     let directory =
@@ -57,15 +54,15 @@ test_loadMeta = do
     let (Identity result) = runExceptT $ parseMeta directory
     assertEqual
         (Right
-             (Meta
-              { mtSlug = "about"
-              , mtLayout = BaseLayout
-              , mtContent =
-                    M.fromList
-                        [ (EN, unsafeReadMarkdown "This is meta")
-                        , (RU, unsafeReadMarkdown "Это мета")
-                        ]
-              }))
+             Meta
+             { mtSlug = "about"
+             , mtLayout = BaseLayout
+             , mtContent =
+                   M.fromList
+                       [ (EN, unsafeReadMarkdown "This is meta")
+                       , (RU, unsafeReadMarkdown "Это мета")
+                       ]
+             })
         result
 
 test_loadMetaPresentationLayout = do
@@ -80,11 +77,11 @@ test_loadMetaPresentationLayout = do
     let (Identity result) = runExceptT $ parseMeta directory
     assertEqual
         (Right
-             (Meta
-              { mtSlug = "talk"
-              , mtLayout = PresentationLayout
-              , mtContent = M.fromList [(EN, unsafeReadMarkdown "Talk content")]
-              }))
+             Meta
+             { mtSlug = "talk"
+             , mtLayout = PresentationLayout
+             , mtContent = M.fromList [(EN, unsafeReadMarkdown "Talk content")]
+             })
         result
 
 test_loadArticle = do
@@ -99,15 +96,15 @@ test_loadArticle = do
     let (Identity result) = runExceptT $ parseArticle directory
     assertEqual
         (Right
-             (Article
-              { arSlug = "article-one"
-              , arAuthored = mkDate 2015 03 01
-              , arContent =
-                    M.fromList
-                        [ (EN, unsafeReadMarkdown "Article One")
-                        , (RU, unsafeReadMarkdown "Статья Один")
-                        ]
-              }))
+             Article
+             { arSlug = "article-one"
+             , arAuthored = mkDate 2015 03 01
+             , arContent =
+                   M.fromList
+                       [ (EN, unsafeReadMarkdown "Article One")
+                       , (RU, unsafeReadMarkdown "Статья Один")
+                       ]
+             })
         result
 
 test_loadStrings = do
@@ -142,15 +139,16 @@ test_loadLinks = do
                 , "    zh: 列子2"
                 ]
     assertEqual
-        (Right $
-         [ MetaLink "about"
-         , ExternalLink
-               "https://1.example.com/"
-               (M.fromList [(EN, "Example 1")])
-         , ExternalLink
-               "https://2.example.com/"
-               (M.fromList [(EN, "Example 2"), (RU, "Пример 2"), (ZH, "列子2")])
-         ])
+        (Right
+             [ MetaLink "about"
+             , ExternalLink
+                   "https://1.example.com/"
+                   (M.fromList [(EN, "Example 1")])
+             , ExternalLink
+                   "https://2.example.com/"
+                   (M.fromList
+                        [(EN, "Example 2"), (RU, "Пример 2"), (ZH, "列子2")])
+             ])
         (decodeEither links :: Either String [Link])
 
 test_loadCrossPost = do
@@ -163,10 +161,10 @@ test_loadCrossPost = do
                 , "  oauth_token_secret: FGHIJ"
                 ]
     assertEqual
-        (Right $
-         [ CrossPost
-           { cpLanguage = ES
-           , cpServiceDetails = AppAuthTwitter (TwitterAuth "ABCDE" "FGHIJ")
-           }
-         ])
+        (Right
+             [ CrossPost
+               { cpLanguage = ES
+               , cpServiceDetails = AppAuthTwitter (TwitterAuth "ABCDE" "FGHIJ")
+               }
+             ])
         (decodeEither crossPosts :: Either String AppCrossPost)

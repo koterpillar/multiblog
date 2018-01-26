@@ -4,33 +4,41 @@
 
 module Integration.TestRSS where
 
+import Data.Default.Class
 import Data.Monoid
-import qualified Data.Text as T
+
+import Data.XML.Types
 
 import Text.Atom.Feed
 import Text.Atom.Feed.Import (elementFeed)
 import Text.Atom.Feed.Validate
 
-import Text.XML.Light
+import qualified Text.XML as C
 
 import Test.Framework
 
 import Integration.Base
 
-atomEntry :: QName
-atomEntry = QName "entry" Nothing Nothing
+atomEntry :: Name
+atomEntry = "entry"
 
 test_home = do
     rss <- makeRequest $ simpleRequest "/feed/en"
-    let Just xml = parseXMLDoc rss
+    xml <-
+        case C.parseLBS def rss of
+            Left exc -> error $ show exc
+            Right res -> pure res
+    let root = documentRoot $ C.toXMLDocument xml
     -- Make sure every entry validates
-    assertEqual [] $
-        flattenT $ mkTree [] $ map validateEntry $ findChildren atomEntry xml
+    -- let entries = findChildren atomEntry root
+    let entryElements = elementChildren root
+    assertNotEmpty entryElements
+    assertEqual [] $ flattenT $ mkTree [] $ map validateEntry entryElements
     -- Check feed contents
-    let Just feed = elementFeed xml
+    let Just feed = elementFeed root
     assertEqual "Test site" $ txtToString $ feedTitle feed
     -- TODO: Web.Routes generate a link without the trailing slash
-    assertEqual (testAddress <> "/") $ T.pack $ feedId feed
+    assertEqual (testAddress <> "/") $ feedId feed
     assertEqual "2015-02-01T00:00:00Z" $ feedUpdated feed
     let entries = feedEntries feed
     assertEqual ["Another article", "First test article"] $
@@ -38,4 +46,4 @@ test_home = do
     let entry1 = head entries
     assertEqual ["Author Name"] $ map personName $ entryAuthors entry1
     let Just (HTMLContent content) = entryContent entry1
-    assertEqual "<p>This article should appear above the first one.</p>" $ content
+    assertEqual "<p>This article should appear above the first one.</p>" content

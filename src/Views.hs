@@ -1,6 +1,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 
@@ -15,7 +16,7 @@ import Data.Default.Class
 import Data.LanguageCodes
 import qualified Data.Map as M
 import Data.Maybe
-import qualified Data.Set as S
+import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Data.Time
@@ -49,7 +50,7 @@ instance Linkable Meta where
 type AppRoute m = (MonadRoute m, URL m ~ Sitemap)
 
 data PageContent = PageContent
-    { pcTitle :: Maybe String
+    { pcTitle :: Maybe Text
     , pcLayout :: Layout
     , pcContent :: HtmlUrl Sitemap
     }
@@ -87,39 +88,39 @@ render
     :: MonadRoute m
     => HtmlUrl (URL m) -> m Markup
 render html = do
-    route <- liftM convRender askRouteFn
+    route <- fmap convRender askRouteFn
     return $ html route
 
 askLangStringFn
     :: MonadReader AppData m
-    => LanguagePreference -> m (String -> String)
+    => LanguagePreference -> m (Text -> Text)
 askLangStringFn lang = do
     strings <- asks appStrings
     let fn str = fromMaybe str $ M.lookup str strings >>= matchLanguage lang
-    return fn
+    pure fn
 
 askLangString
     :: MonadReader AppData m
-    => LanguagePreference -> String -> m String
-askLangString lang str = askLangStringFn lang >>= (\fn -> return $ fn str)
+    => LanguagePreference -> Text -> m Text
+askLangString lang str = askLangStringFn lang >>= (\fn -> pure $ fn str)
 
 linkTitle
     :: (MonadReader AppData m, MonadPlus m)
-    => LanguagePreference -> Link -> m String
+    => LanguagePreference -> Link -> m Text
 linkTitle lang (ExternalLink url titles) =
-    return $ fromMaybe url $ matchLanguage lang titles
+    pure $ fromMaybe url $ matchLanguage lang titles
 linkTitle lang (MetaLink slug) = do
     meta <- askMeta slug
-    return $ langTitle lang meta
+    pure $ langTitle lang meta
 
 linkDestination
     :: (AppRoute m, MonadReader AppData m, MonadPlus m)
-    => Link -> m String
-linkDestination (ExternalLink url _) = return url
+    => Link -> m Text
+linkDestination (ExternalLink url _) = pure url
 linkDestination (MetaLink slug) = do
     meta <- askMeta slug
     route <- askRouteFn
-    return $ T.unpack $ route (link meta) []
+    pure $ route (link meta) []
 
 template
     :: (AppRoute m, MonadReader AppData m, MonadPlus m)
@@ -176,10 +177,10 @@ metaDisplay lang meta =
 -- Generate a link to some content
 linkTo
     :: (Linkable a, AppRoute m)
-    => a -> m String
+    => a -> m Text
 linkTo a = do
     routeFn <- askRouteFn
-    return $ T.unpack $ routeFn (link a) []
+    pure $ routeFn (link a) []
 
 -- Modify the content to have a link to itself and have no anchors
 linkedContent
@@ -187,11 +188,11 @@ linkedContent
     => LanguagePreference -> a -> m Pandoc
 linkedContent lang a = do
     target <- linkTo a
-    return $ linkedHeader target $ langContent lang a
+    pure $ linkedHeader target $ langContent lang a
 
 -- Modify the first header to be a link to a given place
 -- and remove all anchors from headers
-linkedHeader :: String -> Pandoc -> Pandoc
+linkedHeader :: Text -> Pandoc -> Pandoc
 linkedHeader target doc = evalState (walkM linkHeader doc) True
   where
     linkHeader :: Block -> State Bool Block
@@ -203,7 +204,7 @@ linkedHeader target doc = evalState (walkM linkHeader doc) True
         -- make the first header a link
         let text' =
                 if isFirst
-                    then [Link nullAttr text (target, "")]
+                    then [Link nullAttr text (T.unpack target, "")]
                     else text
         -- remove anchors
         return $ Header n ("", [], []) text'
@@ -213,28 +214,30 @@ renderSiteScript
     :: MonadRoute m
     => m TL.Text
 renderSiteScript = do
-    route <- liftM convRender askRouteFn
+    route <- fmap convRender askRouteFn
     return $ renderJavascriptUrl route $(juliusFile "templates/site.julius")
 
 renderPrintStylesheet
     :: MonadRoute m
     => m TL.Text
 renderPrintStylesheet = do
-    route <- liftM convRender askRouteFn
+    route <- fmap convRender askRouteFn
     return $ renderCssUrl route $(luciusFile "templates/print.lucius")
 
 -- | Remark can only render the pipe tables. Disable the other kinds
 remarkOptions :: WriterOptions
 remarkOptions =
-    def {writerExtensions = writerExtensions def S.\\ remarkUnsupported}
+    def
+    { writerExtensions =
+          foldr disableExtension (writerExtensions def) remarkUnsupported
+    }
   where
     remarkUnsupported =
-        S.fromList
-            [ Ext_simple_tables
-            , Ext_multiline_tables
-            , Ext_grid_tables
-            , Ext_fenced_code_attributes
-            ]
+        [ Ext_simple_tables
+        , Ext_multiline_tables
+        , Ext_grid_tables
+        , Ext_fenced_code_attributes
+        ]
 
 -- | Remark relies on "---" being a slide separator, Pandoc makes it into a
 -- horizontal line

@@ -1,1 +1,1 @@
-<p>#{writeHtml def $ langContent lang meta}
+<p>#{runPandocPure' $ writeHtml5 def $ langContent lang meta}

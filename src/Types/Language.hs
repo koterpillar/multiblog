@@ -29,9 +29,9 @@ type LanguageMap = M.Map Language
 mapKeysM
     :: (Monad m, Ord k2)
     => (k1 -> m k2) -> M.Map k1 a -> m (M.Map k2 a)
-mapKeysM kfunc = liftM M.fromList . mapM kvfunc . M.toList
+mapKeysM kfunc = fmap M.fromList . mapM kvfunc . M.toList
   where
-    kvfunc (k, v) = liftM (\k' -> (k', v)) $ kfunc k
+    kvfunc (k, v) = (\k' -> (k', v)) <$> kfunc k
 
 instance A.FromJSON ISO639_1 where
     parseJSON v@(A.String _) = A.parseJSON v >>= parseLanguageM
@@ -46,7 +46,7 @@ newtype LanguageChoices a = LanguageChoices (LanguageMap a)
 instance A.FromJSON v =>
          A.FromJSON (LanguageChoices v) where
     parseJSON v@(A.Object _) =
-        A.parseJSON v >>= mapKeysM parseLanguageM >>= pure . LanguageChoices
+        LanguageChoices <$> (A.parseJSON v >>= mapKeysM parseLanguageM)
     parseJSON v@(A.String _) =
         (LanguageChoices . M.singleton defaultLanguage) <$> A.parseJSON v
     parseJSON _ = mzero
@@ -76,7 +76,7 @@ matchLanguageFunc :: (a -> Float)
                   -> LanguagePreference
                   -> LanguageMap a
                   -> Maybe a
-matchLanguageFunc quality pref values = liftM fst $ M.maxView ranked
+matchLanguageFunc quality pref values = fst <$> M.maxView ranked
   where
     ranked = M.fromList $ M.elems $ M.mapWithKey rank values
     rank lang value = (rankLanguage lang pref * quality value, value)
@@ -98,7 +98,7 @@ parseLanguageM (c1:c2:'-':_) = parseLanguageM [c1, c2]
 parseLanguageM _ = mzero
 
 showLanguage :: Language -> String
-showLanguage = (\(a, b) -> a : b : []) . toChars
+showLanguage = (\(a, b) -> [a, b]) . toChars
 
 iso3166 :: Language -> String
 iso3166 EN = "gb"
@@ -113,8 +113,8 @@ languageHeader (Just str) =
   where
     parsePref pref =
         case splitOn ";q=" pref of
-            [lang] -> (pairWith 1) <$> parseLanguageM lang
-            [lang, qvalue] -> (pairWith (read qvalue)) <$> parseLanguageM lang
+            [lang] -> pairWith 1 <$> parseLanguageM lang
+            [lang, qvalue] -> pairWith (read qvalue) <$> parseLanguageM lang
             _ -> Nothing
     pairWith y x = (x, y)
 

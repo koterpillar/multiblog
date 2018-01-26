@@ -12,6 +12,7 @@ import qualified Data.ByteString.UTF8 as U
 import Data.Functor.Identity
 import Data.List
 import Data.Maybe
+import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
 
@@ -59,7 +60,7 @@ loadApp dataDirectory address isRealAddress = do
 -- | Application address, and whether it's specified explicitly
 siteAddress :: IO (T.Text, Bool)
 siteAddress = do
-    addr <- fmap (fmap T.pack) $ lookupEnv "SITE_URL"
+    addr <- fmap T.pack <$> lookupEnv "SITE_URL"
     return $ case addr of
         Just realAddr -> (realAddr, True)
         Nothing -> ("http://localhost:8000", False)
@@ -84,8 +85,7 @@ initAppCache = do
     return $ AppCache pdfCache
 
 runApp :: AppCache -> AppData -> App a -> IO a
-runApp cache app a = do
-    runReaderT (evalStateT a cache) app
+runApp cache app a = runReaderT (evalStateT a cache) app
 
 site :: ServerPartT App Response
 site = do
@@ -138,7 +138,7 @@ dailyIndex = articleList . byDate
 languageHeaderM :: AppPart LanguagePreference
 languageHeaderM = do
     request <- askRq
-    let header = liftM B.unpack $ getHeader "Accept-Language" request
+    let header = B.unpack <$> getHeader "Accept-Language" request
     param <- optional $ look "lang"
     cookie <- optional $ lookCookieValue "lang"
     let langValue = listToMaybe $ catMaybes [param, cookie, header]
@@ -154,7 +154,7 @@ html
     => a -> AppPart Response
 html = ok . toResponse
 
-article :: Day -> String -> AppPart Response
+article :: Day -> Text -> AppPart Response
 article date slug = do
     language <- languageHeaderM
     a <- onlyOne $ lift $ askFiltered $ byDateSlug date slug
@@ -169,7 +169,7 @@ articleList articleFilter = do
     language <- languageHeaderM
     articleListDisplay language paginated >>= html
 
-meta :: String -> Maybe PageFormat -> AppPart Response
+meta :: Text -> Maybe PageFormat -> AppPart Response
 meta slug format' = do
     let format = fromMaybe Html format'
     language <- languageHeaderM

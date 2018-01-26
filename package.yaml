@@ -8,25 +8,46 @@ maintainer: a@koterpillar.com
 license: MIT
 dependencies:
 - base >=4.7 && <5
+- aeson
+- authenticate-oauth
 - blaze-html
+- blaze-markup
+- boomerang
 - bytestring
 - containers
 - data-default-class
 - directory
+- feed
 - filepath
 - happstack-server
 - http-conduit
 - iso639
 - lens
+- lifted-base
 - mtl
+- network
+- optparse-generic
 - pandoc
 - pandoc-types
+- process
+- process-extras
 - shakespeare
 - split
+- tagsoup
+- text
 - time
+- transformers
 - twitter-conduit
 - twitter-types
-- xml
+- unix
+- utf8-string
+- web-routes
+- web-routes-boomerang
+- web-routes-happstack
+- web-routes-th
+- xml-conduit
+- xml-types
+- yaml
 executables:
   multiblog:
     main: Main.hs
@@ -34,27 +55,6 @@ executables:
     ghc-options:
     - -Wall
     - -Werror
-    dependencies:
-    - aeson
-    - authenticate-oauth
-    - blaze-markup
-    - boomerang
-    - feed
-    - lifted-base
-    - network
-    - optparse-generic
-    - process
-    - process-extras
-    - tagsoup
-    - text
-    - transformers
-    - unix
-    - utf8-string
-    - web-routes
-    - web-routes-boomerang
-    - web-routes-happstack
-    - web-routes-th
-    - yaml
 tests:
   tests:
     main: TestMain.hs

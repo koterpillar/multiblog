@@ -14,6 +14,7 @@ import qualified Data.ByteString.Lazy as LB
 import Data.Default.Class
 import qualified Data.Map as M
 import qualified Data.Set as S
+import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
 import Data.Yaml
@@ -26,7 +27,7 @@ import Types.Language
 import Types.Services
 import Utils
 
-data Analytics = Analytics
+newtype Analytics = Analytics
     { anaGoogle :: Maybe String
     } deriving (Generic, Show)
 
@@ -42,7 +43,7 @@ data AppData = AppData
     , appRealAddress :: Bool
     , appArticles :: [Article]
     , appMeta :: [Meta]
-    , appStrings :: M.Map String LanguageString
+    , appStrings :: M.Map Text LanguageString
     , appLinks :: [Link]
     , appAnalytics :: Analytics
     , appServices :: AppServices
@@ -87,7 +88,7 @@ askOne articleFilter = onlyOne $ askFiltered articleFilter
 
 askMeta
     :: (MonadReader AppData m, MonadPlus m)
-    => String -> m Meta
+    => Text -> m Meta
 askMeta slug = onlyOne $ asks $ filter (bySlug slug) . appMeta
 
 -- Find all languages used on the site
@@ -105,11 +106,11 @@ allLanguages app = S.union articleLangs metaLangs
         => a -> S.Set Language
     contentLangs = S.fromList . M.keys . getContent
 
-data AppCache = AppCache
-    { appcachePdf :: Cache (Language, String) LB.ByteString
+newtype AppCache = AppCache
+    { appcachePdf :: Cache (Language, Text) LB.ByteString
     }
 
-instance HasCache (Language, String) LB.ByteString AppCache where
+instance HasCache (Language, Text) LB.ByteString AppCache where
     getCache = appcachePdf
 
 instance HasAppServices AppData where

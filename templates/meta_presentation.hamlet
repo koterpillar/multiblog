@@ -1,1 +1,1 @@
-#{writeMarkdown remarkOptions $ fixSlideSeparators $ langContent lang meta}
+#{runPandocPure' $ writeMarkdown remarkOptions $ fixSlideSeparators $ langContent lang meta}
