@@ -9,7 +9,7 @@ $doctype 5
         #{langString "siteName"}
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
-    <link rel="stylesheet" href="https://cloud.github.com/downloads/lafeber/world-flags-sprite/flags16.css">
+    <link rel="stylesheet" href="https://github.com/downloads/lafeber/world-flags-sprite/flags16.css">
     <link rel="alternate" type="application/atom+xml" href="@{Feed $ bestLanguage lang}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     ^{analytics}
