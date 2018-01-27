@@ -21,7 +21,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Data.Time
 
-import Text.Blaze.Html (Markup)
+import Text.Blaze.Html (Markup, preEscapedToHtml)
 import Text.Hamlet
 import Text.Julius
 import Text.Lucius
@@ -230,26 +230,6 @@ renderCodeStylesheet
     => m TL.Text
 renderCodeStylesheet = pure $ TL.pack $ styleToCss highlightingStyle
 
--- | Remark can only render the pipe tables. Disable the other kinds
-remarkOptions :: WriterOptions
-remarkOptions =
-    def
-    { writerExtensions =
-          foldr disableExtension (writerExtensions def) remarkUnsupported
-    }
-  where
-    remarkUnsupported =
-        [ Ext_simple_tables
-        , Ext_multiline_tables
-        , Ext_grid_tables
-        , Ext_fenced_code_attributes
-        ]
-
--- | Remark relies on "---" being a slide separator, Pandoc makes it into a
--- horizontal line
-fixSlideSeparators :: Pandoc -> Pandoc
-fixSlideSeparators = walk fixSeparators
-  where
-    fixSeparators :: Block -> Block
-    fixSeparators HorizontalRule = Para [Str "---"]
-    fixSeparators x = x
+-- | Presentation can only render the pipe tables. Disable the other kinds
+presentationOptions :: WriterOptions
+presentationOptions = def { writerSlideLevel = Just 1}

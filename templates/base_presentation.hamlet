@@ -7,22 +7,15 @@ $doctype 5
         #{title} - #{langString "siteName"}
       $nothing
         #{langString "siteName"}
-    <style>
-      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
-      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
-      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
-
-      body { font-family: 'Droid Serif'; }
-      h1, h2, h3 {
-        font-family: 'Yanone Kaffeesatz';
-        font-weight: normal;
-      }
-      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    <link rel="stylesheet" href="https://revealjs.com/css/reveal.css">
+    <link rel="stylesheet" href="https://revealjs.com/css/theme/white.css">
     <link rel="stylesheet" href=@{CodeStylesheet}>
     ^{analytics}
   <body>
-    <textarea #source>
-      ^{pcContent page}
-    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    <div .reveal>
+      <div .slides>
+        ^{pcContent page}
+    <script src="https://revealjs.com/lib/js/head.min.js">
+    <script src="https://revealjs.com/js/reveal.js">
     <script>
-      var slideshow = remark.create();
+      Reveal.initialize();
