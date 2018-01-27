@@ -1,9 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
 module ReloadHup
-  ( reloadHup
-  , Reload
-  ) where
+    ( reloadHup
+    , Reload
+    ) where
 
 import Control.Concurrent
 import Control.Exception

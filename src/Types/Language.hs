@@ -1,10 +1,10 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
 {-|
 Language-related types.
 -}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Types.Language where
 
@@ -26,9 +26,7 @@ type Language = ISO639_1
 
 type LanguageMap = M.Map Language
 
-mapKeysM
-    :: (Monad m, Ord k2)
-    => (k1 -> m k2) -> M.Map k1 a -> m (M.Map k2 a)
+mapKeysM :: (Monad m, Ord k2) => (k1 -> m k2) -> M.Map k1 a -> m (M.Map k2 a)
 mapKeysM kfunc = fmap M.fromList . mapM kvfunc . M.toList
   where
     kvfunc (k, v) = (\k' -> (k', v)) <$> kfunc k
@@ -41,10 +39,10 @@ instance A.FromJSONKey ISO639_1 where
     fromJSONKey = A.FromJSONKeyTextParser $ parseLanguageM . T.unpack
 
 -- | Newtype for parsing either a single value or a map of values
-newtype LanguageChoices a = LanguageChoices (LanguageMap a)
+newtype LanguageChoices a =
+    LanguageChoices (LanguageMap a)
 
-instance A.FromJSON v =>
-         A.FromJSON (LanguageChoices v) where
+instance A.FromJSON v => A.FromJSON (LanguageChoices v) where
     parseJSON v@(A.Object _) =
         LanguageChoices <$> (A.parseJSON v >>= mapKeysM parseLanguageM)
     parseJSON v@(A.String _) =
@@ -64,7 +62,9 @@ singleLanguage lang = LanguagePreference $ M.singleton lang 1
 bestLanguage :: LanguagePreference -> Language
 bestLanguage =
     fromMaybe defaultLanguage .
-    listToMaybe . fmap fst . sortBy (reverseCompare `on` snd) . M.toList . unLanguagePreference
+    listToMaybe .
+    fmap fst .
+    sortBy (reverseCompare `on` snd) . M.toList . unLanguagePreference
 
 rankLanguage :: Language -> LanguagePreference -> Float
 rankLanguage lang = fromMaybe 0 . M.lookup lang . unLanguagePreference
@@ -72,10 +72,8 @@ rankLanguage lang = fromMaybe 0 . M.lookup lang . unLanguagePreference
 matchLanguage :: LanguagePreference -> LanguageMap a -> Maybe a
 matchLanguage = matchLanguageFunc (const 1)
 
-matchLanguageFunc :: (a -> Float)
-                  -> LanguagePreference
-                  -> LanguageMap a
-                  -> Maybe a
+matchLanguageFunc ::
+       (a -> Float) -> LanguagePreference -> LanguageMap a -> Maybe a
 matchLanguageFunc quality pref values = fst <$> M.maxView ranked
   where
     ranked = M.fromList $ M.elems $ M.mapWithKey rank values
@@ -87,9 +85,7 @@ parseLanguage langStr =
         (Just lang) -> pure lang
         Nothing -> throwError $ langStr ++ " is not a valid language code."
 
-parseLanguageM
-    :: MonadPlus m
-    => String -> m Language
+parseLanguageM :: MonadPlus m => String -> m Language
 parseLanguageM [c1, c2] =
     case fromChars c1 c2 of
         Just lang -> return lang
@@ -119,7 +115,9 @@ languageHeader (Just str) =
     pairWith y x = (x, y)
 
 instance Show LanguagePreference where
-    show = intercalate "," . map (uncurry showPref) . M.toList . unLanguagePreference
+    show =
+        intercalate "," .
+        map (uncurry showPref) . M.toList . unLanguagePreference
       where
         showPref lang 1 = showLanguage lang
         showPref lang qvalue = showLanguage lang ++ ";q=" ++ show qvalue

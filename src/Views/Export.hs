@@ -1,37 +1,37 @@
-{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
-{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Views.Export where
 
-import           Control.Monad.Reader
-import           Control.Monad.State
+import Control.Monad.Reader
+import Control.Monad.State
 
-import qualified Data.ByteString.Lazy           as LB
-import qualified Data.ByteString.UTF8           as U
-import           Data.Text.Lazy.Encoding
+import qualified Data.ByteString.Lazy as LB
+import qualified Data.ByteString.UTF8 as U
+import Data.Text.Lazy.Encoding
 
-import           System.Exit
-import           System.Process                 (CreateProcess, proc)
-import           System.Process.ByteString.Lazy
+import System.Exit
+import System.Process (CreateProcess, proc)
+import System.Process.ByteString.Lazy
 
-import           Text.Blaze.Renderer.Text       as TextRenderer
-import           Text.Hamlet
-import           Text.HTML.TagSoup
-import           Text.StringLike
+import Text.Blaze.Renderer.Text as TextRenderer
+import Text.HTML.TagSoup
+import Text.Hamlet
+import Text.StringLike
 
-import           Text.Pandoc                    hiding (Meta)
+import Text.Pandoc hiding (Meta)
 
-import           Web.Routes
+import Web.Routes
 
-import           Cache
-import           Models
-import           Routes
-import           Types.Content
-import           Types.Language
-import           Views
+import Cache
+import Models
+import Routes
+import Types.Content
+import Types.Language
+import Views
 
 -- Export a meta into one of the supported formats
 metaExport ::
@@ -74,7 +74,7 @@ wkhtmltopdf html =
     liftIO $ do
         (exitCode, pdf, err) <- readCreateProcessWithExitCode wkhtmlProc html
         case exitCode of
-            ExitSuccess   -> return pdf
+            ExitSuccess -> return pdf
             ExitFailure _ -> error $ U.toString $ LB.toStrict err
 
 -- wkhtmltopdf, wrapped in xvfb-run as it requires an X display
@@ -139,7 +139,7 @@ fixupHtml = renderTags . go Start . parseTags
     isHeader = isHeader' . toString
       where
         isHeader' "h3" = True
-        isHeader' _    = False
+        isHeader' _ = False
     -- Tag to output before a paragraph element run
     joiner_start :: StringLike str => Tag str
     joiner_start =

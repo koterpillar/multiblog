@@ -79,8 +79,8 @@ rString = xmaph T.unpack (Just . T.pack)
 anyString :: Boomerang TextsError [Text] o (String :- o)
 anyString = rString anyText
 
-rExtension
-    :: Boomerang e tok i (Text :- o)
+rExtension ::
+       Boomerang e tok i (Text :- o)
     -> Boomerang e tok i (Text :- Maybe Text :- o)
 rExtension = xmap splitExt' (Just . joinExt')
   where
@@ -98,8 +98,8 @@ xflip = xmap pflip (Just . pflip)
     pflip (a :- b :- o) = b :- a :- o
 
 -- Apply a transformation to the second topmost component of a Boomerang
-xmaph2
-    :: (b -> c)
+xmaph2 ::
+       (b -> c)
     -> (c -> Maybe b)
     -> Boomerang e tok i (a :- b :- o)
     -> Boomerang e tok i (a :- c :- o)
@@ -119,8 +119,8 @@ joinExt segment Nothing = segment
 joinExt segment (Just ext) = segment <> "." <> ext
 
 -- Convert the second topmost component into a MaybeFormat
-xFormat
-    :: Boomerang e tok i (Text :- Maybe Text :- o)
+xFormat ::
+       Boomerang e tok i (Text :- Maybe Text :- o)
     -> Boomerang e tok i (Text :- MaybeFormat :- o)
 xFormat = xmaph2 (strToFormat =<<) (Just . fmap formatToStr)
 

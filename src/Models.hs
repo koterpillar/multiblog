@@ -71,24 +71,16 @@ mkDate y m d = atMidnight $ fromGregorian y m d
 atMidnight :: Day -> UTCTime
 atMidnight day = UTCTime day 0
 
-askApp
-    :: MonadReader AppData m
-    => m AppData
+askApp :: MonadReader AppData m => m AppData
 askApp = ask
 
-askFiltered
-    :: MonadReader AppData m
-    => (Article -> Bool) -> m [Article]
+askFiltered :: MonadReader AppData m => (Article -> Bool) -> m [Article]
 askFiltered articleFilter = asks $ filter articleFilter . appArticles
 
-askOne
-    :: (MonadReader AppData m, MonadPlus m)
-    => (Article -> Bool) -> m Article
+askOne :: (MonadReader AppData m, MonadPlus m) => (Article -> Bool) -> m Article
 askOne articleFilter = onlyOne $ askFiltered articleFilter
 
-askMeta
-    :: (MonadReader AppData m, MonadPlus m)
-    => Text -> m Meta
+askMeta :: (MonadReader AppData m, MonadPlus m) => Text -> m Meta
 askMeta slug = onlyOne $ asks $ filter (bySlug slug) . appMeta
 
 -- Find all languages used on the site
@@ -97,13 +89,9 @@ allLanguages app = S.union articleLangs metaLangs
   where
     articleLangs = allContentLangs $ appArticles app
     metaLangs = allContentLangs $ appMeta app
-    allContentLangs
-        :: HasContent a
-        => [a] -> S.Set Language
+    allContentLangs :: HasContent a => [a] -> S.Set Language
     allContentLangs = S.unions . map contentLangs
-    contentLangs
-        :: HasContent a
-        => a -> S.Set Language
+    contentLangs :: HasContent a => a -> S.Set Language
     contentLangs = S.fromList . M.keys . getContent
 
 newtype AppCache = AppCache

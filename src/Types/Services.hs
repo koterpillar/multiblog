@@ -4,6 +4,7 @@ Types related to the external services.
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Types.Services where
 
 import Control.Monad.Reader
@@ -32,8 +33,7 @@ instance Default AppServices
 
 instance FromJSON TW.OAuth where
     parseJSON =
-        A.withObject "Object expected" $
-        \v -> do
+        A.withObject "Object expected" $ \v -> do
             key <- v .: "consumer_key"
             secret <- v .: "consumer_secret"
             return $
@@ -50,8 +50,7 @@ data AppAuth =
     AppAuthTwitter TwitterAuth
     deriving (Eq, Show)
 
-class ToJSON a =>
-      ServiceAuth a  where
+class ToJSON a => ServiceAuth a where
     toAppAuth :: a -> AppAuth
     fromAppAuth :: AppAuth -> Maybe a
     parseAuth :: Object -> Parser a
@@ -107,8 +106,7 @@ class HasCrossPosts a where
 
 instance FromJSON CrossPost where
     parseJSON =
-        A.withObject "Object expected" $
-        \v -> do
+        A.withObject "Object expected" $ \v -> do
             lang <- v .: "lang"
             auth <- parseAppAuth v
             return $ CrossPost lang auth
@@ -120,9 +118,10 @@ withTwitter act = do
         Nothing -> error "Twitter credentials not defined"
         Just auth -> act auth
 
-withCreds
-    :: (ServiceAuth sa, HasCrossPosts a, MonadReader a m)
-    => (Language -> sa -> m b) -> m [b]
+withCreds ::
+       (ServiceAuth sa, HasCrossPosts a, MonadReader a m)
+    => (Language -> sa -> m b)
+    -> m [b]
 withCreds act = do
     cps <- asks (mapMaybe filterService . getCrossPosts)
     traverse (uncurry act) cps

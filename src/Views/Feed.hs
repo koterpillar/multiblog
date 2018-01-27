@@ -75,8 +75,7 @@ articleEntry lang article = do
                 (atomDate $ arAuthored article)
     let content =
             renderMarkup $
-            runPandocPure' $
-            writeHtml $ stripTitle $ langContent lpref article
+            runPandocPure' $ writeHtml $ stripTitle $ langContent lpref article
     return
         entry
         { entryContent = Just $ HTMLContent $ Data.Text.Lazy.toStrict content
