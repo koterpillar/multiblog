@@ -5,6 +5,7 @@
 -- Import the application data (articles and meta) from a set of files.
 module Import where
 
+import Control.Lens ((&))
 import Control.Monad
 import Control.Monad.Except
 
@@ -198,8 +199,9 @@ readers =
             readMarkdown
                 def
                 { readerExtensions =
-                      enableExtension Ext_backtick_code_blocks $
-                      readerExtensions def
+                      readerExtensions def &
+                      enableExtension Ext_backtick_code_blocks &
+                      enableExtension Ext_pipe_tables
                 })
         ]
 
