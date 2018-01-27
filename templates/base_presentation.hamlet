@@ -18,6 +18,7 @@ $doctype 5
         font-weight: normal;
       }
       .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    <link rel="stylesheet" href=@{CodeStylesheet}>
     ^{analytics}
   <body>
     <textarea #source>

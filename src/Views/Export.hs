@@ -61,7 +61,7 @@ pdfExport ::
     -> m LB.ByteString
 pdfExport lang meta =
     withCacheM (bestLanguage lang, mtSlug meta) $ do
-        let content = runPandocPure' $ writeHtml5 def $ langContent lang meta
+        let content = runPandocPure' $ writeHtml $ langContent lang meta
         let title = langTitle lang meta
         html <- render $(hamletFile "templates/pdf-export.hamlet")
         let htmlText = TextRenderer.renderMarkup html

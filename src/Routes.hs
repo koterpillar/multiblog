@@ -51,6 +51,7 @@ data Sitemap
     | Feed Language
     | SiteScript
     | PrintStylesheet
+    | CodeStylesheet
     deriving (Eq, Ord, Show)
 
 makeBoomerangs ''Sitemap
@@ -133,6 +134,7 @@ sitemap =
         , rFeed . "feed" </> rLanguage
         , rSiteScript . "site.js"
         , rPrintStylesheet . "print.css"
+        , rCodeStylesheet . "code.css"
         , rArticleView . rDay </> anyText
         , rMetaView . xFormat (rExtension anyText)
         ]

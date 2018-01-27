@@ -7,9 +7,11 @@ module Views.Feed where
 
 import Control.Monad.Reader
 
-import Data.Time
+import Data.Default.Class
 
 import Data.Monoid
+
+import Data.Time
 
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy
@@ -34,8 +36,6 @@ import Text.Atom.Feed
 import Text.Atom.Feed.Export (xmlFeed)
 
 import Text.Blaze.Renderer.Text (renderMarkup)
-
-import Text.Pandoc (def, writeHtml5)
 
 import qualified Text.XML as C
 
@@ -76,7 +76,7 @@ articleEntry lang article = do
     let content =
             renderMarkup $
             runPandocPure' $
-            writeHtml5 def $ stripTitle $ langContent lpref article
+            writeHtml $ stripTitle $ langContent lpref article
     return
         entry
         { entryContent = Just $ HTMLContent $ Data.Text.Lazy.toStrict content

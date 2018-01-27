@@ -23,6 +23,7 @@ newtype TestLink =
 instance Linkable TestLink where
     link (TestLink dest) = MetaView dest Nothing
 
+test_linkedHeader :: IO ()
 test_linkedHeader = do
     let source =
             Text.unlines
@@ -43,8 +44,9 @@ test_linkedHeader = do
              ]) $
         Data.Text.Lazy.toStrict $
         renderHtml $
-        runPandocPure' $ writeHtml5 def $ linkedHeader "http://test" pandoc
+        runPandocPure' $ writeHtml $ linkedHeader "http://test" pandoc
 
+test_paginated :: IO ()
 test_paginated = do
     let pages = [1 .. 100] :: [Integer]
     assertEqual (Paginated Nothing [1, 2, 3] (Just 2)) (paginate 3 1 pages)

@@ -15,7 +15,10 @@ import Data.Text (Text)
 import Data.Time
 import Data.Yaml
 
+import Text.Blaze.Html (Html)
+
 import Text.Pandoc hiding (Meta)
+import Text.Pandoc.Highlighting
 import Text.Pandoc.Walk
 
 import Types.Language
@@ -113,10 +116,9 @@ inlineToStr inline =
     runPandocPure' $ writePlain def $ Pandoc mempty [Plain inline]
 
 runPandocPure :: PandocPure a -> Either PandocError a
-runPandocPure = flip StrictState.evalState def .
-            flip StrictState.evalStateT def .
-            runExceptT .
-            unPandocPure
+runPandocPure =
+    flip StrictState.evalState def .
+    flip StrictState.evalStateT def . runExceptT . unPandocPure
 
 runPandocPure' :: PandocPure a -> a
 runPandocPure' a =
@@ -148,3 +150,9 @@ langTitle lang =
   where
     extractTitle (Header _ _ title) = [inlineToStr title]
     extractTitle _ = []
+
+writeHtml :: PandocMonad m => Pandoc -> m Html
+writeHtml = writeHtml5 def {writerHighlightStyle = Just highlightingStyle}
+
+highlightingStyle :: Style
+highlightingStyle = pygments

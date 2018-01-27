@@ -26,6 +26,7 @@ import Text.Hamlet
 import Text.Julius
 import Text.Lucius
 import Text.Pandoc hiding (Meta, Reader)
+import Text.Pandoc.Highlighting
 import Text.Pandoc.Walk
 
 import Web.Routes
@@ -223,6 +224,11 @@ renderPrintStylesheet
 renderPrintStylesheet = do
     route <- fmap convRender askRouteFn
     return $ renderCssUrl route $(luciusFile "templates/print.lucius")
+
+renderCodeStylesheet
+    :: MonadRoute m
+    => m TL.Text
+renderCodeStylesheet = pure $ TL.pack $ styleToCss highlightingStyle
 
 -- | Remark can only render the pipe tables. Disable the other kinds
 remarkOptions :: WriterOptions

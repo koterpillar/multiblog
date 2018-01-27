@@ -157,8 +157,11 @@ buildDir dir =
             forM files $ \file -> do
                 content <- B.readFile file
                 pure
-                    SourceFile {sfName = T.pack $ takeFileName file, sfContent = content}
-        pure SourceDirectory {sdName = T.pack $ takeFileName dir, sdFiles = sources}
+                    SourceFile
+                    {sfName = T.pack $ takeFileName file, sfContent = content}
+        pure
+            SourceDirectory
+            {sdName = T.pack $ takeFileName dir, sdFiles = sources}
   where
     dirPath subdir = dir </> subdir
 
@@ -188,7 +191,17 @@ loadFromDirectory path = do
 
 -- A map of supported file formats and corresponding Pandoc readers
 readers :: M.Map Text (Text -> Either PandocError Pandoc)
-readers = M.fromList [("md", runPandocPure . readMarkdown def)]
+readers =
+    M.fromList
+        [ ( "md"
+          , runPandocPure .
+            readMarkdown
+                def
+                { readerExtensions =
+                      enableExtension Ext_backtick_code_blocks $
+                      readerExtensions def
+                })
+        ]
 
 readFileOrEmpty :: String -> IO B.ByteString
 readFileOrEmpty path = do

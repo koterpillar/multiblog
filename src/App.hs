@@ -120,6 +120,7 @@ handler route =
         Feed lang -> feedIndex lang
         SiteScript -> siteScript
         PrintStylesheet -> printStylesheet
+        CodeStylesheet -> codeStylesheet
 
 index :: AppPart Response
 index = articleList $ const True
@@ -202,3 +203,6 @@ siteScript = renderSiteScript >>= html
 
 printStylesheet :: AppPart Response
 printStylesheet = renderPrintStylesheet >>= html . asCss
+
+codeStylesheet :: AppPart Response
+codeStylesheet = renderCodeStylesheet >>= html . asCss
