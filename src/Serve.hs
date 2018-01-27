@@ -9,8 +9,6 @@ import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
 
-import Data.Maybe
-
 import Happstack.Server
 
 import Network.Socket
