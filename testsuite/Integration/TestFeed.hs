@@ -1,8 +1,7 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
-{-# OPTIONS -Wno-missing-signatures #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Integration.TestRSS where
+module Integration.TestFeed where
 
 import Data.Default.Class
 import Data.Monoid
@@ -20,8 +19,9 @@ import Test.Framework
 import Integration.Base
 
 atomEntry :: Name
-atomEntry = "entry"
+atomEntry = "{http://www.w3.org/2005/Atom}entry"
 
+test_home :: IO ()
 test_home = do
     rss <- makeRequest $ simpleRequest "/feed/en"
     xml <-
@@ -30,8 +30,7 @@ test_home = do
             Right res -> pure res
     let root = documentRoot $ C.toXMLDocument xml
     -- Make sure every entry validates
-    -- let entries = findChildren atomEntry root
-    let entryElements = elementChildren root
+    let entryElements = elementChildren root >>= isNamed atomEntry
     assertNotEmpty entryElements
     assertEqual [] $ flattenT $ mkTree [] $ map validateEntry entryElements
     -- Check feed contents
@@ -39,11 +38,11 @@ test_home = do
     assertEqual "Test site" $ txtToString $ feedTitle feed
     -- TODO: Web.Routes generate a link without the trailing slash
     assertEqual (testAddress <> "/") $ feedId feed
-    assertEqual "2015-02-01T00:00:00Z" $ feedUpdated feed
+    assertEqual "2018-01-01T00:00:00Z" $ feedUpdated feed
     let entries = feedEntries feed
-    assertEqual ["Another article", "First test article"] $
+    assertEqual ["Статья с кодом", "Another article"] $
         map (txtToString . entryTitle) $ take 2 entries
-    let entry1 = head entries
-    assertEqual ["Author Name"] $ map personName $ entryAuthors entry1
-    let Just (HTMLContent content) = entryContent entry1
+    let entry2 = entries !! 1
+    assertEqual ["Author Name"] $ map personName $ entryAuthors entry2
+    let Just (HTMLContent content) = entryContent entry2
     assertEqual "<p>This article should appear above the first one.</p>" content
