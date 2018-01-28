@@ -8,60 +8,67 @@ maintainer: a@koterpillar.com
 license: MIT
 dependencies:
 - base >=4.7 && <5
-- aeson
-- authenticate-oauth
 - blaze-html
 - blaze-markup
-- boomerang
 - bytestring
 - containers
 - data-default-class
-- directory
 - feed
-- filepath
 - happstack-server
-- http-conduit
 - iso639
-- lens
-- lifted-base
 - mtl
-- network
-- optparse-generic
 - pandoc
-- pandoc-types
-- process
-- process-extras
-- shakespeare
-- split
-- tagsoup
 - text
-- time
-- transformers
 - twitter-conduit
-- twitter-types
-- unix
-- utf8-string
-- web-routes
-- web-routes-boomerang
-- web-routes-happstack
-- web-routes-th
 - xml-conduit
 - xml-types
 - yaml
+library:
+  source-dirs: src
+  dependencies:
+  - aeson
+  - authenticate-oauth
+  - boomerang
+  - directory
+  - filepath
+  - http-conduit
+  - lens
+  - lifted-base
+  - network
+  - optparse-generic
+  - pandoc-types
+  - process
+  - process-extras
+  - shakespeare
+  - split
+  - tagsoup
+  - time
+  - transformers
+  - twitter-types
+  - unix
+  - web-routes
+  - web-routes-boomerang
+  - web-routes-happstack
+  - web-routes-th
 executables:
   multiblog:
     main: Main.hs
-    source-dirs: src
+    source-dirs: app
+    dependencies:
+    - multiblog
     ghc-options:
     - -Wall
     - -Werror
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
 tests:
   tests:
     main: TestMain.hs
     source-dirs:
-    - src
     - testsuite
     dependencies:
+    - multiblog
     - HTF
     - HUnit
     - derive

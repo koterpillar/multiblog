@@ -1,7 +1,9 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main where
+module AppMain
+    ( multiblog
+    ) where
 
 import Control.Monad.IO.Class
 
@@ -20,8 +22,8 @@ data Args
 
 instance ParseRecord Args
 
-main :: IO ()
-main =
+multiblog :: IO ()
+multiblog =
     reloadHup $ do
         app <- loadAppDefault
         cache <- initAppCache

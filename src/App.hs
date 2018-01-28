@@ -8,12 +8,12 @@ import Control.Monad.Reader
 import Control.Monad.State
 
 import qualified Data.ByteString.Char8 as B
-import qualified Data.ByteString.UTF8 as U
 import Data.Functor.Identity
 import Data.List
 import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import Data.Time
 
 import Happstack.Server
@@ -107,7 +107,7 @@ parseRoute :: T.Text -> Either String Sitemap
 parseRoute =
     fmap runIdentity . runSite "" (boomerangSiteRouteT pure sitemap) . segments
   where
-    segments = decodePathInfo . U.fromString . T.unpack
+    segments = decodePathInfo . T.encodeUtf8
 
 handler :: Sitemap -> AppPart Response
 handler route =

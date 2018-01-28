@@ -10,9 +10,10 @@ module Types.Services where
 import Control.Monad.Reader
 
 import qualified Data.Aeson as A
-import qualified Data.ByteString.UTF8 as U
+import qualified Data.ByteString as BS
 import Data.Default.Class
 import qualified Data.Map as M
+import qualified Data.Text.Encoding as Text
 import Data.Maybe
 import Data.Yaml
 
@@ -38,8 +39,8 @@ instance FromJSON TW.OAuth where
             secret <- v .: "consumer_secret"
             return $
                 TW.twitterOAuth
-                { TW.oauthConsumerKey = U.fromString key
-                , TW.oauthConsumerSecret = U.fromString secret
+                { TW.oauthConsumerKey = Text.encodeUtf8 key
+                , TW.oauthConsumerSecret = Text.encodeUtf8 secret
                 }
 
 instance FromJSON AppServices where
@@ -56,23 +57,23 @@ class ToJSON a => ServiceAuth a where
     parseAuth :: Object -> Parser a
 
 data TwitterAuth = TwitterAuth
-    { taToken :: U.ByteString
-    , taSecret :: U.ByteString
+    { taToken :: BS.ByteString
+    , taSecret :: BS.ByteString
     } deriving (Eq, Show)
 
 instance ServiceAuth TwitterAuth where
     toAppAuth = AppAuthTwitter
     fromAppAuth (AppAuthTwitter a) = Just a
     parseAuth v =
-        let decodeUtf = fmap U.fromString
-        in TwitterAuth <$> decodeUtf (v .: "oauth_token") <*>
-           decodeUtf (v .: "oauth_token_secret")
+        let encodeUtf = fmap Text.encodeUtf8
+        in TwitterAuth <$> encodeUtf (v .: "oauth_token") <*>
+           encodeUtf (v .: "oauth_token_secret")
 
 instance ToJSON TwitterAuth where
     toJSON (TwitterAuth token secret) =
         object
-            [ "oauth_token" .= U.toString token
-            , "oauth_token_secret" .= U.toString secret
+            [ "oauth_token" .= Text.decodeUtf8 token
+            , "oauth_token_secret" .= Text.decodeUtf8 secret
             ]
 
 taCredential :: TwitterAuth -> TW.Credential

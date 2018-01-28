@@ -10,7 +10,7 @@ import Control.Monad.Reader
 import Control.Monad.State
 
 import qualified Data.ByteString.Lazy as LB
-import qualified Data.ByteString.UTF8 as U
+import qualified Data.Text.Lazy as TL
 import Data.Text.Lazy.Encoding
 
 import System.Exit
@@ -75,7 +75,7 @@ wkhtmltopdf html =
         (exitCode, pdf, err) <- readCreateProcessWithExitCode wkhtmlProc html
         case exitCode of
             ExitSuccess -> return pdf
-            ExitFailure _ -> error $ U.toString $ LB.toStrict err
+            ExitFailure _ -> error $ TL.unpack $ decodeUtf8 err
 
 -- wkhtmltopdf, wrapped in xvfb-run as it requires an X display
 wkhtmlProc :: CreateProcess

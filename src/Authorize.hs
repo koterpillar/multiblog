@@ -8,7 +8,10 @@ module Authorize where
 import Control.Monad.IO.Class
 
 import qualified Data.ByteString as B
-import qualified Data.ByteString.UTF8 as U
+
+import qualified Data.Text.Encoding as Text
+import qualified Data.Text.IO as Text
+
 import qualified Data.Yaml as Y
 
 import System.IO (hFlush, stdout)
@@ -24,7 +27,7 @@ authorize service = do
     auth <- getAuthorization service
     liftIO $ do
         putStrLn ""
-        putStr $ U.toString $ Y.encode auth
+        Text.putStr $ Text.decodeUtf8 $ Y.encode auth
 
 getAuthorization :: String -> App AppAuth
 getAuthorization "twitter" = authorizeTwitter
@@ -50,4 +53,4 @@ getPIN url = do
     putStrLn $ "Open the following URL: " ++ url
     putStr "PIN: "
     hFlush stdout
-    fmap U.fromString getLine
+    Text.encodeUtf8 <$> Text.getLine

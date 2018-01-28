@@ -8,10 +8,10 @@ module TestImport where
 import Control.Monad.Except
 import Control.Monad.Identity
 
-import qualified Data.ByteString.UTF8 as U
 import Data.LanguageCodes
 import qualified Data.Map as M
 import Data.Text (Text)
+import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import Data.Yaml
 
@@ -109,8 +109,8 @@ test_loadArticle = do
 
 test_loadStrings = do
     let strings =
-            U.fromString $
-            unlines
+            Text.encodeUtf8 $
+            Text.unlines
                 [ "title:"
                 , "  en: Title"
                 , "  ru: Заголовок"
@@ -127,8 +127,8 @@ test_loadStrings = do
 
 test_loadLinks = do
     let links =
-            U.fromString $
-            unlines
+            Text.encodeUtf8 $
+            Text.unlines
                 [ "- page: about"
                 , "- url: https://1.example.com/"
                 , "  text: Example 1"
@@ -153,8 +153,8 @@ test_loadLinks = do
 
 test_loadCrossPost = do
     let crossPosts =
-            U.fromString $
-            unlines
+            Text.encodeUtf8 $
+            Text.unlines
                 [ "- service: twitter"
                 , "  lang: es"
                 , "  oauth_token: ABCDE"
