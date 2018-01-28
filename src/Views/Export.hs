@@ -73,8 +73,9 @@ wkhtmltopdf :: MonadIO m => LB.ByteString -> m LB.ByteString
 wkhtmltopdf html =
     liftIO $ do
         (exitCode, pdf, err) <- readCreateProcessWithExitCode wkhtmlProc html
+        let pdf' = filterWkhtmlWarnings pdf
         case exitCode of
-            ExitSuccess -> return pdf
+            ExitSuccess -> return pdf'
             ExitFailure _ -> error $ TL.unpack $ decodeUtf8 err
 
 -- wkhtmltopdf, wrapped in xvfb-run as it requires an X display
@@ -93,6 +94,20 @@ wkhtmlProc = proc "xvfb-run" $ "-a" : wkArgs
         , "-"
         , "-"
         ]
+
+filterWkhtmlWarnings :: LB.ByteString -> LB.ByteString
+filterWkhtmlWarnings output
+    | startsWithError = filterWkhtmlWarnings $ dropThisLine output
+    | otherwise = output
+  where
+    startsWithError =
+        LB.isPrefixOf "QSslSocket" output ||
+        LB.isPrefixOf "libpng warning" output
+    dropThisLine :: LB.ByteString -> LB.ByteString
+    dropThisLine = LB.dropWhile isNewline . LB.dropWhile (not . isNewline)
+    isNewline 10 = True
+    isNewline 13 = True
+    isNewline _ = False
 
 data FixupState
     = Start
