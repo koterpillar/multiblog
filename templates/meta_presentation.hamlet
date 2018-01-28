@@ -1,1 +1,1 @@
-#{writeMarkdown remarkOptions $ fixSlideSeparators $ langContent lang meta}
+#{preEscapedToHtml $ runPandocPure' $ writeRevealJs presentationOptions $ langContent lang meta}

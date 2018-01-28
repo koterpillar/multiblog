@@ -4,14 +4,16 @@ Types related to the external services.
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Types.Services where
 
 import Control.Monad.Reader
 
 import qualified Data.Aeson as A
-import qualified Data.ByteString.UTF8 as U
+import qualified Data.ByteString as BS
 import Data.Default.Class
 import qualified Data.Map as M
+import qualified Data.Text.Encoding as Text
 import Data.Maybe
 import Data.Yaml
 
@@ -21,7 +23,7 @@ import qualified Web.Twitter.Conduit as TW
 
 import Types.Language
 
-data AppServices = AppServices
+newtype AppServices = AppServices
     { asTwitter :: Maybe TW.OAuth
     } deriving (Generic, Show)
 
@@ -32,48 +34,46 @@ instance Default AppServices
 
 instance FromJSON TW.OAuth where
     parseJSON =
-        A.withObject "Object expected" $
-        \v -> do
+        A.withObject "Object expected" $ \v -> do
             key <- v .: "consumer_key"
             secret <- v .: "consumer_secret"
             return $
                 TW.twitterOAuth
-                { TW.oauthConsumerKey = U.fromString key
-                , TW.oauthConsumerSecret = U.fromString secret
+                { TW.oauthConsumerKey = Text.encodeUtf8 key
+                , TW.oauthConsumerSecret = Text.encodeUtf8 secret
                 }
 
 instance FromJSON AppServices where
     parseJSON =
         A.withObject "Object expected" $ \v -> AppServices <$> v .:? "twitter"
 
-data AppAuth =
+newtype AppAuth =
     AppAuthTwitter TwitterAuth
     deriving (Eq, Show)
 
-class ToJSON a =>
-      ServiceAuth a  where
+class ToJSON a => ServiceAuth a where
     toAppAuth :: a -> AppAuth
     fromAppAuth :: AppAuth -> Maybe a
     parseAuth :: Object -> Parser a
 
 data TwitterAuth = TwitterAuth
-    { taToken :: U.ByteString
-    , taSecret :: U.ByteString
+    { taToken :: BS.ByteString
+    , taSecret :: BS.ByteString
     } deriving (Eq, Show)
 
 instance ServiceAuth TwitterAuth where
     toAppAuth = AppAuthTwitter
     fromAppAuth (AppAuthTwitter a) = Just a
     parseAuth v =
-        let decodeUtf = fmap U.fromString
-        in TwitterAuth <$> decodeUtf (v .: "oauth_token") <*>
-           decodeUtf (v .: "oauth_token_secret")
+        let encodeUtf = fmap Text.encodeUtf8
+        in TwitterAuth <$> encodeUtf (v .: "oauth_token") <*>
+           encodeUtf (v .: "oauth_token_secret")
 
 instance ToJSON TwitterAuth where
     toJSON (TwitterAuth token secret) =
         object
-            [ "oauth_token" .= U.toString token
-            , "oauth_token_secret" .= U.toString secret
+            [ "oauth_token" .= Text.decodeUtf8 token
+            , "oauth_token_secret" .= Text.decodeUtf8 secret
             ]
 
 taCredential :: TwitterAuth -> TW.Credential
@@ -107,8 +107,7 @@ class HasCrossPosts a where
 
 instance FromJSON CrossPost where
     parseJSON =
-        A.withObject "Object expected" $
-        \v -> do
+        A.withObject "Object expected" $ \v -> do
             lang <- v .: "lang"
             auth <- parseAppAuth v
             return $ CrossPost lang auth
@@ -120,9 +119,10 @@ withTwitter act = do
         Nothing -> error "Twitter credentials not defined"
         Just auth -> act auth
 
-withCreds
-    :: (ServiceAuth sa, HasCrossPosts a, MonadReader a m)
-    => (Language -> sa -> m b) -> m [b]
+withCreds ::
+       (ServiceAuth sa, HasCrossPosts a, MonadReader a m)
+    => (Language -> sa -> m b)
+    -> m [b]
 withCreds act = do
     cps <- asks (mapMaybe filterService . getCrossPosts)
     traverse (uncurry act) cps

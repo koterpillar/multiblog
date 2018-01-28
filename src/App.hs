@@ -8,11 +8,12 @@ import Control.Monad.Reader
 import Control.Monad.State
 
 import qualified Data.ByteString.Char8 as B
-import qualified Data.ByteString.UTF8 as U
 import Data.Functor.Identity
 import Data.List
 import Data.Maybe
+import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import Data.Time
 
 import Happstack.Server
@@ -40,8 +41,8 @@ type App = StateT AppCache (ReaderT AppData IO)
 
 type AppPart a = RouteT Sitemap (ServerPartT App) a
 
-loadApp
-    :: String -- ^ directory to load from
+loadApp ::
+       String -- ^ directory to load from
     -> T.Text -- ^ site address
     -> Bool -- ^ whether the address was explicitly specified
     -> IO AppData
@@ -51,18 +52,16 @@ loadApp dataDirectory address isRealAddress = do
         Left err -> error err
         Right appState ->
             return
-                appState
-                { appAddress = address
-                , appRealAddress = isRealAddress
-                }
+                appState {appAddress = address, appRealAddress = isRealAddress}
 
 -- | Application address, and whether it's specified explicitly
 siteAddress :: IO (T.Text, Bool)
 siteAddress = do
-    addr <- fmap (fmap T.pack) $ lookupEnv "SITE_URL"
-    return $ case addr of
-        Just realAddr -> (realAddr, True)
-        Nothing -> ("http://localhost:8000", False)
+    addr <- fmap T.pack <$> lookupEnv "SITE_URL"
+    return $
+        case addr of
+            Just realAddr -> (realAddr, True)
+            Nothing -> ("http://localhost:8000", False)
 
 -- | Application directory to use
 getAppDirectory :: IO FilePath
@@ -84,8 +83,7 @@ initAppCache = do
     return $ AppCache pdfCache
 
 runApp :: AppCache -> AppData -> App a -> IO a
-runApp cache app a = do
-    runReaderT (evalStateT a cache) app
+runApp cache app a = runReaderT (evalStateT a cache) app
 
 site :: ServerPartT App Response
 site = do
@@ -98,15 +96,18 @@ site = do
 
 -- Run an action in application routing context
 runRoute :: RouteT Sitemap m a -> m a
-runRoute act =
+runRoute act
     -- Supply a known good URL (root) to run the site,
     -- producing the result of the given action
+ =
     let (Right res) = runSite "" (boomerangSiteRouteT (const act) sitemap) []
     in res
 
 parseRoute :: T.Text -> Either String Sitemap
-parseRoute = fmap runIdentity . runSite "" (boomerangSiteRouteT pure sitemap) . segments
-    where segments = decodePathInfo . U.fromString . T.unpack
+parseRoute =
+    fmap runIdentity . runSite "" (boomerangSiteRouteT pure sitemap) . segments
+  where
+    segments = decodePathInfo . T.encodeUtf8
 
 handler :: Sitemap -> AppPart Response
 handler route =
@@ -120,6 +121,7 @@ handler route =
         Feed lang -> feedIndex lang
         SiteScript -> siteScript
         PrintStylesheet -> printStylesheet
+        CodeStylesheet -> codeStylesheet
 
 index :: AppPart Response
 index = articleList $ const True
@@ -138,7 +140,7 @@ dailyIndex = articleList . byDate
 languageHeaderM :: AppPart LanguagePreference
 languageHeaderM = do
     request <- askRq
-    let header = liftM B.unpack $ getHeader "Accept-Language" request
+    let header = B.unpack <$> getHeader "Accept-Language" request
     param <- optional $ look "lang"
     cookie <- optional $ lookCookieValue "lang"
     let langValue = listToMaybe $ catMaybes [param, cookie, header]
@@ -149,12 +151,10 @@ pageNumber = do
     page <- optional $ look "page"
     return $ fromMaybe 1 $ page >>= readM
 
-html
-    :: ToMessage a
-    => a -> AppPart Response
+html :: ToMessage a => a -> AppPart Response
 html = ok . toResponse
 
-article :: Day -> String -> AppPart Response
+article :: Day -> Text -> AppPart Response
 article date slug = do
     language <- languageHeaderM
     a <- onlyOne $ lift $ askFiltered $ byDateSlug date slug
@@ -169,7 +169,7 @@ articleList articleFilter = do
     language <- languageHeaderM
     articleListDisplay language paginated >>= html
 
-meta :: String -> Maybe PageFormat -> AppPart Response
+meta :: Text -> Maybe PageFormat -> AppPart Response
 meta slug format' = do
     let format = fromMaybe Html format'
     language <- languageHeaderM
@@ -189,8 +189,7 @@ data WithContentType r =
     WithContentType String
                     r
 
-instance ToMessage r =>
-         ToMessage (WithContentType r) where
+instance ToMessage r => ToMessage (WithContentType r) where
     toResponse (WithContentType ct r) =
         setHeaderBS (B.pack "Content-Type") (B.pack ct) $ toResponse r
 
@@ -202,3 +201,6 @@ siteScript = renderSiteScript >>= html
 
 printStylesheet :: AppPart Response
 printStylesheet = renderPrintStylesheet >>= html . asCss
+
+codeStylesheet :: AppPart Response
+codeStylesheet = renderCodeStylesheet >>= html . asCss

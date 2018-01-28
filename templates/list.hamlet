@@ -5,7 +5,7 @@ $maybe prev <- pagePrev articles
           #{langString "prevPage"}
 $forall article <- articlesContent
   <div>
-    #{writeHtml def article}
+    #{runPandocPure' $ writeHtml article}
 $maybe next <- pageNext articles
   <ul class=pagination>
     <li class=page-item>

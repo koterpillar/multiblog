@@ -8,13 +8,16 @@ module Authorize where
 import Control.Monad.IO.Class
 
 import qualified Data.ByteString as B
-import qualified Data.ByteString.UTF8 as U
+
+import qualified Data.Text.Encoding as Text
+import qualified Data.Text.IO as Text
+
 import qualified Data.Yaml as Y
 
 import System.IO (hFlush, stdout)
 
-import Web.Twitter.Conduit hiding (map)
 import Web.Authenticate.OAuth as OA
+import Web.Twitter.Conduit
 
 import App
 import Types.Services
@@ -22,9 +25,9 @@ import Types.Services
 authorize :: String -> App ()
 authorize service = do
     auth <- getAuthorization service
-    liftIO $
-        do putStrLn ""
-           putStr $ U.toString $ Y.encode auth
+    liftIO $ do
+        putStrLn ""
+        Text.putStr $ Text.decodeUtf8 $ Y.encode auth
 
 getAuthorization :: String -> App AppAuth
 getAuthorization "twitter" = authorizeTwitter
@@ -32,10 +35,9 @@ getAuthorization _ = error "Invalid service name"
 
 authorizeTwitter :: App AppAuth
 authorizeTwitter =
-    withTwitter $
-    \auth ->
-         liftIO $
-         do mgr <- newManager tlsManagerSettings
+    withTwitter $ \auth ->
+        liftIO $ do
+            mgr <- newManager tlsManagerSettings
             tempCred <- OA.getTemporaryCredential auth mgr
             let url = OA.authorizeUrl auth tempCred
             pin <- getPIN url
@@ -51,4 +53,4 @@ getPIN url = do
     putStrLn $ "Open the following URL: " ++ url
     putStr "PIN: "
     hFlush stdout
-    fmap U.fromString getLine
+    Text.encodeUtf8 <$> Text.getLine

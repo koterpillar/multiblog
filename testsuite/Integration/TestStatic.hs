@@ -1,10 +1,7 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Integration.TestStatic where
-
-import Control.Monad
-
-import Types.Language
 
 import Integration.Base
 

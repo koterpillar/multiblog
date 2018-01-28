@@ -1,7 +1,14 @@
-language: haskell
+sudo: false
 
-ghc:
-  - 7.8  # Only used for Cabal
+language: generic
+
+cache:
+  directories:
+  - $HOME/.ghc
+  - $HOME/.cabal
+  - $HOME/.stack
+  - .stack-work
+  timeout: 900
 
 addons:
   apt:
@@ -10,27 +17,20 @@ addons:
       - xvfb
 
 before_install:
-  - wget https://www.stackage.org/stack/linux-x86_64 -O stack.tar.gz
-  - tar xf stack.tar.gz
-  - mkdir -p $HOME/.local/bin
-  - cp stack-*-linux-x86_64/stack $HOME/.local/bin/stack
-  - stack setup
-  - stack install hlint
+- mkdir -p ~/.local/bin
+- travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
 install:
-  - stack build
+- stack --no-terminal --install-ghc test --bench --dry-run
+- stack --no-terminal --install-ghc test --bench --only-dependencies
+- stack --no-terminal --install-ghc install hlint
 
 script:
-  - hlint src testsuite
-  - stack test
-
-cache:
-  directories:
-    - $HOME/.stack
-    - .stack-work
+- hlint src testsuite
+- stack --no-terminal test --bench --no-run-benchmarks
 
 before_deploy:
-  - cp $(stack path --local-install-root)/bin/multiblog .
+- cp $(stack path --local-install-root)/bin/multiblog .
 
 deploy:
   provider: releases
@@ -41,5 +41,3 @@ deploy:
   on:
     tags: true
     all_branches: true
-
-sudo: false

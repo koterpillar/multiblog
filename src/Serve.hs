@@ -9,8 +9,6 @@ import Control.Monad
 import Control.Monad.Reader
 import Control.Monad.State
 
-import Data.Maybe
-
 import Happstack.Server
 
 import Network.Socket
@@ -18,15 +16,13 @@ import Network.Socket
 import System.Environment
 
 import App
-import Models
 import CrossPost
-
+import Models
 
 crossPostAndServe :: App ()
 crossPostAndServe = do
     isRealAddress <- asks appRealAddress
-    when isRealAddress $ do
-        void $ fork crossPost
+    when isRealAddress $ void $ fork crossPost
     serve
 
 -- Serve the site contents, handling SIGHUP
@@ -34,17 +30,15 @@ serve :: App ()
 serve = do
     lport <- liftIO listenPort
     liftIO $ putStrLn $ "Serving on port " ++ show lport ++ "."
-    let conf =
-            nullConf
-            { port = lport
-            }
+    let conf = nullConf {port = lport}
     app <- ask
     cache <- get
     -- Manually bind the socket to close it on exception
-    liftIO $ bracket
-        (bindPort conf)
-        close
-        (\sock -> simpleHTTPWithSocket' (runApp cache app) sock conf site)
+    liftIO $
+        bracket
+            (bindPort conf)
+            close
+            (\sock -> simpleHTTPWithSocket' (runApp cache app) sock conf site)
 
 listenPort :: IO Int
-listenPort = liftM (read . fromMaybe "8000") (lookupEnv "LISTEN_PORT")
+listenPort = maybe 8000 read <$> lookupEnv "LISTEN_PORT"

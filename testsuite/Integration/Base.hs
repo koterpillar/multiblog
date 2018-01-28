@@ -4,26 +4,32 @@
 
 -- Base functions for integration tests
 module Integration.Base
-  ( makeRequest
-  , simpleRequest
-  , assertContains
-  , assertContainsBefore
-  , assertNotContains
-  , testAddress
-  , withLang
-  , withLang1
-  , withLangCookie
-  ) where
+    ( TestRequest
+    , makeRequest
+    , makeRequestText
+    , simpleRequest
+    , assertContains
+    , assertContainsBefore
+    , assertNotContains
+    , assertTextContains
+    , assertTextContainsBefore
+    , assertTextNotContains
+    , testAddress
+    , withLang
+    , withLang1
+    , withLangCookie
+    ) where
 
 import Control.Concurrent.MVar
 
 import qualified Data.ByteString.Lazy as LB
-import qualified Data.ByteString.UTF8 as U
 import Data.Char
 import Data.List
-import Data.List.Split
 import qualified Data.Map as M
+import Data.Monoid
+import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 
 import Happstack.Server
 
@@ -34,69 +40,89 @@ import App
 import Types.Language
 
 data TestRequest = TestRequest
-    { trUri :: String
-    , trHeaders :: M.Map String String
-    , trCookies :: M.Map String String
+    { trUri :: Text
+    , trHeaders :: M.Map Text Text
+    , trCookies :: M.Map Text Text
     }
 
-simpleRequest :: String -> TestRequest
+simpleRequest :: Text -> TestRequest
 simpleRequest uri = TestRequest uri M.empty M.empty
 
 testAddress :: T.Text
 testAddress = "http://test"
 
--- Make a request to the application
-makeRequest :: TestRequest -> IO String
+-- | Make a request to the application
+makeRequest :: TestRequest -> IO LB.ByteString
 makeRequest req = do
     happstackReq <- mkRequest req
     app <- loadApp "testsuite/Integration/content" testAddress False
     cache <- initAppCache
     rsp <- runApp cache app $ simpleHTTP'' site happstackReq
-    content <- responseContent rsp
-    return content
+    responseContent rsp
 
-assertContains
-    :: (Eq a, Show a)
-    => [a] -> [a] -> Assertion
+makeRequestText :: TestRequest -> IO Text
+makeRequestText = fmap (T.decodeUtf8 . LB.toStrict) . makeRequest
+
+assertContains :: (Eq a, Show a) => [a] -> [a] -> Assertion
 assertContains needle haystack =
     subAssert $
     assertBoolVerbose
         (show needle ++ " not found in:\n" ++ show haystack)
         (needle `isInfixOf` haystack)
 
-assertNotContains
-    :: (Eq a, Show a)
-    => [a] -> [a] -> Assertion
+assertNotContains :: (Eq a, Show a) => [a] -> [a] -> Assertion
 assertNotContains needle haystack =
     subAssert $
     assertBoolVerbose
         (show needle ++ " found in:\n" ++ show haystack)
         (not $ needle `isInfixOf` haystack)
 
-assertContainsBefore
-    :: (Eq a, Show a)
-    => [a] -> [a] -> [a] -> Assertion
+assertTextContains :: Text -> Text -> Assertion
+assertTextContains needle haystack =
+    subAssert $
+    assertBoolVerbose
+        (show needle ++ " not found in:\n" ++ show haystack)
+        (needle `T.isInfixOf` haystack)
+
+assertTextNotContains :: Text -> Text -> Assertion
+assertTextNotContains needle haystack =
+    subAssert $
+    assertBoolVerbose
+        (show needle ++ " found in:\n" ++ show haystack)
+        (not $ needle `T.isInfixOf` haystack)
+
+assertContainsBefore :: (Eq a, Show a) => [a] -> [a] -> [a] -> Assertion
 assertContainsBefore first second haystack =
     subAssert $
     assertBoolVerbose
-        (show first ++ " does not precede " ++ show second ++ " in:\n" ++ show haystack)
+        (show first ++
+         " does not precede " ++ show second ++ " in:\n" ++ show haystack)
         (second `isInfixOf`
-         (head $ dropWhile (first `isInfixOf`) $ tails haystack))
+         head (dropWhile (first `isInfixOf`) $ tails haystack))
+
+assertTextContainsBefore :: Text -> Text -> Text -> Assertion
+assertTextContainsBefore first second haystack =
+    subAssert $
+    assertBoolVerbose
+        (show first ++
+         " does not precede " ++ show second ++ " in:\n" ++ show haystack)
+        (second `T.isInfixOf`
+         head (dropWhile (first `T.isInfixOf`) $ T.tails haystack))
 
 -- Create a request with a specified URL
 -- Happstack doesn't make it easy
 mkRequest :: TestRequest -> IO Request
 mkRequest TestRequest {..} = do
-    let (rUri, rParams) = splitUriParam $ trUri
+    let (rUri, rParams) = splitUriParam trUri
     inputsBody <- newEmptyMVar
     rBody <- newMVar (Body LB.empty)
     return
         Request
         { rqSecure = False
         , rqMethod = GET
-        , rqPaths = filter (/= "") $ splitOn "/" rUri
-        , rqUri = trUri
-        , rqQuery = "?" ++ rParams
+        , rqPaths = map T.unpack $ filter (/= "") $ T.splitOn "/" rUri
+        , rqUri = T.unpack trUri
+        , rqQuery = T.unpack $ "?" <> rParams
         , rqInputsQuery = splitParams rParams
         , rqInputsBody = inputsBody
         , rqCookies = cookies
@@ -106,44 +132,45 @@ mkRequest TestRequest {..} = do
         , rqPeer = ("", 0)
         }
   where
-    splitUriParam :: String -> (String, String)
+    splitUriParam :: Text -> (Text, Text)
     splitUriParam rPath =
-        case splitOn "?" rPath of
+        case T.splitOn "?" rPath of
             [rUri] -> (rUri, "")
             [rUri, rParams] -> (rUri, rParams)
-    splitParams :: String -> [(String, Input)]
+            _ -> error "path should have 1 or 0 '?'"
+    splitParams :: Text -> [(String, Input)]
     splitParams =
-        map (mkParamTuple . splitOn "=") . filter (/= "") . splitOn "&"
-    mkParamTuple :: [String] -> (String, Input)
-    mkParamTuple [k, v] = (k, mkInputValue v)
-    mkParamTuple [k] = (k, mkInputValue "")
+        map (mkParamTuple . T.splitOn "=") . filter (/= "") . T.splitOn "&"
+    mkParamTuple :: [Text] -> (String, Input)
+    mkParamTuple [k, v] = (T.unpack k, mkInputValue v)
+    mkParamTuple [k] = (T.unpack k, mkInputValue "")
+    mkParamTuple _ = error "mkParamTuple should have 1 or 2 element list input"
     mkInputValue str =
         Input
-        { inputValue = Right (LB.fromStrict $ U.fromString str)
+        { inputValue = Right (LB.fromStrict $ T.encodeUtf8 str)
         , inputFilename = Nothing
         , inputContentType =
-            ContentType
-            { ctType = "text"
-            , ctSubtype = "plain"
-            , ctParameters = []
-            }
+              ContentType
+              {ctType = "text", ctSubtype = "plain", ctParameters = []}
         }
-    cookies = M.toList $ M.mapWithKey mkCookie trCookies
-    headers = M.fromList $ map makeHeader $ M.toList $ trHeaders
+    cookies =
+        M.toList $
+        M.mapWithKey mkCookie $ M.mapKeys T.unpack $ M.map T.unpack trCookies
+    headers =
+        M.fromList $
+        map makeHeader $
+        M.toList $ M.mapKeys T.unpack $ M.map T.unpack trHeaders
     makeHeader (name, value) = (name', HeaderPair name' [value'])
       where
-        name' = U.fromString $ map toLower name
-        value' = U.fromString value
+        name' = T.encodeUtf8 $ T.pack $ map toLower name
+        value' = T.encodeUtf8 $ T.pack value
 
 -- Add an Accept-Language header to a request
 withLang :: LanguagePreference -> TestRequest -> TestRequest
-withLang lang req =
-    req
-    { trHeaders = newHeaders
-    }
+withLang lang req = req {trHeaders = newHeaders}
   where
     newHeaders = M.insert "Accept-Language" pref (trHeaders req)
-    pref = show lang
+    pref = T.pack $ show lang
 
 withLang1 :: Language -> TestRequest -> TestRequest
 withLang1 = withLang . singleLanguage
@@ -152,15 +179,13 @@ withLang1 = withLang . singleLanguage
 withLangCookie :: Language -> TestRequest -> TestRequest
 withLangCookie lang req =
     req
-    { trCookies = M.insert "lang" (showLanguage lang) (trCookies req)
-    }
+    {trCookies = M.insert "lang" (T.pack $ showLanguage lang) (trCookies req)}
 
 -- Extract contents from a response
-responseContent :: Response -> IO String
-responseContent r@(Response _ _ _ _ _) =
-    return $ U.toString $ LB.toStrict $ rsBody r
-responseContent f@(SendFile _ _ _ _ _ _ _) = do
-    contents <- readFile $ sfFilePath f
+responseContent :: Response -> IO LB.ByteString
+responseContent r@Response {} = pure $ rsBody r
+responseContent f@SendFile {} = do
+    contents <- LB.readFile $ sfFilePath f
     let offset = fromIntegral $ sfOffset f
     let count = fromIntegral $ sfCount f
-    return $ drop offset $ take count contents
+    pure $ LB.drop offset $ LB.take count contents

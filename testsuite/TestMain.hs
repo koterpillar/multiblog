@@ -3,9 +3,9 @@
 import Test.Framework
 
 import {-@ HTF_TESTS @-} Integration.TestArticle
+import {-@ HTF_TESTS @-} Integration.TestFeed
 import {-@ HTF_TESTS @-} Integration.TestHome
 import {-@ HTF_TESTS @-} Integration.TestMeta
-import {-@ HTF_TESTS @-} Integration.TestRSS
 import {-@ HTF_TESTS @-} Integration.TestStatic
 import {-@ HTF_TESTS @-} TestCache
 import {-@ HTF_TESTS @-} TestImport

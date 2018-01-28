@@ -6,13 +6,13 @@
 module TestCache where
 
 import Control.Concurrent.MVar
-import Control.Monad
-import Control.Monad.State
+import Control.Monad.State hiding (state)
 
 import Cache
 
 import Test.Framework
 
+test_cached :: IO ()
 test_cached = do
     values <- newMVar [1, 2, 3]
     let nextValue :: IO Int
@@ -29,17 +29,18 @@ test_cached = do
     assertEqual 2 anotherValue
 
 -- Test caching a function that depends on internal state
-data TestState = TestState
+newtype TestState = TestState
     { tsCache :: Cache String Int
     }
 
 instance HasCache String Int TestState where
     getCache = tsCache
 
+test_withCacheM :: IO ()
 test_withCacheM
 -- Test using cache via a monad
  = do
-    state <- liftM TestState $ initCache
+    state <- TestState <$> initCache
     -- Test caching a function that depends on internal state
     values <- newMVar [1, 2, 3]
     let nextValue :: IO Int

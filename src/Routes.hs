@@ -8,8 +8,6 @@ import Prelude hiding ((.))
 
 import Control.Category (Category((.)))
 
-import Data.List
-import Data.List.Split
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
@@ -27,12 +25,12 @@ data PageFormat
     deriving (Eq, Ord, Show)
 
 -- TODO: use Boomerang for these
-formatToStr :: PageFormat -> String
+formatToStr :: PageFormat -> Text
 formatToStr Html = "pdf"
 formatToStr Pdf = "pdf"
 formatToStr Docx = "docx"
 
-strToFormat :: String -> Maybe PageFormat
+strToFormat :: Text -> Maybe PageFormat
 strToFormat "html" = Just Html
 strToFormat "pdf" = Just Pdf
 strToFormat "docx" = Just Docx
@@ -47,12 +45,13 @@ data Sitemap
               Int
     | Daily Day
     | ArticleView Day
-                  String
-    | MetaView String
+                  Text
+    | MetaView Text
                MaybeFormat
     | Feed Language
     | SiteScript
     | PrintStylesheet
+    | CodeStylesheet
     deriving (Eq, Ord, Show)
 
 makeBoomerangs ''Sitemap
@@ -80,16 +79,16 @@ rString = xmaph T.unpack (Just . T.pack)
 anyString :: Boomerang TextsError [Text] o (String :- o)
 anyString = rString anyText
 
-rExtension
-    :: Boomerang e tok i (String :- o)
-    -> Boomerang e tok i (String :- Maybe String :- o)
+rExtension ::
+       Boomerang e tok i (Text :- o)
+    -> Boomerang e tok i (Text :- Maybe Text :- o)
 rExtension = xmap splitExt' (Just . joinExt')
   where
-    splitExt' :: String :- o -> String :- Maybe String :- o
+    splitExt' :: Text :- o -> Text :- Maybe Text :- o
     splitExt' (seg :- o) =
         let (seg', ext) = splitExt seg
         in seg' :- ext :- o
-    joinExt' :: String :- Maybe String :- o -> String :- o
+    joinExt' :: Text :- Maybe Text :- o -> Text :- o
     joinExt' (seg :- ext :- o) = joinExt seg ext :- o
 
 -- Swap the top 2 components in a Boomerang
@@ -99,31 +98,31 @@ xflip = xmap pflip (Just . pflip)
     pflip (a :- b :- o) = b :- a :- o
 
 -- Apply a transformation to the second topmost component of a Boomerang
-xmaph2
-    :: (b -> c)
+xmaph2 ::
+       (b -> c)
     -> (c -> Maybe b)
     -> Boomerang e tok i (a :- b :- o)
     -> Boomerang e tok i (a :- c :- o)
 xmaph2 f g = xflip . xmaph f g . xflip
 
 -- Split a path component into basename and extension
-splitExt :: String -> (String, Maybe String)
+splitExt :: Text -> (Text, Maybe Text)
 splitExt segment =
-    case splitOn "." segment of
+    case T.splitOn "." segment of
         [] -> ("", Nothing)
         [s] -> (s, Nothing)
-        ss -> (intercalate "." $ init ss, Just $ last ss)
+        ss -> (T.intercalate "." $ init ss, Just $ last ss)
 
 -- Join a basename and extension together
-joinExt :: String -> Maybe String -> String
+joinExt :: Text -> Maybe Text -> Text
 joinExt segment Nothing = segment
-joinExt segment (Just ext) = segment ++ "." ++ ext
+joinExt segment (Just ext) = segment <> "." <> ext
 
 -- Convert the second topmost component into a MaybeFormat
-xFormat
-    :: Boomerang e tok i (String :- Maybe String :- o)
-    -> Boomerang e tok i (String :- MaybeFormat :- o)
-xFormat = xmaph2 ((=<<) strToFormat) (Just . fmap formatToStr)
+xFormat ::
+       Boomerang e tok i (Text :- Maybe Text :- o)
+    -> Boomerang e tok i (Text :- MaybeFormat :- o)
+xFormat = xmaph2 (strToFormat =<<) (Just . fmap formatToStr)
 
 sitemap :: Boomerang TextsError [Text] r (Sitemap :- r)
 sitemap =
@@ -135,6 +134,7 @@ sitemap =
         , rFeed . "feed" </> rLanguage
         , rSiteScript . "site.js"
         , rPrintStylesheet . "print.css"
-        , rArticleView . rDay </> anyString
-        , rMetaView . xFormat (rExtension anyString)
+        , rCodeStylesheet . "code.css"
+        , rArticleView . rDay </> anyText
+        , rMetaView . xFormat (rExtension anyText)
         ]

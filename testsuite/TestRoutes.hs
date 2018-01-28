@@ -1,10 +1,12 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module TestRoutes where
 
 import Routes
 
 import Test.Framework
+import Test.QuickCheck.Instances ()
 
 test_splitExt = do
     assertEqual ("segment", Nothing) (splitExt "segment")

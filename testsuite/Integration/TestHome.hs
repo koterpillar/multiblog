@@ -1,8 +1,7 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Integration.TestHome where
-
-import Control.Monad
 
 import Data.LanguageCodes
 
@@ -10,38 +9,44 @@ import Test.Framework
 
 import Integration.Base
 
+homeRequest :: TestRequest
 homeRequest = simpleRequest "/"
 
+test_home :: IO ()
 test_home = do
-    home <- makeRequest $ homeRequest
-    assertContains "Test site" home
+    home <- makeRequestText homeRequest
+    assertTextContains "Test site" home
     -- Articles must be ordered correctly
-    assertContainsBefore "Another article" "First test article" home
+    assertTextContainsBefore "Another article" "First test article" home
     -- This article must be on the second page
-    assertContains "Next page" home
-    assertNotContains "Previous page" home
-    assertNotContains "Very early article" home
-    assertContains "<a href=\"http://test/about\">Test About</a>" home
-    assertContains "<a href=\"https://1.example.com/\">Example 1</a>" home
-    assertContains "<a href=\"https://2.example.com/\">Example 2</a>" home
+    assertTextContains "Next page" home
+    assertTextNotContains "Previous page" home
+    assertTextNotContains "Very early article" home
+    assertTextContains "<a href=\"http://test/about\">Test About</a>" home
+    assertTextContains "<a href=\"https://1.example.com/\">Example 1</a>" home
+    assertTextContains "<a href=\"https://2.example.com/\">Example 2</a>" home
 
+test_home_lang :: IO ()
 test_home_lang = do
-    home <- makeRequest $ withLang1 RU $ homeRequest
-    assertContains "Главная" home
-    assertContains "<a href=\"https://1.example.com/\">Example 1</a>" home
-    assertContains "<a href=\"https://2.example.com/\">Пример 2</a>" home
+    home <- makeRequestText $ withLang1 RU homeRequest
+    assertTextContains "Главная" home
+    assertTextContains "<a href=\"https://1.example.com/\">Example 1</a>" home
+    assertTextContains "<a href=\"https://2.example.com/\">Пример 2</a>" home
 
+test_explicit_lang :: IO ()
 test_explicit_lang = do
-    home <- makeRequest $ simpleRequest "/?lang=ru"
-    assertContains "Главная" home
+    home <- makeRequestText $ simpleRequest "/?lang=ru"
+    assertTextContains "Главная" home
 
+test_cookie_lang :: IO ()
 test_cookie_lang = do
-    home <- makeRequest $ withLangCookie ZH $ homeRequest
-    assertContains "<a href=\"http://test/about\">测试关于页</a>" home
-    assertContains "首页" home
+    home <- makeRequestText $ withLangCookie ZH homeRequest
+    assertTextContains "<a href=\"http://test/about\">测试关于页</a>" home
+    assertTextContains "首页" home
 
+test_home_next_page :: IO ()
 test_home_next_page = do
-    home <- makeRequest $ simpleRequest "/?page=2"
-    assertContains "Very early article" home
-    assertContains "Previous page" home
-    assertNotContains "Next page" home
+    home <- makeRequestText $ simpleRequest "/?page=2"
+    assertTextContains "Very early article" home
+    assertTextContains "Previous page" home
+    assertTextNotContains "Next page" home

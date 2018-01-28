@@ -7,21 +7,52 @@ $doctype 5
         #{title} - #{langString "siteName"}
       $nothing
         #{langString "siteName"}
-    <style>
-      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
-      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
-      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
-
-      body { font-family: 'Droid Serif'; }
-      h1, h2, h3 {
-        font-family: 'Yanone Kaffeesatz';
-        font-weight: normal;
+    <link rel="stylesheet" href="https://revealjs.com/css/reveal.css">
+    <link rel="stylesheet" href="https://revealjs.com/css/theme/white.css">
+    <style type="text/css">
+      .reveal {
+        font-size: 24px;
       }
-      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3,
+      .reveal h4,
+      .reveal h5,
+      .reveal h6 {
+        text-transform: none;
+      }
+
+      .reveal h1 {
+        font-size: 4.5em;
+      }
+
+      .reveal h2 {
+        font-size: 2.9em;
+      }
+
+      .reveal h3 {
+        font-size: 2.3em;
+      }
+
+      .reveal h4 {
+        font-size: 1.8em;
+      }
+
+      .reveal pre {
+        font-size: 1em;
+      }
+    <link rel="stylesheet" href=@{CodeStylesheet}>
     ^{analytics}
   <body>
-    <textarea #source>
-      ^{pcContent page}
-    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    <div .reveal>
+      <div .slides>
+        ^{pcContent page}
+    <script src="https://revealjs.com/lib/js/head.min.js">
+    <script src="https://revealjs.com/js/reveal.js">
     <script>
-      var slideshow = remark.create();
+      Reveal.initialize({
+        margin: 0.2,
+        minScale: 0.7,
+        maxScale: 1,
+      });
