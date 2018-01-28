@@ -3,3 +3,6 @@ packages:
 - '.'
 ghc-options:
   '$everything': -threaded
+flags:
+  pandoc:
+    embed_data_files: true
