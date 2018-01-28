@@ -23,7 +23,7 @@ import qualified Web.Twitter.Conduit as TW
 
 import Types.Language
 
-data AppServices = AppServices
+newtype AppServices = AppServices
     { asTwitter :: Maybe TW.OAuth
     } deriving (Generic, Show)
 
@@ -47,7 +47,7 @@ instance FromJSON AppServices where
     parseJSON =
         A.withObject "Object expected" $ \v -> AppServices <$> v .:? "twitter"
 
-data AppAuth =
+newtype AppAuth =
     AppAuthTwitter TwitterAuth
     deriving (Eq, Show)
 
