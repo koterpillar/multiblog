@@ -7,8 +7,13 @@
 module TestModels where
 
 import Data.DeriveTH
+
+import Data.LanguageCodes.Arbitrary ()
+
 import qualified Data.Map as M
 import qualified Data.Set as S
+
+import Text.Pandoc.Arbitrary
 
 import qualified Web.Twitter.Conduit as TW
 
@@ -18,8 +23,6 @@ import Types.Services
 
 import Test.Framework
 import Test.QuickCheck.Instances ()
-
-import Arbitrary ()
 
 derive makeArbitrary ''Article
 

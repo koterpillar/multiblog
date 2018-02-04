@@ -18,6 +18,7 @@ dependencies:
 - iso639
 - mtl
 - pandoc
+- pandoc-types
 - text
 - twitter-conduit
 - xml-conduit
@@ -36,7 +37,6 @@ library:
   - lifted-base
   - network
   - optparse-generic
-  - pandoc-types
   - process
   - process-extras
   - shakespeare
@@ -72,5 +72,6 @@ tests:
     - HTF
     - HUnit
     - derive
+    - QuickCheck
     - quickcheck-instances
 stability: Experimental

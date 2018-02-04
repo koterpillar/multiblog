@@ -4,13 +4,13 @@
 module TestLanguage where
 
 import Data.LanguageCodes
+import Data.LanguageCodes.Arbitrary ()
+
 import qualified Data.Map as M
 
 import Types.Language
 
 import Test.Framework
-
-import Arbitrary ()
 
 mkPreference :: [(Language, Float)] -> LanguagePreference
 mkPreference = LanguagePreference . M.fromList
