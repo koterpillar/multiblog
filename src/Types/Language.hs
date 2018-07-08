@@ -27,9 +27,9 @@ type Language = ISO639_1
 type LanguageMap = M.Map Language
 
 mapKeysM :: (Monad m, Ord k2) => (k1 -> m k2) -> M.Map k1 a -> m (M.Map k2 a)
-mapKeysM kfunc = fmap M.fromList . mapM kvfunc . M.toList
+mapKeysM kfunc = fmap M.fromList . traverse kvfunc . M.toList
   where
-    kvfunc (k, v) = (\k' -> (k', v)) <$> kfunc k
+    kvfunc (k, v) = (,) <$> kfunc k <*> pure v
 
 instance A.FromJSON ISO639_1 where
     parseJSON v@(A.String _) = A.parseJSON v >>= parseLanguageM
@@ -46,7 +46,7 @@ instance A.FromJSON v => A.FromJSON (LanguageChoices v) where
     parseJSON v@(A.Object _) =
         LanguageChoices <$> (A.parseJSON v >>= mapKeysM parseLanguageM)
     parseJSON v@(A.String _) =
-        (LanguageChoices . M.singleton defaultLanguage) <$> A.parseJSON v
+        LanguageChoices . M.singleton defaultLanguage <$> A.parseJSON v
     parseJSON _ = mzero
 
 newtype LanguagePreference = LanguagePreference

@@ -78,9 +78,7 @@ loadAppDefault = do
     loadApp directory address isRealAddress
 
 initAppCache :: IO AppCache
-initAppCache = do
-    pdfCache <- initCache
-    return $ AppCache pdfCache
+initAppCache = AppCache <$> initCache
 
 runApp :: AppCache -> AppData -> App a -> IO a
 runApp cache app a = runReaderT (evalStateT a cache) app
