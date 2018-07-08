@@ -1,8 +1,13 @@
-resolver: lts-10.3
+resolver: lts-11.17
 packages:
 - '.'
 ghc-options:
   '$everything': -threaded
+extra-deps:
+  - derive-2.6.4
+  - twitter-types-0.7.2.2
+  - twitter-types-lens-0.7.2
+  - twitter-conduit-0.3.0
 flags:
   pandoc:
     embed_data_files: true

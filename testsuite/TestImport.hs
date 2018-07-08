@@ -117,13 +117,12 @@ test_loadStrings = do
                 , "about:"
                 , "  zh: 关于"
                 ]
-    assertEqual
-        (Right $
-         M.fromList
-             [ ("title", M.fromList [(EN, "Title"), (RU, "Заголовок")])
-             , ("about", M.fromList [(ZH, "关于")])
-             ])
-        (decodeEither strings :: Either String (M.Map String LanguageString))
+    decodeThrow strings >>=
+        assertEqual
+            (M.fromList
+                 [ ("title", M.fromList [(EN, "Title"), (RU, "Заголовок")])
+                 , ("about", M.fromList [(ZH, "关于")])
+                 ] :: M.Map String LanguageString)
 
 test_loadLinks = do
     let links =
@@ -138,18 +137,16 @@ test_loadLinks = do
                 , "    ru: Пример 2"
                 , "    zh: 列子2"
                 ]
-    assertEqual
-        (Right
-             [ MetaLink "about"
-             , ExternalLink
-                   "https://1.example.com/"
-                   (M.fromList [(EN, "Example 1")])
-             , ExternalLink
-                   "https://2.example.com/"
-                   (M.fromList
-                        [(EN, "Example 2"), (RU, "Пример 2"), (ZH, "列子2")])
-             ])
-        (decodeEither links :: Either String [Link])
+    decodeThrow links >>=
+        assertEqual
+            [ MetaLink "about"
+            , ExternalLink
+                  "https://1.example.com/"
+                  (M.fromList [(EN, "Example 1")])
+            , ExternalLink
+                  "https://2.example.com/"
+                  (M.fromList [(EN, "Example 2"), (RU, "Пример 2"), (ZH, "列子2")])
+            ]
 
 test_loadCrossPost = do
     let crossPosts =
@@ -160,11 +157,11 @@ test_loadCrossPost = do
                 , "  oauth_token: ABCDE"
                 , "  oauth_token_secret: FGHIJ"
                 ]
-    assertEqual
-        (Right
-             [ CrossPost
-               { cpLanguage = ES
-               , cpServiceDetails = AppAuthTwitter (TwitterAuth "ABCDE" "FGHIJ")
-               }
-             ])
-        (decodeEither crossPosts :: Either String AppCrossPost)
+    decodeThrow crossPosts >>=
+        assertEqual
+            [ CrossPost
+                  { cpLanguage = ES
+                  , cpServiceDetails =
+                        AppAuthTwitter (TwitterAuth "ABCDE" "FGHIJ")
+                  }
+            ]
