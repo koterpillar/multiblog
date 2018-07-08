@@ -102,7 +102,8 @@ filterWkhtmlWarnings output
   where
     startsWithError =
         LB.isPrefixOf "QSslSocket" output ||
-        LB.isPrefixOf "libpng warning" output
+        LB.isPrefixOf "libpng warning" output ||
+        LB.isPrefixOf "Warning: Ignoring XDG_SESSION_TYPE=wayland" output
     dropThisLine :: LB.ByteString -> LB.ByteString
     dropThisLine = LB.dropWhile isNewline . LB.dropWhile (not . isNewline)
     isNewline 10 = True
