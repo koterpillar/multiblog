@@ -218,6 +218,6 @@ decodeOrDefault ::
        (Default a, FromJSON a, Monad m) => Maybe B.ByteString -> ParseT m a
 decodeOrDefault Nothing = pure def
 decodeOrDefault (Just s) =
-    case Y.decodeEither s of
-        Left err -> throwError err
+    case Y.decodeEither' s of
+        Left err -> throwError $ show err
         Right res -> pure res
