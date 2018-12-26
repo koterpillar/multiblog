@@ -78,7 +78,7 @@ pdfExport ::
     -> Meta
     -> m (Export LB.ByteString)
 pdfExport lang meta =
-    fmap (inline pdf (metaExportFileName Docx meta)) $
+    fmap (inline pdf (metaExportFileName Pdf meta)) $
     withCacheM (bestLanguage lang, mtSlug meta) $ do
         let content = runPandocPure' $ writeHtml $ langContent lang meta
         let title = langTitle lang meta
