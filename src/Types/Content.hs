@@ -67,8 +67,12 @@ instance FromJSON Layout where
 data Meta = Meta
     { mtSlug :: Text
     , mtLayout :: Layout
+    , mtExportSlugOverride :: Maybe Text
     , mtContent :: LanguageContent
     } deriving (Eq, Show)
+
+mtExportSlug :: Meta -> Text
+mtExportSlug meta = fromMaybe (mtSlug meta) (mtExportSlugOverride meta)
 
 instance HasContent Meta where
     getContent = mtContent

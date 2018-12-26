@@ -57,6 +57,7 @@ test_loadMeta = do
              Meta
              { mtSlug = "about"
              , mtLayout = BaseLayout
+             , mtExportSlugOverride = Nothing
              , mtContent =
                    M.fromList
                        [ (EN, unsafeReadMarkdown "This is meta")
@@ -80,6 +81,7 @@ test_loadMetaPresentationLayout = do
              Meta
              { mtSlug = "talk"
              , mtLayout = PresentationLayout
+             , mtExportSlugOverride = Nothing
              , mtContent = M.fromList [(EN, unsafeReadMarkdown "Talk content")]
              })
         result

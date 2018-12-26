@@ -66,7 +66,7 @@ metaExport Docx lang meta = do
 metaExportFileName :: PageFormat -> Meta -> Text
 metaExportFileName format meta = Text.intercalate "." [metaName, fileExtension format]
   where
-    metaName = mtSlug meta
+    metaName = mtExportSlug meta
     fileExtension Docx = "docx"
     fileExtension Html = error "HTML is not an export format"
     fileExtension Pdf = "pdf"
