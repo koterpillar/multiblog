@@ -2,8 +2,6 @@
 
 module Render where
 
-import qualified Data.ByteString    as B
-
 import           Data.Text          (Text)
 import qualified Data.Text          as Text
 import           Data.Text.Encoding (encodeUtf8)
@@ -29,16 +27,16 @@ withContentType :: ContentType -> Response -> Response
 withContentType ct = setHeaderBS "Content-Type" (encodeUtf8 ct)
 
 newtype Stylesheet =
-    Stylesheet TL.Text
+    Stylesheet { unStylesheet :: TL.Text }
 
 instance ToMessage Stylesheet where
-    toResponse = withContentType css . toResponse
+    toResponse = withContentType css . toResponse . unStylesheet
 
 newtype JavaScript =
-    JavaScript TL.Text
+    JavaScript { unJavaScript :: TL.Text }
 
 instance ToMessage JavaScript where
-    toResponse = withContentType javaScript . toResponse
+    toResponse = withContentType javaScript . toResponse . unJavaScript
 
 data Export content = Export
     { exContent       :: content
