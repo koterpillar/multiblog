@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -10,6 +11,10 @@ import Control.Monad.Reader
 import Control.Monad.State
 
 import qualified Data.ByteString.Lazy as LB
+
+import Data.List.NonEmpty (NonEmpty (..))
+import qualified Data.List.NonEmpty as NE
+
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy as TL
@@ -94,17 +99,21 @@ wkhtmltopdf html =
 
 -- wkhtmltopdf, wrapped in xvfb-run as it requires an X display
 wkhtmlProc :: CreateProcess
-wkhtmlProc = proc "xvfb-run" $ "-a" : wkArgs
+#ifdef darwin_HOST_OS
+wkhtmlProc = proc (NE.head wkArgs) (NE.tail wkArgs)
+#else
+wkhtmlProc = proc "xvfb-run" $ "-a" : NE.toList wkArgs
+#endif
   where
     wkArgs =
-        [ "wkhtmltopdf"
-        , "--margin-top"
+        "wkhtmltopdf" :|
+        [ "--margin-top"
         , "15mm"
         , "--margin-bottom"
         , "15mm"
         , "--zoom"
         , "0.78125"
-        , "-q"
+        , "--quiet"
         , "-"
         , "-"
         ]
