@@ -10,6 +10,8 @@ import Control.Monad.Reader
 import Control.Monad.State
 
 import qualified Data.ByteString.Lazy as LB
+import Data.Text (Text)
+import qualified Data.Text as Text
 import qualified Data.Text.Lazy as TL
 import Data.Text.Lazy.Encoding
 
@@ -28,6 +30,7 @@ import Web.Routes
 
 import Cache
 import Models
+import Render
 import Routes
 import Types.Content
 import Types.Language
@@ -44,22 +47,33 @@ metaExport ::
     => PageFormat
     -> LanguagePreference
     -> Meta
-    -> m LB.ByteString
+    -> m (Export LB.ByteString)
 -- Pandoc uses TeX to render PDFs, which requires a lot of packages for Unicode
 -- support, etc. Use wkhtmltopdf instead
 metaExport Pdf lang meta = pdfExport lang meta
 metaExport Html _ _ = error "HTML is not an export format"
 metaExport Docx lang meta = do
     let content = langContent lang meta
-    pure $ runPandocPure' $ writeDocx def content
+    pure $
+        inline docx (metaExportFileName Docx meta) $
+        runPandocPure' $ writeDocx def content
+
+metaExportFileName :: PageFormat -> Meta -> Text
+metaExportFileName format meta = Text.intercalate "." [metaName, fileExtension format]
+  where
+    metaName = mtSlug meta
+    fileExtension Docx = "docx"
+    fileExtension Html = error "HTML is not an export format"
+    fileExtension Pdf = "pdf"
 
 -- Export a PDF using wkhtmltopdf
 pdfExport ::
        (MonadRoute m, URL m ~ Sitemap, MonadState AppCache m, MonadIO m)
     => LanguagePreference
     -> Meta
-    -> m LB.ByteString
+    -> m (Export LB.ByteString)
 pdfExport lang meta =
+    fmap (inline pdf (metaExportFileName Docx meta)) $
     withCacheM (bestLanguage lang, mtSlug meta) $ do
         let content = runPandocPure' $ writeHtml $ langContent lang meta
         let title = langTitle lang meta

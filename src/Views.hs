@@ -32,6 +32,7 @@ import Text.Pandoc.Walk
 import Web.Routes
 
 import Models
+import Render
 import Routes
 import Types.Content
 import Types.Language
@@ -219,18 +220,18 @@ linkedHeader target doc = evalState (walkM linkHeader doc) True
         return $ Header n ("", [], []) text'
     linkHeader x = return x
 
-renderSiteScript :: MonadRoute m => m TL.Text
+renderSiteScript :: MonadRoute m => m JavaScript
 renderSiteScript = do
     route <- fmap convRender askRouteFn
-    return $ renderJavascriptUrl route $(juliusFile "templates/site.julius")
+    return $ JavaScript $ renderJavascriptUrl route $(juliusFile "templates/site.julius")
 
-renderPrintStylesheet :: MonadRoute m => m TL.Text
+renderPrintStylesheet :: MonadRoute m => m Stylesheet
 renderPrintStylesheet = do
     route <- fmap convRender askRouteFn
-    return $ renderCssUrl route $(luciusFile "templates/print.lucius")
+    return $ Stylesheet $ renderCssUrl route $(luciusFile "templates/print.lucius")
 
-renderCodeStylesheet :: MonadRoute m => m TL.Text
-renderCodeStylesheet = pure $ TL.pack $ styleToCss highlightingStyle
+renderCodeStylesheet :: MonadRoute m => m Stylesheet
+renderCodeStylesheet = pure $ Stylesheet $ TL.pack $ styleToCss highlightingStyle
 
 -- | Presentation can only render the pipe tables. Disable the other kinds
 presentationOptions :: WriterOptions
