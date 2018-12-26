@@ -42,6 +42,14 @@ testSource :: Text -> Text -> SourceFile
 testSource name content =
     SourceFile {sfName = name, sfContent = Text.encodeUtf8 content}
 
+defaultMeta =
+    Meta
+        { mtSlug = ""
+        , mtLayout = BaseLayout
+        , mtExportSlugOverride = Nothing
+        , mtContent = M.empty
+        }
+
 test_loadMeta = do
     let directory =
             SourceDirectory
@@ -54,10 +62,8 @@ test_loadMeta = do
     let (Identity result) = runExceptT $ parseMeta directory
     assertEqual
         (Right
-             Meta
+             defaultMeta
              { mtSlug = "about"
-             , mtLayout = BaseLayout
-             , mtExportSlugOverride = Nothing
              , mtContent =
                    M.fromList
                        [ (EN, unsafeReadMarkdown "This is meta")
@@ -78,11 +84,29 @@ test_loadMetaPresentationLayout = do
     let (Identity result) = runExceptT $ parseMeta directory
     assertEqual
         (Right
-             Meta
+             defaultMeta
              { mtSlug = "talk"
              , mtLayout = PresentationLayout
-             , mtExportSlugOverride = Nothing
              , mtContent = M.fromList [(EN, unsafeReadMarkdown "Talk content")]
+             })
+        result
+
+test_loadMetaExportSlug = do
+    let directory =
+            SourceDirectory
+            { sdName = "resume"
+            , sdFiles =
+                  [ testSource "en.md" "Resume content"
+                  , testSource "options.yaml" "exportSlug: MyName"
+                  ]
+            }
+    let (Identity result) = runExceptT $ parseMeta directory
+    assertEqual
+        (Right
+             defaultMeta
+             { mtSlug = "resume"
+             , mtExportSlugOverride = Just "MyName"
+             , mtContent = M.fromList [(EN, unsafeReadMarkdown "Resume content")]
              })
         result
 

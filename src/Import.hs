@@ -59,7 +59,7 @@ instance Default MetaOptions where
 
 instance FromJSON MetaOptions where
     parseJSON (Object v) = do
-        layout <- v .: "layout"
+        layout <- fromMaybe BaseLayout <$> v .:? "layout"
         exportSlug <- v .:? "exportSlug"
         return MetaOptions {moLayout = layout, moExportSlug = exportSlug}
     parseJSON _ = mzero
