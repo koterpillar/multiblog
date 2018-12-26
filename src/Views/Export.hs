@@ -78,7 +78,7 @@ pdfExport ::
     -> Meta
     -> m (Export LB.ByteString)
 pdfExport lang meta =
-    fmap (inline pdf (metaExportFileName Docx meta)) $
+    fmap (inline pdf (metaExportFileName Pdf meta)) $
     withCacheM (bestLanguage lang, mtSlug meta) $ do
         let content = runPandocPure' $ writeHtml $ langContent lang meta
         let title = langTitle lang meta
@@ -91,10 +91,10 @@ pdfExport lang meta =
 wkhtmltopdf :: MonadIO m => LB.ByteString -> m LB.ByteString
 wkhtmltopdf html =
     liftIO $ do
-        (exitCode, pdf, err) <- readCreateProcessWithExitCode wkhtmlProc html
-        let pdf' = filterWkhtmlWarnings pdf
+        (exitCode, output, err) <- readCreateProcessWithExitCode wkhtmlProc html
+        let output' = filterWkhtmlWarnings output
         case exitCode of
-            ExitSuccess -> return pdf'
+            ExitSuccess -> return output'
             ExitFailure _ -> error $ TL.unpack $ decodeUtf8 err
 
 -- wkhtmltopdf, wrapped in xvfb-run as it requires an X display
@@ -125,6 +125,7 @@ filterWkhtmlWarnings output
   where
     startsWithError =
         LB.isPrefixOf "QSslSocket" output ||
+        LB.isPrefixOf "QNet" output ||
         LB.isPrefixOf "libpng warning" output ||
         LB.isPrefixOf "Warning: Ignoring XDG_SESSION_TYPE=wayland" output
     dropThisLine :: LB.ByteString -> LB.ByteString
