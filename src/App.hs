@@ -149,14 +149,14 @@ pageNumber = do
     page <- optional $ look "page"
     return $ fromMaybe 1 $ page >>= readM
 
-html :: ToMessage a => a -> AppPart Response
-html = ok . toResponse
+okResponse :: ToMessage a => a -> AppPart Response
+okResponse = ok . toResponse
 
 article :: Day -> Text -> AppPart Response
 article date slug = do
     language <- languageHeaderM
     a <- onlyOne $ lift $ askFiltered $ byDateSlug date slug
-    articleDisplay language a >>= html
+    articleDisplay language a >>= okResponse
 
 articleList :: (Article -> Bool) -> AppPart Response
 articleList articleFilter = do
@@ -165,7 +165,7 @@ articleList articleFilter = do
     page <- pageNumber
     let paginated = paginate pageSize page sorted
     language <- languageHeaderM
-    articleListDisplay language paginated >>= html
+    articleListDisplay language paginated >>= okResponse
 
 meta :: Text -> Maybe PageFormat -> AppPart Response
 meta slug format' = do
@@ -173,32 +173,20 @@ meta slug format' = do
     language <- languageHeaderM
     m <- askMeta slug
     case format of
-        Html -> metaDisplay language m >>= html
-        _ -> metaExport format language m >>= html
+        Html -> metaDisplay language m >>= okResponse
+        _ -> metaExport format language m >>= okResponse
 
 feedIndex :: Language -> AppPart Response
 feedIndex language = do
     articles <- lift $ askFiltered (const True)
     let sorted = sortBy reverseCompare articles
-    feedDisplay language sorted >>= html
-
--- Override content type on any response
-data WithContentType r =
-    WithContentType String
-                    r
-
-instance ToMessage r => ToMessage (WithContentType r) where
-    toResponse (WithContentType ct r) =
-        setHeaderBS (B.pack "Content-Type") (B.pack ct) $ toResponse r
-
-asCss :: r -> WithContentType r
-asCss = WithContentType "text/css"
+    feedDisplay language sorted >>= okResponse
 
 siteScript :: AppPart Response
-siteScript = renderSiteScript >>= html
+siteScript = renderSiteScript >>= okResponse
 
 printStylesheet :: AppPart Response
-printStylesheet = renderPrintStylesheet >>= html . asCss
+printStylesheet = renderPrintStylesheet >>= okResponse
 
 codeStylesheet :: AppPart Response
-codeStylesheet = renderCodeStylesheet >>= html . asCss
+codeStylesheet = renderCodeStylesheet >>= okResponse

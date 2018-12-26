@@ -49,17 +49,19 @@ sdFile name =
 
 type ParseT m a = ExceptT String m a
 
-newtype MetaOptions = MetaOptions
+data MetaOptions = MetaOptions
     { moLayout :: Layout
+    , moExportSlug :: Maybe Text
     }
 
 instance Default MetaOptions where
-    def = MetaOptions {moLayout = BaseLayout}
+    def = MetaOptions {moLayout = BaseLayout, moExportSlug = Nothing}
 
 instance FromJSON MetaOptions where
     parseJSON (Object v) = do
-        layout <- v .: "layout"
-        return MetaOptions {moLayout = layout}
+        layout <- fromMaybe BaseLayout <$> v .:? "layout"
+        exportSlug <- v .:? "exportSlug"
+        return MetaOptions {moLayout = layout, moExportSlug = exportSlug}
     parseJSON _ = mzero
 
 -- | Parse meta from a directory
@@ -69,7 +71,11 @@ parseMeta dir = do
     options <- decodeOrDefault $ sdFile "options.yaml" dir
     pure
         Meta
-        {mtSlug = sdName dir, mtLayout = moLayout options, mtContent = content}
+            { mtSlug = sdName dir
+            , mtLayout = moLayout options
+            , mtExportSlugOverride = moExportSlug options
+            , mtContent = content
+            }
 
 -- | Parse an article from a directory
 parseArticle :: Monad m => SourceDirectory -> ParseT m Article
