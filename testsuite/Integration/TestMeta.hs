@@ -22,17 +22,17 @@ test_meta_html = do
 
 test_meta_pdf :: IO ()
 test_meta_pdf = do
-    meta_pdf <- makeRequest $ simpleRequest "/meta.pdf"
+    meta_pdf <- makeRequestBS $ simpleRequest "/meta.pdf"
     assertEqual "%PDF" (LB.take 4 meta_pdf)
 
 test_meta_pdf_ru :: IO ()
 test_meta_pdf_ru = do
-    meta_pdf <- makeRequest $ withLang1 RU $ simpleRequest "/meta.pdf"
+    meta_pdf <- makeRequestBS $ withLang1 RU $ simpleRequest "/meta.pdf"
     assertEqual "%PDF" (LB.take 4 meta_pdf)
 
 test_meta_docx :: IO ()
 test_meta_docx = do
-    meta_docx <- makeRequest $ simpleRequest "/meta.docx"
+    meta_docx <- makeRequestBS $ simpleRequest "/meta.docx"
     assertEqual
         "PK" -- DOCX are ZIP files
         (LB.take 2 meta_docx)

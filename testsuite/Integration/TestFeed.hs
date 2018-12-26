@@ -4,7 +4,6 @@
 module Integration.TestFeed where
 
 import Data.Default.Class
-import Data.Monoid
 
 import Data.XML.Types
 
@@ -23,7 +22,7 @@ atomEntry = "{http://www.w3.org/2005/Atom}entry"
 
 test_home :: IO ()
 test_home = do
-    rss <- makeRequest $ simpleRequest "/feed/en"
+    rss <- makeRequestBS $ simpleRequest "/feed/en"
     xml <-
         case C.parseLBS def rss of
             Left exc -> error $ show exc

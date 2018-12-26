@@ -6,6 +6,7 @@
 module Integration.Base
     ( TestRequest
     , makeRequest
+    , makeRequestBS
     , makeRequestText
     , simpleRequest
     , assertContains
@@ -26,7 +27,6 @@ import qualified Data.ByteString.Lazy as LB
 import Data.Char
 import Data.List
 import qualified Data.Map as M
-import Data.Monoid
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -52,16 +52,18 @@ testAddress :: T.Text
 testAddress = "http://test"
 
 -- | Make a request to the application
-makeRequest :: TestRequest -> IO LB.ByteString
+makeRequest :: TestRequest -> IO Response
 makeRequest req = do
     happstackReq <- mkRequest req
     app <- loadApp "testsuite/Integration/content" testAddress False
     cache <- initAppCache
-    rsp <- runApp cache app $ simpleHTTP'' site happstackReq
-    responseContent rsp
+    runApp cache app $ simpleHTTP'' site happstackReq
+
+makeRequestBS :: TestRequest -> IO LB.ByteString
+makeRequestBS req = makeRequest req >>= responseContent
 
 makeRequestText :: TestRequest -> IO Text
-makeRequestText = fmap (T.decodeUtf8 . LB.toStrict) . makeRequest
+makeRequestText = fmap (T.decodeUtf8 . LB.toStrict) . makeRequestBS
 
 assertContains :: (Eq a, Show a) => [a] -> [a] -> Assertion
 assertContains needle haystack =
