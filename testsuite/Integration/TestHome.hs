@@ -50,3 +50,13 @@ test_home_next_page = do
     assertTextContains "Very early article" home
     assertTextContains "Previous page" home
     assertTextNotContains "Next page" home
+
+test_css :: IO ()
+test_css = do
+    css <- makeRequestText $ simpleRequest "/code.css"
+    assertTextContains "color" css
+
+test_js :: IO ()
+test_js = do
+    js <- makeRequestText $ simpleRequest "/site.js"
+    assertTextContains "function" js
