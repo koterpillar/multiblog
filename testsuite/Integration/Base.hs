@@ -15,6 +15,8 @@ module Integration.Base
     , assertTextContains
     , assertTextContainsBefore
     , assertTextNotContains
+    , responseContent
+    , responseHeader
     , testAddress
     , withLang
     , withLang1
@@ -23,6 +25,7 @@ module Integration.Base
 
 import Control.Concurrent.MVar
 
+import Data.ByteString (ByteString)
 import qualified Data.ByteString.Lazy as LB
 import Data.Char
 import Data.List
@@ -191,3 +194,6 @@ responseContent f@SendFile {} = do
     let offset = fromIntegral $ sfOffset f
     let count = fromIntegral $ sfCount f
     pure $ LB.drop offset $ LB.take count contents
+
+responseHeader :: String -> Response -> Maybe ByteString
+responseHeader = getHeader
