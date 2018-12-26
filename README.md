@@ -42,6 +42,10 @@ Metas support rendering as slideshows via [remark](https://remarkjs.com/). To
 switch a meta to presentation mode, add `layout: presentation` to `options.yaml`
 in the meta directory.
 
+Metas can be exported as PDF or DOCX by adding `.pdf` or `.docx` to the URL. To
+control the exported file name, add `exportSlug: AnotherName` to `options.yaml`
+in the meta directory.
+
 Some elements of the blog other than content itself must also be translated. The
 translations use the file `strings.yaml` which must contain hashes of the
 following structure: string - language - translation.
