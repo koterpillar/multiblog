@@ -91,10 +91,10 @@ pdfExport lang meta =
 wkhtmltopdf :: MonadIO m => LB.ByteString -> m LB.ByteString
 wkhtmltopdf html =
     liftIO $ do
-        (exitCode, pdf, err) <- readCreateProcessWithExitCode wkhtmlProc html
-        let pdf' = filterWkhtmlWarnings pdf
+        (exitCode, output, err) <- readCreateProcessWithExitCode wkhtmlProc html
+        let output' = filterWkhtmlWarnings output
         case exitCode of
-            ExitSuccess -> return pdf'
+            ExitSuccess -> return output'
             ExitFailure _ -> error $ TL.unpack $ decodeUtf8 err
 
 -- wkhtmltopdf, wrapped in xvfb-run as it requires an X display
