@@ -40,6 +40,7 @@ import Test.Framework
 import Test.HUnit
 
 import App
+import Models
 import Types.Language
 
 data TestRequest = TestRequest
@@ -51,14 +52,14 @@ data TestRequest = TestRequest
 simpleRequest :: Text -> TestRequest
 simpleRequest uri = TestRequest uri M.empty M.empty
 
-testAddress :: T.Text
-testAddress = "http://test"
+testAddress :: SiteAddress
+testAddress = ImplicitSiteAddress "http://test"
 
 -- | Make a request to the application
 makeRequest :: TestRequest -> IO Response
 makeRequest req = do
     happstackReq <- mkRequest req
-    app <- loadApp "testsuite/Integration/content" testAddress False
+    app <- loadApp "testsuite/Integration/content" testAddress
     cache <- initAppCache
     runApp cache app $ simpleHTTP'' site happstackReq
 

@@ -16,6 +16,7 @@ import qualified Text.XML as C
 import Test.Framework
 
 import Integration.Base
+import Models
 
 atomEntry :: Name
 atomEntry = "{http://www.w3.org/2005/Atom}entry"
@@ -36,7 +37,7 @@ test_home = do
     let Just feed = elementFeed root
     assertEqual "Test site" $ txtToString $ feedTitle feed
     -- TODO: Web.Routes generate a link without the trailing slash
-    assertEqual (testAddress <> "/") $ feedId feed
+    assertEqual (getSiteAddress testAddress <> "/") $ feedId feed
     assertEqual "2018-01-01T00:00:00Z" $ feedUpdated feed
     let entries = feedEntries feed
     assertEqual ["Статья с кодом", "Another article"] $

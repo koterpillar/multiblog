@@ -52,6 +52,8 @@ derive makeArbitrary ''AppAuth
 
 derive makeArbitrary ''CrossPost
 
+derive makeArbitrary ''SiteAddress
+
 derive makeArbitrary ''AppData
 
 fall :: [a] -> (a -> Bool) -> Bool
