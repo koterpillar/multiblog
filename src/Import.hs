@@ -186,7 +186,7 @@ loadFromDirectory path = do
     pure $
         def
         { appDirectory = path
-        , appAddress = ""
+        , appAddress = ImplicitSiteAddress ""
         , appArticles = articles
         , appMeta = metas
         , appStrings = strings

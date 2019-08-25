@@ -43,25 +43,24 @@ type AppPart a = RouteT Sitemap (ServerPartT App) a
 
 loadApp ::
        String -- ^ directory to load from
-    -> T.Text -- ^ site address
-    -> Bool -- ^ whether the address was explicitly specified
+    -> SiteAddress -- ^ site address
     -> IO AppData
-loadApp dataDirectory address isRealAddress = do
+loadApp dataDirectory address = do
     app <- runExceptT $ loadFromDirectory dataDirectory
     case app of
         Left err -> error err
         Right appState ->
             return
-                appState {appAddress = address, appRealAddress = isRealAddress}
+                appState {appAddress = address}
 
 -- | Application address, and whether it's specified explicitly
-siteAddress :: IO (T.Text, Bool)
+siteAddress :: IO SiteAddress
 siteAddress = do
     addr <- fmap T.pack <$> lookupEnv "SITE_URL"
     return $
         case addr of
-            Just realAddr -> (realAddr, True)
-            Nothing -> ("http://localhost:8000", False)
+            Just realAddr -> ExplicitSiteAddress realAddr
+            Nothing -> ImplicitSiteAddress "http://localhost:8000"
 
 -- | Application directory to use
 getAppDirectory :: IO FilePath
@@ -73,9 +72,9 @@ getAppDirectory = do
 
 loadAppDefault :: IO AppData
 loadAppDefault = do
-    (address, isRealAddress) <- siteAddress
+    address <- siteAddress
     directory <- getAppDirectory
-    loadApp directory address isRealAddress
+    loadApp directory address
 
 initAppCache :: IO AppCache
 initAppCache = AppCache <$> initCache
@@ -90,7 +89,7 @@ site = do
     let routedSite = boomerangSiteRouteT handler sitemap
     let staticDir = appDir </> "static"
     let staticSite = serveDirectory DisableBrowsing ["index.html"] staticDir
-    implSite address "" routedSite `mplus` staticSite
+    implSite (getSiteAddress address) "" routedSite `mplus` staticSite
 
 -- Run an action in application routing context
 runRoute :: RouteT Sitemap m a -> m a

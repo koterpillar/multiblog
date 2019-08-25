@@ -69,13 +69,13 @@ crossPostTwitter = do
             forM unposted $ \art -> do
                 let title = langTitle lpref art
                 articleLink <- linkTo art
-                let content = title <> " " <> address <> articleLink
+                let content = title <> " " <> getSiteAddress address <> articleLink
                 doCall $ update content
     return ()
 
 twitterArticleLinks :: (MonadReader AppData m) => [Status] -> m [Article]
 twitterArticleLinks statuses = do
-    addr <- asks appAddress
+    addr <- asks (getSiteAddress . appAddress)
     let relativeUrl aurl
             | T.isPrefixOf addr aurl = Just $ T.drop (T.length addr) aurl
             | otherwise = Nothing

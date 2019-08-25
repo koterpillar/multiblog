@@ -37,10 +37,11 @@ instance FromJSON Analytics where
     parseJSON =
         A.withObject "Object expected" $ \v -> Analytics <$> v .:? "google"
 
+data SiteAddress = ExplicitSiteAddress { getSiteAddress :: T.Text } | ImplicitSiteAddress { getSiteAddress :: T.Text } deriving (Generic, Show)
+
 data AppData = AppData
     { appDirectory :: String
-    , appAddress :: T.Text
-    , appRealAddress :: Bool
+    , appAddress :: SiteAddress
     , appArticles :: [Article]
     , appMeta :: [Meta]
     , appStrings :: M.Map Text LanguageString
@@ -54,8 +55,7 @@ instance Default AppData where
     def =
         AppData
         { appDirectory = def
-        , appAddress = T.empty
-        , appRealAddress = False
+        , appAddress = ImplicitSiteAddress ""
         , appArticles = def
         , appMeta = def
         , appStrings = def

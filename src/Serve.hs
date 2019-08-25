@@ -21,8 +21,10 @@ import Models
 
 crossPostAndServe :: App ()
 crossPostAndServe = do
-    isRealAddress <- asks appRealAddress
-    when isRealAddress $ void $ fork crossPost
+    address <- asks appAddress
+    case address of
+        ImplicitSiteAddress _ -> pure ()
+        ExplicitSiteAddress _ -> void $ fork crossPost
     serve
 
 -- Serve the site contents, handling SIGHUP
