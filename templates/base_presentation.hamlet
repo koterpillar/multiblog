@@ -52,8 +52,10 @@ $doctype 5
     <script src="https://revealjs.com/js/reveal.js">
     <script>
       Reveal.initialize({
+        width: "100%",
+        height: "100%",
         margin: 0.2,
-        minScale: 0.7,
+        minScale: 1,
         maxScale: 1,
         history: true,
       });
