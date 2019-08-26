@@ -37,7 +37,14 @@ instance FromJSON Analytics where
     parseJSON =
         A.withObject "Object expected" $ \v -> Analytics <$> v .:? "google"
 
-data SiteAddress = ExplicitSiteAddress { getSiteAddress :: T.Text } | ImplicitSiteAddress { getSiteAddress :: T.Text } deriving (Generic, Show)
+data SiteAddress
+    = ExplicitSiteAddress
+          { getSiteAddress :: T.Text
+          }
+    | ImplicitSiteAddress
+          { getSiteAddress :: T.Text
+          }
+    deriving (Generic, Show)
 
 data AppData = AppData
     { appDirectory :: String
