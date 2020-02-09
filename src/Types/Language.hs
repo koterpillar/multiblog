@@ -4,6 +4,7 @@ Language-related types.
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Types.Language where
@@ -16,18 +17,20 @@ import Data.Function
 import Data.LanguageCodes
 import Data.List
 import Data.List.Split
-import qualified Data.Map as M
+import Data.Map (Map)
+import qualified Data.Map as Map
 import Data.Maybe
-import qualified Data.Text as T
+import Data.Text (Text)
+import qualified Data.Text as Text
 
 import Utils
 
 type Language = ISO639_1
 
-type LanguageMap = M.Map Language
+type LanguageMap = Map Language
 
-mapKeysM :: (Monad m, Ord k2) => (k1 -> m k2) -> M.Map k1 a -> m (M.Map k2 a)
-mapKeysM kfunc = fmap M.fromList . traverse kvfunc . M.toList
+mapKeysM :: (Monad m, Ord k2) => (k1 -> m k2) -> Map k1 a -> m (Map k2 a)
+mapKeysM kfunc = fmap Map.fromList . traverse kvfunc . Map.toList
   where
     kvfunc (k, v) = (,) <$> kfunc k <*> pure v
 
@@ -36,7 +39,7 @@ instance A.FromJSON ISO639_1 where
     parseJSON _ = mzero
 
 instance A.FromJSONKey ISO639_1 where
-    fromJSONKey = A.FromJSONKeyTextParser $ parseLanguageM . T.unpack
+    fromJSONKey = A.FromJSONKeyTextParser $ parseLanguageM . Text.unpack
 
 -- | Newtype for parsing either a single value or a map of values
 newtype LanguageChoices a =
@@ -46,7 +49,7 @@ instance A.FromJSON v => A.FromJSON (LanguageChoices v) where
     parseJSON v@(A.Object _) =
         LanguageChoices <$> (A.parseJSON v >>= mapKeysM parseLanguageM)
     parseJSON v@(A.String _) =
-        LanguageChoices . M.singleton defaultLanguage <$> A.parseJSON v
+        LanguageChoices . Map.singleton defaultLanguage <$> A.parseJSON v
     parseJSON _ = mzero
 
 newtype LanguagePreference = LanguagePreference
@@ -57,26 +60,26 @@ defaultLanguage :: Language
 defaultLanguage = EN
 
 singleLanguage :: Language -> LanguagePreference
-singleLanguage lang = LanguagePreference $ M.singleton lang 1
+singleLanguage lang = LanguagePreference $ Map.singleton lang 1
 
 bestLanguage :: LanguagePreference -> Language
 bestLanguage =
     fromMaybe defaultLanguage .
     listToMaybe .
     fmap fst .
-    sortBy (reverseCompare `on` snd) . M.toList . unLanguagePreference
+    sortBy (reverseCompare `on` snd) . Map.toList . unLanguagePreference
 
 rankLanguage :: Language -> LanguagePreference -> Float
-rankLanguage lang = fromMaybe 0 . M.lookup lang . unLanguagePreference
+rankLanguage lang = fromMaybe 0 . Map.lookup lang . unLanguagePreference
 
 matchLanguage :: LanguagePreference -> LanguageMap a -> Maybe a
 matchLanguage = matchLanguageFunc (const 1)
 
 matchLanguageFunc ::
        (a -> Float) -> LanguagePreference -> LanguageMap a -> Maybe a
-matchLanguageFunc quality pref values = fst <$> M.maxView ranked
+matchLanguageFunc quality pref values = fst <$> Map.maxView ranked
   where
-    ranked = M.fromList $ M.elems $ M.mapWithKey rank values
+    ranked = Map.fromList $ Map.elems $ Map.mapWithKey rank values
     rank lang value = (rankLanguage lang pref * quality value, value)
 
 parseLanguage :: MonadError String m => String -> m Language
@@ -93,19 +96,19 @@ parseLanguageM [c1, c2] =
 parseLanguageM (c1:c2:'-':_) = parseLanguageM [c1, c2]
 parseLanguageM _ = mzero
 
-showLanguage :: Language -> String
-showLanguage = (\(a, b) -> [a, b]) . toChars
+showLanguage :: Language -> Text
+showLanguage = Text.pack . (\(a, b) -> [a, b]) . toChars
 
-iso3166 :: Language -> String
+iso3166 :: Language -> Text
 iso3166 EN = "gb"
 iso3166 ZH = "cn"
 iso3166 x = showLanguage x
 
 -- TODO: Parsec or library
 languageHeader :: Maybe String -> LanguagePreference
-languageHeader Nothing = LanguagePreference $ M.singleton defaultLanguage 1
+languageHeader Nothing = LanguagePreference $ Map.singleton defaultLanguage 1
 languageHeader (Just str) =
-    LanguagePreference $ M.fromList $ mapMaybe parsePref $ splitOn "," str
+    LanguagePreference $ Map.fromList $ mapMaybe parsePref $ splitOn "," str
   where
     parsePref pref =
         case splitOn ";q=" pref of
@@ -116,8 +119,9 @@ languageHeader (Just str) =
 
 instance Show LanguagePreference where
     show =
-        intercalate "," .
-        map (uncurry showPref) . M.toList . unLanguagePreference
+        Text.unpack .
+        Text.intercalate "," .
+        map (uncurry showPref) . Map.toList . unLanguagePreference
       where
         showPref lang 1 = showLanguage lang
-        showPref lang qvalue = showLanguage lang ++ ";q=" ++ show qvalue
+        showPref lang qvalue = showLanguage lang <> ";q=" <> Text.pack (show qvalue)

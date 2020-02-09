@@ -32,6 +32,7 @@ library:
   - authenticate-oauth
   - directory
   - filepath
+  - here
   - http-conduit
   - lens
   - lifted-base

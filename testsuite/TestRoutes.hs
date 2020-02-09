@@ -19,17 +19,23 @@ instance Arbitrary PageFormat where
 instance Arbitrary Sitemap where
     arbitrary = genericArbitrary
 
-test_routeURL_parseURL = do
-    assertEqual (routeURL Index) ""
-    assertEqual (parseURL "/") $ Just Index
+test_index_URL = do
+    assertEqual "" (routeURL Index)
+    assertEqual (Just Index) $ parseURL "/"
+
+test_article_URL = do
     let testArticle = ArticleView (fromGregorian 2020 01 01) "test"
-    assertEqual (routeURL testArticle) "/2020-01-01/test"
-    assertEqual (parseURL "/2020/01/01/test") $ Just testArticle
-    assertEqual (parseURL "/2020-01-01/test/") $ Just testArticle
-    assertEqual (routeURL $ MetaView "meta" Nothing) "/meta"
-    assertEqual (parseURL "/meta/") $ Just $ MetaView "meta" Nothing
-    assertEqual (routeURL $ MetaView "meta" (Just Pdf)) "/meta.pdf"
-    assertEqual (routeURL $ Feed EN) "/feed/en"
+    assertEqual  "/2020-01-01/test" (routeURL testArticle)
+    assertEqual (Just testArticle) (parseURL "/2020/01/01/test")
+    assertEqual (Just testArticle) (parseURL "/2020-01-01/test/")
+
+test_meta_URL = do
+    assertEqual "/meta" (routeURL $ MetaView "meta" Nothing)
+    assertEqual (Just $ MetaView "meta" Nothing) (parseURL "/meta/")
+    assertEqual "/meta.pdf" (routeURL $ MetaView "meta" (Just Pdf))
+
+test_feed_URL = do
+    assertEqual "/feed/en" (routeURL $ Feed EN)
 
 prop_routeURL_parseURL route =
     let url = routeURL route

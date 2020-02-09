@@ -184,7 +184,7 @@ withLang1 = withLang . singleLanguage
 withLangCookie :: Language -> TestRequest -> TestRequest
 withLangCookie lang req =
     req
-    {trCookies = M.insert "lang" (T.pack $ showLanguage lang) (trCookies req)}
+    {trCookies = M.insert "lang" (showLanguage lang) (trCookies req)}
 
 -- Extract contents from a response
 responseContent :: Response -> IO LB.ByteString
