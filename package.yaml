@@ -20,6 +20,7 @@ dependencies:
 - pandoc
 - pandoc-types
 - text
+- time
 - twitter-conduit
 - xml-conduit
 - xml-types
@@ -41,7 +42,6 @@ library:
   - shakespeare
   - split
   - tagsoup
-  - time
   - transformers
   - twitter-types
   - unix

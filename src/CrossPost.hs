@@ -21,7 +21,6 @@ import qualified Data.Text as T
 
 import Network.HTTP.Conduit (newManager, tlsManagerSettings)
 
-import Web.Routes
 import Web.Twitter.Conduit (OAuth, TWInfo(..), call, twCredential, twOAuth)
 import Web.Twitter.Conduit.Api
 import Web.Twitter.Conduit.Parameters hiding (map)
@@ -40,11 +39,11 @@ import Views
 crossPost :: App ()
 crossPost = do
     liftIO $ putStrLn "Cross-posting new articles..."
-    runRoute crossPostTwitter
+    crossPostTwitter
     liftIO $ putStrLn "All new articles cross-posted."
 
 crossPostTwitter ::
-       (MonadRoute m, URL m ~ Sitemap, MonadIO m, MonadReader AppData m) => m ()
+       (MonadIO m, MonadReader AppData m) => m ()
 crossPostTwitter = do
     mgr <- liftIO $ newManager tlsManagerSettings
     address <- asks appAddress
@@ -68,7 +67,7 @@ crossPostTwitter = do
             let lpref = singleLanguage credLang
             forM unposted $ \art -> do
                 let title = langTitle lpref art
-                articleLink <- linkTo art
+                let articleLink = linkTo art
                 let content = title <> " " <> address <> articleLink
                 doCall $ update content
     return ()
@@ -84,7 +83,7 @@ twitterArticleLinks statuses = do
     -- Filter out the ones for the article route
     let articleLinks =
             [ (date, slug)
-            | Right (ArticleView date slug) <- map parseRoute urls
+            | Just (ArticleView date slug) <- map parseURL urls
             ]
     -- Get the matched articles
     let articleFilter art = any (\(d, s) -> byDateSlug d s art) articleLinks

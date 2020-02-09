@@ -29,8 +29,6 @@ import Text.Pandoc hiding (Meta, Reader)
 import Text.Pandoc.Highlighting
 import Text.Pandoc.Walk
 
-import Web.Routes
-
 import Models
 import Render
 import Routes
@@ -48,8 +46,6 @@ instance Linkable Article where
 
 instance Linkable Meta where
     link m = MetaView (mtSlug m) Nothing
-
-type AppRoute m = (MonadRoute m, URL m ~ Sitemap)
 
 data PageContent = PageContent
     { pcTitle :: Maybe Text
@@ -88,10 +84,8 @@ paginate size page allItems = Paginated prev items next
 convRender :: (url -> [(a, Maybe b)] -> c) -> url -> [(a, b)] -> c
 convRender maybeF url params = maybeF url $ map (A.second Just) params
 
-render :: MonadRoute m => HtmlUrl (URL m) -> m Markup
-render html = do
-    route <- fmap convRender askRouteFn
-    return $ html route
+render :: HtmlUrl Sitemap -> Markup
+render html = html perhapsRoute
 
 askLangStringFn ::
        MonadReader AppData m => LanguagePreference -> m (Text -> Text)
@@ -115,15 +109,14 @@ linkTitle lang (MetaLink slug) = do
     pure $ langTitle lang meta
 
 linkDestination ::
-       (AppRoute m, MonadReader AppData m, MonadPlus m) => Link -> m Text
+       (MonadReader AppData m, MonadPlus m) => Link -> m Text
 linkDestination (ExternalLink url _) = pure url
 linkDestination (MetaLink slug) = do
     meta <- askMeta slug
-    route <- askRouteFn
-    pure $ route (link meta) []
+    pure $ perhapsRoute (link meta) []
 
 template ::
-       (AppRoute m, MonadReader AppData m, MonadPlus m)
+       (MonadReader AppData m, MonadPlus m)
     => LanguagePreference
     -> PageContent
     -> m Markup
@@ -139,22 +132,22 @@ template lang page = do
     analyticsIDs <- asks appAnalytics
     let analytics = $(hamletFile "templates/analytics.hamlet")
     case pcLayout page of
-        BaseLayout -> render $(hamletFile "templates/base.hamlet")
+        BaseLayout -> pure $ render $(hamletFile "templates/base.hamlet")
         PresentationLayout ->
-            render $(hamletFile "templates/base_presentation.hamlet")
+            pure $ render $(hamletFile "templates/base_presentation.hamlet")
 
 articleListDisplay ::
-       (AppRoute m, MonadReader AppData m, MonadPlus m)
+       (MonadReader AppData m, MonadPlus m)
     => LanguagePreference
     -> Paginated Article
     -> m Markup
 articleListDisplay lang articles = do
-    articlesContent <- mapM (linkedContent lang) (pageItems articles)
+    let articlesContent = map (linkedContent lang) (pageItems articles)
     langString <- askLangStringFn lang
     template lang $ def {pcContent = $(hamletFile "templates/list.hamlet")}
 
 articleDisplay ::
-       (AppRoute m, MonadReader AppData m, MonadPlus m)
+       (MonadReader AppData m, MonadPlus m)
     => LanguagePreference
     -> Article
     -> m Markup
@@ -166,7 +159,7 @@ articleDisplay lang article =
     }
 
 metaDisplay ::
-       (AppRoute m, MonadReader AppData m, MonadPlus m)
+       (MonadReader AppData m, MonadPlus m)
     => LanguagePreference
     -> Meta
     -> m Markup
@@ -185,20 +178,16 @@ metaDisplay lang meta =
                 $(hamletFile "templates/meta_presentation.hamlet")
 
 -- Generate a link to some content
-linkTo :: (Linkable a, AppRoute m) => a -> m Text
-linkTo a = do
-    routeFn <- askRouteFn
-    pure $ routeFn (link a) []
+linkTo :: (Linkable a) => a -> Text
+linkTo a = perhapsRoute (link a) []
 
 -- Modify the content to have a link to itself and have no anchors
 linkedContent ::
-       (HasContent a, Linkable a, AppRoute m)
+       (HasContent a, Linkable a)
     => LanguagePreference
     -> a
-    -> m Pandoc
-linkedContent lang a = do
-    target <- linkTo a
-    pure $ linkedHeader target $ langContent lang a
+    -> Pandoc
+linkedContent lang a = linkedHeader (linkTo a) $ langContent lang a
 
 -- Modify the first header to be a link to a given place
 -- and remove all anchors from headers
@@ -220,18 +209,17 @@ linkedHeader target doc = evalState (walkM linkHeader doc) True
         return $ Header n ("", [], []) text'
     linkHeader x = return x
 
-renderSiteScript :: MonadRoute m => m JavaScript
-renderSiteScript = do
-    route <- fmap convRender askRouteFn
-    return $ JavaScript $ renderJavascriptUrl route $(juliusFile "templates/site.julius")
+perhapsRoute :: Render Sitemap
+perhapsRoute r _ = routeURL r
 
-renderPrintStylesheet :: MonadRoute m => m Stylesheet
-renderPrintStylesheet = do
-    route <- fmap convRender askRouteFn
-    return $ Stylesheet $ renderCssUrl route $(luciusFile "templates/print.lucius")
+renderSiteScript :: JavaScript
+renderSiteScript = JavaScript $ renderJavascriptUrl perhapsRoute $(juliusFile "templates/site.julius")
 
-renderCodeStylesheet :: MonadRoute m => m Stylesheet
-renderCodeStylesheet = pure $ Stylesheet $ TL.pack $ styleToCss highlightingStyle
+renderPrintStylesheet :: Stylesheet
+renderPrintStylesheet = Stylesheet $ renderCssUrl perhapsRoute $(luciusFile "templates/print.lucius")
+
+renderCodeStylesheet :: Stylesheet
+renderCodeStylesheet = Stylesheet $ TL.pack $ styleToCss highlightingStyle
 
 -- | Presentation can only render the pipe tables. Disable the other kinds
 presentationOptions :: WriterOptions

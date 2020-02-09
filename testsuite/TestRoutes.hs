@@ -3,18 +3,26 @@
 
 module TestRoutes where
 
+import Data.LanguageCodes
+import Data.Time.Calendar
+
 import Routes
 
 import Test.Framework
 import Test.QuickCheck.Instances ()
 
-test_splitExt = do
-    assertEqual ("segment", Nothing) (splitExt "segment")
-    assertEqual ("segment", Just "ext") (splitExt "segment.ext")
-    assertEqual
-        ("segment.more.dots", Just "ext")
-        (splitExt "segment.more.dots.ext")
+test_routeURL_parseURL = do
+    assertEqual (routeURL Index) ""
+    assertEqual (parseURL "/") $ Just Index
+    let testArticle = ArticleView (fromGregorian 2020 01 01) "test"
+    assertEqual (routeURL testArticle) "/2020-01-01/test"
+    assertEqual (parseURL "/2020/01/01/test") $ Just testArticle
+    assertEqual (parseURL "/2020-01-01/test/") $ Just testArticle
+    assertEqual (routeURL $ MetaView "meta" Nothing) "/meta"
+    assertEqual (parseURL "/meta/") $ Just $ MetaView "meta" Nothing
+    assertEqual (routeURL $ MetaView "meta" (Just Pdf)) "/meta.pdf"
+    assertEqual (routeURL $ Feed EN) "/feed/en"
 
-prop_splitExt_joinExt seg =
-    let (seg', ext) = splitExt seg
-    in joinExt seg' ext == seg
+prop_routeURL_parseURL route =
+    let url = routeURL route
+    in parseURL url == Just route

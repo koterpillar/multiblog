@@ -39,8 +39,6 @@ import Text.Blaze.Renderer.Text (renderMarkup)
 
 import qualified Text.XML as C
 
-import Web.Routes
-
 import Models
 import Routes
 import Types.Content
@@ -60,13 +58,13 @@ atomDate :: UTCTime -> Date
 atomDate = (<> "T00:00:00Z") . Text.pack . showGregorian . utctDay
 
 articleEntry ::
-       (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m)
+       MonadReader AppData m
     => Language
     -> Article
     -> m Entry
 articleEntry lang article = do
     let lpref = singleLanguage lang
-    articleLink <- linkTo article
+    let articleLink = linkTo article
     authorName <- askLangString lpref "authorName"
     let entry =
             nullEntry
@@ -84,18 +82,18 @@ articleEntry lang article = do
         }
 
 feedDisplay ::
-       (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m)
+       MonadReader AppData m
     => Language
     -> [Article]
     -> m Response
 feedDisplay lang articles = do
     siteName <- askLangString (singleLanguage lang) "siteName"
     -- TODO: Web.Routes generate a link without the trailing slash
-    home <- (<> "/") <$> linkTo Index
+    let home = linkTo Index <> "/"
     let lastUpdated = arAuthored $ head articles
     let blankFeed = nullFeed home (TextString siteName) (atomDate lastUpdated)
     entries <- mapM (articleEntry lang) articles
-    selfAddress <- linkTo $ Routes.Feed lang
+    let selfAddress = linkTo $ Routes.Feed lang
     let selfLink = (nullLink selfAddress) {linkRel = Just $ Left "self"}
     let feed = blankFeed {feedEntries = entries, feedLinks = [selfLink]}
     pure $ toResponse $ AtomFeed feed
