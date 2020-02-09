@@ -4,12 +4,20 @@
 module TestRoutes where
 
 import Data.LanguageCodes
+import Data.LanguageCodes.Arbitrary ()
 import Data.Time.Calendar
 
 import Routes
 
 import Test.Framework
 import Test.QuickCheck.Instances ()
+import Test.QuickCheck.Arbitrary.Generic
+
+instance Arbitrary PageFormat where
+    arbitrary = genericArbitrary
+
+instance Arbitrary Sitemap where
+    arbitrary = genericArbitrary
 
 test_routeURL_parseURL = do
     assertEqual (routeURL Index) ""

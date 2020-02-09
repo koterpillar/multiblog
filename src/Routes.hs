@@ -1,6 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeOperators #-}
 
 module Routes where
 
@@ -12,12 +11,14 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time
 
+import GHC.Generics
+
 import Types.Language
 
 data PageFormat
     = Pdf
     | Docx
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Generic)
 
 formatToStr :: PageFormat -> Text
 formatToStr Pdf = "pdf"
@@ -40,7 +41,7 @@ data Sitemap
     | SiteScript
     | PrintStylesheet
     | CodeStylesheet
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Generic)
 
 routeURL :: Sitemap -> Text
 routeURL = undefined

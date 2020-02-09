@@ -67,6 +67,7 @@ tests:
     - HTF
     - HUnit
     - derive
+    - generic-arbitrary
     - QuickCheck
     - quickcheck-instances
 stability: Experimental
