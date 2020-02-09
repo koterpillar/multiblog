@@ -29,7 +29,6 @@ library:
   dependencies:
   - aeson
   - authenticate-oauth
-  - boomerang
   - directory
   - filepath
   - http-conduit
@@ -46,10 +45,6 @@ library:
   - transformers
   - twitter-types
   - unix
-  - web-routes
-  - web-routes-boomerang
-  - web-routes-happstack
-  - web-routes-th
 executables:
   multiblog:
     main: Main.hs
