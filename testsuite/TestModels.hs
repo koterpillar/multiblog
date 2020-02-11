@@ -6,8 +6,6 @@
 
 module TestModels where
 
-import Data.DeriveTH
-
 import Data.LanguageCodes.Arbitrary ()
 
 import qualified Data.Map as M
@@ -22,17 +20,23 @@ import Types.Content
 import Types.Services
 
 import Test.Framework
+import Test.QuickCheck.Arbitrary.Generic
 import Test.QuickCheck.Instances ()
 
-derive makeArbitrary ''Article
+instance Arbitrary Article where
+    arbitrary = genericArbitrary
 
-derive makeArbitrary ''Layout
+instance Arbitrary Layout where
+    arbitrary = genericArbitrary
 
-derive makeArbitrary ''Meta
+instance Arbitrary Meta where
+    arbitrary = genericArbitrary
 
-derive makeArbitrary ''Link
+instance Arbitrary Link where
+    arbitrary = genericArbitrary
 
-derive makeArbitrary ''Analytics
+instance Arbitrary Analytics where
+    arbitrary = genericArbitrary
 
 instance Arbitrary TW.OAuth where
     arbitrary = do
@@ -44,15 +48,20 @@ instance Arbitrary TW.OAuth where
             , TW.oauthConsumerSecret = secret
             }
 
-derive makeArbitrary ''AppServices
+instance Arbitrary AppServices where
+    arbitrary = genericArbitrary
 
-derive makeArbitrary ''TwitterAuth
+instance Arbitrary TwitterAuth where
+    arbitrary = genericArbitrary
 
-derive makeArbitrary ''AppAuth
+instance Arbitrary AppAuth where
+    arbitrary = genericArbitrary
 
-derive makeArbitrary ''CrossPost
+instance Arbitrary CrossPost where
+    arbitrary = genericArbitrary
 
-derive makeArbitrary ''AppData
+instance Arbitrary AppData where
+    arbitrary = genericArbitrary
 
 fall :: [a] -> (a -> Bool) -> Bool
 fall = flip all

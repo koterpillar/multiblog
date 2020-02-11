@@ -1,6 +1,7 @@
 {-|
 Types for the blog content - articles and metas.
 -}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Types.Content where
@@ -14,6 +15,8 @@ import Data.Maybe
 import Data.Text (Text)
 import Data.Time
 import Data.Yaml
+
+import GHC.Generics (Generic)
 
 import Text.Blaze.Html (Html)
 
@@ -40,7 +43,7 @@ data Article = Article
     { arSlug :: Text
     , arContent :: LanguageContent
     , arAuthored :: UTCTime
-    } deriving (Eq, Show)
+    } deriving (Eq, Show, Generic)
 
 instance Ord Article where
     a `compare` b = (arAuthored a, arSlug a) `compare` (arAuthored b, arSlug b)
@@ -55,7 +58,7 @@ instance HasSlug Article where
 data Layout
     = BaseLayout
     | PresentationLayout
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 
 instance FromJSON Layout where
     parseJSON (String v)
@@ -69,7 +72,7 @@ data Meta = Meta
     , mtLayout :: Layout
     , mtExportSlugOverride :: Maybe Text
     , mtContent :: LanguageContent
-    } deriving (Eq, Show)
+    } deriving (Eq, Show, Generic)
 
 mtExportSlug :: Meta -> Text
 mtExportSlug meta = fromMaybe (mtSlug meta) (mtExportSlugOverride meta)
@@ -85,7 +88,7 @@ data Link
     = MetaLink { lnName :: Text }
     | ExternalLink { lnUrl :: Text
                    , lnText :: LanguageString }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 
 instance FromJSON Link where
     parseJSON (Object v) =

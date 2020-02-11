@@ -15,8 +15,8 @@ import Routes
 
 import Test.Framework
 import Test.QuickCheck
-import Test.QuickCheck.Instances ()
 import Test.QuickCheck.Arbitrary.Generic
+import Test.QuickCheck.Instances ()
 
 instance Arbitrary PageFormat where
     arbitrary = genericArbitrary

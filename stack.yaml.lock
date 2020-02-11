@@ -5,13 +5,6 @@
 
 packages:
 - completed:
-    hackage: derive-2.6.4@sha256:f697cbe62828b5d777ea148814978940bd8707cb2ad4adff9415fc6139a7c05d,3184
-    pantry-tree:
-      size: 3967
-      sha256: cb33c5025c4629ea5377dd0fc521700cac79f8a88a5d062cfbb0cd7f9f37bcb5
-  original:
-    hackage: derive-2.6.4
-- completed:
     hackage: twitter-conduit-0.3.0@sha256:67b68511fc19563ff4159ae37188ac3db7dbc6603d81f11c6f1c2dd8ec1f5bd8,4318
     pantry-tree:
       size: 2681

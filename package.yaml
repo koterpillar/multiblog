@@ -67,7 +67,6 @@ tests:
     - multiblog
     - HTF
     - HUnit
-    - derive
     - generic-arbitrary
     - QuickCheck
     - quickcheck-instances
