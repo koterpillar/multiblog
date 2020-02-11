@@ -85,6 +85,7 @@ parseURL = parseSegments . splitNonEmpty "/"
         parseSegments ["assets", "site.js"] = Just SiteScript
         parseSegments ["assets", "print.css"] = Just PrintStylesheet
         parseSegments ["assets", "code.css"] = Just CodeStylesheet
+        parseSegments ["feed", lang] = Feed <$> parseLanguageM lang
         parseSegments _ = Nothing
         dateLike = Text.all $ \c -> isDigit c || c == '-'
         parseArticle [yearStr, monthStr, dayStr] text = do

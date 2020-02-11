@@ -94,7 +94,7 @@ parseContent dir = do
             case M.lookup (T.pack $ tail ext) readers of
                 Nothing -> pure Nothing
                 Just reader -> do
-                    lang <- parseLanguage fileName
+                    lang <- parseLanguage (T.pack fileName)
                     case reader (T.decodeUtf8 $ sfContent file) of
                         Left err -> throwError $ show err
                         Right res -> pure (Just (lang, res))

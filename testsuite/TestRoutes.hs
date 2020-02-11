@@ -5,19 +5,34 @@ module TestRoutes where
 
 import Data.LanguageCodes
 import Data.LanguageCodes.Arbitrary ()
+
+import Data.Text (Text)
+import qualified Data.Text as Text
+
 import Data.Time.Calendar
 
 import Routes
 
 import Test.Framework
+import Test.QuickCheck
 import Test.QuickCheck.Instances ()
 import Test.QuickCheck.Arbitrary.Generic
 
 instance Arbitrary PageFormat where
     arbitrary = genericArbitrary
 
+arbitraryName :: Gen Text
+arbitraryName = Text.pack <$> listOf (elements ['a'..'z'])
+
 instance Arbitrary Sitemap where
-    arbitrary = genericArbitrary
+    arbitrary = oneof [ pure Index
+                      , ArticleView <$> arbitrary <*> arbitraryName
+                      , MetaView <$> arbitraryName <*> arbitrary
+                      , Feed <$> arbitrary
+                      , pure SiteScript
+                      , pure PrintStylesheet
+                      , pure CodeStylesheet
+                      ]
 
 test_index_URL = do
     assertEqual "" (routeURL Index)

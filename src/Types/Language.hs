@@ -39,7 +39,7 @@ instance A.FromJSON ISO639_1 where
     parseJSON _ = mzero
 
 instance A.FromJSONKey ISO639_1 where
-    fromJSONKey = A.FromJSONKeyTextParser $ parseLanguageM . Text.unpack
+    fromJSONKey = A.FromJSONKeyTextParser $ parseLanguageM
 
 -- | Newtype for parsing either a single value or a map of values
 newtype LanguageChoices a =
@@ -82,19 +82,21 @@ matchLanguageFunc quality pref values = fst <$> Map.maxView ranked
     ranked = Map.fromList $ Map.elems $ Map.mapWithKey rank values
     rank lang value = (rankLanguage lang pref * quality value, value)
 
-parseLanguage :: MonadError String m => String -> m Language
+parseLanguage :: MonadError String m => Text -> m Language
 parseLanguage langStr =
     case parseLanguageM langStr :: Maybe Language of
         (Just lang) -> pure lang
-        Nothing -> throwError $ langStr ++ " is not a valid language code."
+        Nothing -> throwError $ Text.unpack $ langStr <> " is not a valid language code."
 
-parseLanguageM :: MonadPlus m => String -> m Language
-parseLanguageM [c1, c2] =
-    case fromChars c1 c2 of
-        Just lang -> return lang
-        Nothing -> mzero
-parseLanguageM (c1:c2:'-':_) = parseLanguageM [c1, c2]
-parseLanguageM _ = mzero
+parseLanguageM :: MonadPlus m => Text -> m Language
+parseLanguageM = parseLanguageStr . Text.unpack
+    where
+        parseLanguageStr [c1, c2] =
+            case fromChars c1 c2 of
+                Just lang -> return lang
+                Nothing -> mzero
+        parseLanguageStr (c1:c2:'-':_) = parseLanguageStr [c1, c2]
+        parseLanguageStr _ = mzero
 
 showLanguage :: Language -> Text
 showLanguage = Text.pack . (\(a, b) -> [a, b]) . toChars
@@ -112,8 +114,8 @@ languageHeader (Just str) =
   where
     parsePref pref =
         case splitOn ";q=" pref of
-            [lang] -> pairWith 1 <$> parseLanguageM lang
-            [lang, qvalue] -> pairWith (read qvalue) <$> parseLanguageM lang
+            [lang] -> pairWith 1 <$> parseLanguageM (Text.pack lang)
+            [lang, qvalue] -> pairWith (read qvalue) <$> parseLanguageM (Text.pack lang)
             _ -> Nothing
     pairWith y x = (x, y)
 
