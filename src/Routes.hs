@@ -15,6 +15,8 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Time
 
+import Debug.Trace
+
 import GHC.Generics
 
 import Text.Read
@@ -71,7 +73,7 @@ readText :: Read a => Text -> Maybe a
 readText = readMaybe . Text.unpack
 
 parseURL :: Text -> Maybe Sitemap
-parseURL = parseSegments . splitNonEmpty "/"
+parseURL = parseSegments . splitNonEmpty "/" . dropQueryParams
     where
         parseSegments [] = Just Index
         parseSegments [metaText] = case splitNonEmpty "." metaText of
@@ -95,6 +97,7 @@ parseURL = parseSegments . splitNonEmpty "/"
                                                    date <- fromGregorianValid year month day
                                                    pure $ ArticleView date text
         parseArticle _ _ = Nothing
+        dropQueryParams = Text.takeWhile (/= '?')
 
 -- Join a basename and extension together
 joinExt :: Text -> Maybe Text -> Text
