@@ -49,8 +49,7 @@ test_meta_URL = do
     assertEqual (Just $ MetaView "meta" Nothing) (parseURL "/meta/")
     assertEqual "/meta.pdf" (routeURL $ MetaView "meta" (Just Pdf))
 
-test_feed_URL = do
-    assertEqual "/feed/en" (routeURL $ Feed EN)
+test_feed_URL = assertEqual "/feed/en" (routeURL $ Feed EN)
 
 prop_routeURL_parseURL route =
     let url = routeURL route

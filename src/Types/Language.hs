@@ -39,7 +39,7 @@ instance A.FromJSON ISO639_1 where
     parseJSON _ = mzero
 
 instance A.FromJSONKey ISO639_1 where
-    fromJSONKey = A.FromJSONKeyTextParser $ parseLanguageM
+    fromJSONKey = A.FromJSONKeyTextParser parseLanguageM
 
 -- | Newtype for parsing either a single value or a map of values
 newtype LanguageChoices a =

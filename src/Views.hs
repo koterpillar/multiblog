@@ -82,9 +82,7 @@ paginate size page allItems = Paginated prev items next
         | otherwise = Just (page + 1)
 
 render :: MonadReader AppData m => HtmlUrl Sitemap -> m Markup
-render html = do
-    r <- routeURLParams
-    pure $ html r
+render html = html <$> routeURLParams
 
 askLangStringFn ::
        MonadReader AppData m => LanguagePreference -> m (Text -> Text)
