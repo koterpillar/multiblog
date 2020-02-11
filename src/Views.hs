@@ -213,7 +213,9 @@ linkedHeader target doc = evalState (walkM linkHeader doc) True
     linkHeader x = return x
 
 routeURLParams :: MonadReader AppData m => m (Render Sitemap)
-routeURLParams = pure $ \r _ -> routeURL r
+routeURLParams = do
+    address <- asks appAddress
+    pure $ \r _ -> address <> routeURL r
 
 renderSiteScript :: MonadReader AppData m => m JavaScript
 renderSiteScript = routeURLParams >>= \r -> pure $ JavaScript $ renderJavascriptUrl r $(juliusFile "templates/site.julius")
