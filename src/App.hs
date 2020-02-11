@@ -155,10 +155,10 @@ feedIndex language = do
     feedDisplay language sorted >>= okResponse
 
 siteScript :: AppPart Response
-siteScript = okResponse renderSiteScript
+siteScript = renderSiteScript >>= okResponse
 
 printStylesheet :: AppPart Response
-printStylesheet = okResponse renderPrintStylesheet
+printStylesheet = renderPrintStylesheet >>= okResponse
 
 codeStylesheet :: AppPart Response
 codeStylesheet = okResponse renderCodeStylesheet

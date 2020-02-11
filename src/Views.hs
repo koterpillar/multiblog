@@ -81,11 +81,10 @@ paginate size page allItems = Paginated prev items next
         | null rest = Nothing
         | otherwise = Just (page + 1)
 
-convRender :: (url -> [(a, Maybe b)] -> c) -> url -> [(a, b)] -> c
-convRender maybeF url params = maybeF url $ map (A.second Just) params
-
-render :: HtmlUrl Sitemap -> Markup
-render html = html perhapsRoute
+render :: MonadReader AppData m => HtmlUrl Sitemap -> m Markup
+render html = do
+    r <- routeURLParams
+    pure $ html r
 
 askLangStringFn ::
        MonadReader AppData m => LanguagePreference -> m (Text -> Text)
@@ -113,7 +112,7 @@ linkDestination ::
 linkDestination (ExternalLink url _) = pure url
 linkDestination (MetaLink slug) = do
     meta <- askMeta slug
-    pure $ perhapsRoute (link meta) []
+    linkTo meta
 
 template ::
        (MonadReader AppData m, MonadPlus m)
@@ -132,9 +131,9 @@ template lang page = do
     analyticsIDs <- asks appAnalytics
     let analytics = $(hamletFile "templates/analytics.hamlet")
     case pcLayout page of
-        BaseLayout -> pure $ render $(hamletFile "templates/base.hamlet")
+        BaseLayout -> render $(hamletFile "templates/base.hamlet")
         PresentationLayout ->
-            pure $ render $(hamletFile "templates/base_presentation.hamlet")
+            render $(hamletFile "templates/base_presentation.hamlet")
 
 articleListDisplay ::
        (MonadReader AppData m, MonadPlus m)
@@ -142,7 +141,7 @@ articleListDisplay ::
     -> Paginated Article
     -> m Markup
 articleListDisplay lang articles = do
-    let articlesContent = map (linkedContent lang) (pageItems articles)
+    articlesContent <- mapM (linkedContent lang) (pageItems articles)
     langString <- askLangStringFn lang
     template lang $ def {pcContent = $(hamletFile "templates/list.hamlet")}
 
@@ -178,16 +177,20 @@ metaDisplay lang meta =
                 $(hamletFile "templates/meta_presentation.hamlet")
 
 -- Generate a link to some content
-linkTo :: (Linkable a) => a -> Text
-linkTo a = perhapsRoute (link a) []
+linkTo :: (MonadReader AppData m, Linkable a) => a -> m Text
+linkTo a = do
+    r <- routeURLParams
+    pure $ r (link a) []
 
 -- Modify the content to have a link to itself and have no anchors
 linkedContent ::
-       (HasContent a, Linkable a)
+       (MonadReader AppData m, HasContent a, Linkable a)
     => LanguagePreference
     -> a
-    -> Pandoc
-linkedContent lang a = linkedHeader (linkTo a) $ langContent lang a
+    -> m Pandoc
+linkedContent lang a = do
+    lnk <- linkTo a
+    pure $ linkedHeader lnk $ langContent lang a
 
 -- Modify the first header to be a link to a given place
 -- and remove all anchors from headers
@@ -209,14 +212,14 @@ linkedHeader target doc = evalState (walkM linkHeader doc) True
         return $ Header n ("", [], []) text'
     linkHeader x = return x
 
-perhapsRoute :: Render Sitemap
-perhapsRoute r _ = routeURL r
+routeURLParams :: MonadReader AppData m => m (Render Sitemap)
+routeURLParams = pure $ \r _ -> routeURL r
 
-renderSiteScript :: JavaScript
-renderSiteScript = JavaScript $ renderJavascriptUrl perhapsRoute $(juliusFile "templates/site.julius")
+renderSiteScript :: MonadReader AppData m => m JavaScript
+renderSiteScript = routeURLParams >>= \r -> pure $ JavaScript $ renderJavascriptUrl r $(juliusFile "templates/site.julius")
 
-renderPrintStylesheet :: Stylesheet
-renderPrintStylesheet = Stylesheet $ renderCssUrl perhapsRoute $(luciusFile "templates/print.lucius")
+renderPrintStylesheet :: MonadReader AppData m => m Stylesheet
+renderPrintStylesheet = routeURLParams >>= \r -> pure $ Stylesheet $ renderCssUrl r $(luciusFile "templates/print.lucius")
 
 renderCodeStylesheet :: Stylesheet
 renderCodeStylesheet = Stylesheet $ TL.pack $ styleToCss highlightingStyle

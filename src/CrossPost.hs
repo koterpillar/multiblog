@@ -67,7 +67,7 @@ crossPostTwitter = do
             let lpref = singleLanguage credLang
             forM unposted $ \art -> do
                 let title = langTitle lpref art
-                let articleLink = linkTo art
+                articleLink <- linkTo art
                 let content = title <> " " <> address <> articleLink
                 doCall $ update content
     return ()

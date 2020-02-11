@@ -64,7 +64,7 @@ articleEntry ::
     -> m Entry
 articleEntry lang article = do
     let lpref = singleLanguage lang
-    let articleLink = linkTo article
+    articleLink <- linkTo article
     authorName <- askLangString lpref "authorName"
     let entry =
             nullEntry
@@ -89,11 +89,11 @@ feedDisplay ::
 feedDisplay lang articles = do
     siteName <- askLangString (singleLanguage lang) "siteName"
     -- TODO: Web.Routes generate a link without the trailing slash
-    let home = linkTo Index <> "/"
+    home <- (<> "/") <$> linkTo Index
     let lastUpdated = arAuthored $ head articles
     let blankFeed = nullFeed home (TextString siteName) (atomDate lastUpdated)
     entries <- mapM (articleEntry lang) articles
-    let selfAddress = linkTo $ Routes.Feed lang
+    selfAddress <- linkTo $ Routes.Feed lang
     let selfLink = (nullLink selfAddress) {linkRel = Just $ Left "self"}
     let feed = blankFeed {feedEntries = entries, feedLinks = [selfLink]}
     pure $ toResponse $ AtomFeed feed

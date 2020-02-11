@@ -67,7 +67,7 @@ metaExportFileName format meta = Text.intercalate "." [metaName, fileExtension f
 
 -- Export a PDF using wkhtmltopdf
 pdfExport ::
-       (MonadState AppCache m, MonadIO m)
+       (MonadReader AppData m, MonadState AppCache m, MonadIO m)
     => LanguagePreference
     -> Meta
     -> m (Export LB.ByteString)
@@ -76,7 +76,7 @@ pdfExport lang meta =
     withCacheM (bestLanguage lang, mtSlug meta) $ do
         let content = runPandocPure' $ writeHtml $ langContent lang meta
         let title = langTitle lang meta
-        let html = render $(hamletFile "templates/pdf-export.hamlet")
+        html <- render $(hamletFile "templates/pdf-export.hamlet")
         let htmlText = TextRenderer.renderMarkup html
         let fixedHtmlText = fixupHtml htmlText
         wkhtmltopdf $ encodeUtf8 fixedHtmlText
