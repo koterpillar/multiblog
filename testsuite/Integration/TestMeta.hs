@@ -17,11 +17,6 @@ test_meta = do
     meta <- makeRequestText $ simpleRequest "/meta"
     assertTextContains "<h1>Test Meta</h1>" meta
 
-test_meta_html :: IO ()
-test_meta_html = do
-    meta <- makeRequestText $ simpleRequest "/meta.html"
-    assertTextContains "<h1>Test Meta</h1>" meta
-
 test_meta_pdf :: IO ()
 test_meta_pdf = do
     meta_pdf <- makeRequest $ simpleRequest "/meta.pdf"
