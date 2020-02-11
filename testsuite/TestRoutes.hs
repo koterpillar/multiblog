@@ -22,7 +22,7 @@ instance Arbitrary PageFormat where
     arbitrary = genericArbitrary
 
 arbitraryName :: Gen Text
-arbitraryName = Text.pack <$> listOf (elements ['a'..'z'])
+arbitraryName = Text.pack <$> listOf1 (elements ['a'..'z'])
 
 instance Arbitrary Sitemap where
     arbitrary = oneof [ pure Index
