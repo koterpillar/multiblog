@@ -1,12 +1,13 @@
-resolver: lts-12.24
+resolver: lts-14.25
 packages:
 - '.'
 ghc-options:
   '$everything': -threaded
 extra-deps:
-  - twitter-conduit-0.3.0
-  - twitter-types-0.7.2.2
-  - twitter-types-lens-0.7.2
+- happstack-server-7.5.4@sha256:ec4e33c543da50806cb1af1009a72b65aec96dbb710d95a2174480f84d5202d5,6407
+- twitter-conduit-0.4.0@sha256:fc0af0d860e352dd200562e8d82a2fe546097317f5ca139ac7079cc7a5d18418,3990
+- twitter-types-0.10.0@sha256:335b70b38ea189d9a94b015feafa906d6741eb602541a9d3ce6ca03ad388c405,1568
+- twitter-types-lens-0.10.0@sha256:c9589b49b92e0ca3f2b0472959d5ca9f26589caa8b3af182fcd9697dda570751,974
 flags:
   pandoc:
     embed_data_files: true
