@@ -53,10 +53,10 @@ test_home_next_page = do
 
 test_css :: IO ()
 test_css = do
-    css <- makeRequestText $ simpleRequest "/code.css"
+    css <- makeRequestText $ simpleRequest "/assets/code.css"
     assertTextContains "color" css
 
 test_js :: IO ()
 test_js = do
-    js <- makeRequestText $ simpleRequest "/site.js"
+    js <- makeRequestText $ simpleRequest "/assets/site.js"
     assertTextContains "function" js
