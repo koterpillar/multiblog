@@ -10,7 +10,7 @@ packages:
       size: 3201
       sha256: 724cacc11a75d1f6d2de8cccf948f345ad6acaaa7f5bd135da1e63bc419a3e05
   original:
-    hackage: happstack-server-7.5.4
+    hackage: happstack-server-7.5.4@sha256:ec4e33c543da50806cb1af1009a72b65aec96dbb710d95a2174480f84d5202d5,6407
 - completed:
     hackage: twitter-conduit-0.4.0@sha256:fc0af0d860e352dd200562e8d82a2fe546097317f5ca139ac7079cc7a5d18418,3990
     pantry-tree:
