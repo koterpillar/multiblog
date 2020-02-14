@@ -33,6 +33,7 @@ library:
   - directory
   - filepath
   - here
+  - html-conduit
   - http-conduit
   - lens
   - lifted-base

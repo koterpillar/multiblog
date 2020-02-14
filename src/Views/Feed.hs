@@ -28,6 +28,8 @@ import           Text.Atom.Feed.Export    (xmlFeed)
 
 import           Text.Blaze.Renderer.Text (renderMarkup)
 
+import           Text.HTML.DOM            (parseLT)
+
 import qualified Text.XML                 as C
 
 import           Models
@@ -65,7 +67,8 @@ articleEntry lang article = do
     return
         entry
             { entryContent =
-                  Just $ HTMLContent $ Data.Text.Lazy.toStrict content
+                  Just $
+                  HTMLContent $ documentRoot $ C.toXMLDocument $ parseLT content
             , entryLinks = [nullLink articleLink]
             , entryAuthors = [nullPerson {personName = authorName}]
             }
