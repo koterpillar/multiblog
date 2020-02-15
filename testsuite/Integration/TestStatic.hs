@@ -3,9 +3,9 @@
 
 module Integration.TestStatic where
 
-import Integration.Base
+import           Integration.Base
 
-import Test.Framework
+import           Test.Framework
 
 test_static = do
     resp <- makeRequestBS $ simpleRequest "/some-verification-file.html"

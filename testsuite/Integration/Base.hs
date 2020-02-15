@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 -- Base functions for integration tests
 module Integration.Base
@@ -23,27 +23,27 @@ module Integration.Base
     , withLangCookie
     ) where
 
-import Control.Concurrent.MVar
+import           Control.Concurrent.MVar
 
-import Data.ByteString (ByteString)
-import qualified Data.ByteString.Lazy as LB
-import Data.Char
-import Data.List
-import qualified Data.Map as M
-import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
+import           Data.ByteString         (ByteString)
+import qualified Data.ByteString.Lazy    as LB
+import           Data.Char
+import           Data.List
+import qualified Data.Map                as M
+import           Data.Text               (Text)
+import qualified Data.Text               as T
+import qualified Data.Text.Encoding      as T
 
-import Happstack.Server
+import           Happstack.Server
 
-import Test.Framework
-import Test.HUnit
+import           Test.Framework
+import           Test.HUnit
 
-import App
-import Types.Language
+import           App
+import           Types.Language
 
 data TestRequest = TestRequest
-    { trUri :: Text
+    { trUri     :: Text
     , trHeaders :: M.Map Text Text
     , trCookies :: M.Map Text Text
     }
@@ -123,26 +123,26 @@ mkRequest TestRequest {..} = do
     rBody <- newMVar (Body LB.empty)
     return
         Request
-        { rqSecure = False
-        , rqMethod = GET
-        , rqPaths = map T.unpack $ filter (/= "") $ T.splitOn "/" rUri
-        , rqUri = T.unpack trUri
-        , rqQuery = T.unpack $ "?" <> rParams
-        , rqInputsQuery = splitParams rParams
-        , rqInputsBody = inputsBody
-        , rqCookies = cookies
-        , rqVersion = HttpVersion 1 1
-        , rqHeaders = headers
-        , rqBody = rBody
-        , rqPeer = ("", 0)
-        }
+            { rqSecure = False
+            , rqMethod = GET
+            , rqPaths = map T.unpack $ filter (/= "") $ T.splitOn "/" rUri
+            , rqUri = T.unpack trUri
+            , rqQuery = T.unpack $ "?" <> rParams
+            , rqInputsQuery = splitParams rParams
+            , rqInputsBody = inputsBody
+            , rqCookies = cookies
+            , rqVersion = HttpVersion 1 1
+            , rqHeaders = headers
+            , rqBody = rBody
+            , rqPeer = ("", 0)
+            }
   where
     splitUriParam :: Text -> (Text, Text)
     splitUriParam rPath =
         case T.splitOn "?" rPath of
-            [rUri] -> (rUri, "")
+            [rUri]          -> (rUri, "")
             [rUri, rParams] -> (rUri, rParams)
-            _ -> error "path should have 1 or 0 '?'"
+            _               -> error "path should have 1 or 0 '?'"
     splitParams :: Text -> [(String, Input)]
     splitParams =
         map (mkParamTuple . T.splitOn "=") . filter (/= "") . T.splitOn "&"
@@ -152,12 +152,12 @@ mkRequest TestRequest {..} = do
     mkParamTuple _ = error "mkParamTuple should have 1 or 2 element list input"
     mkInputValue str =
         Input
-        { inputValue = Right (LB.fromStrict $ T.encodeUtf8 str)
-        , inputFilename = Nothing
-        , inputContentType =
-              ContentType
-              {ctType = "text", ctSubtype = "plain", ctParameters = []}
-        }
+            { inputValue = Right (LB.fromStrict $ T.encodeUtf8 str)
+            , inputFilename = Nothing
+            , inputContentType =
+                  ContentType
+                      {ctType = "text", ctSubtype = "plain", ctParameters = []}
+            }
     cookies =
         M.toList $
         M.mapWithKey mkCookie $ M.mapKeys T.unpack $ M.map T.unpack trCookies
@@ -183,8 +183,7 @@ withLang1 = withLang . singleLanguage
 -- Add a language cookie to a request
 withLangCookie :: Language -> TestRequest -> TestRequest
 withLangCookie lang req =
-    req
-    {trCookies = M.insert "lang" (showLanguage lang) (trCookies req)}
+    req {trCookies = M.insert "lang" (showLanguage lang) (trCookies req)}
 
 -- Extract contents from a response
 responseContent :: Response -> IO LB.ByteString

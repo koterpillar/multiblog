@@ -5,22 +5,22 @@ Subcommand to obtain a user's authorization for a service to cross-post.
 
 module Authorize where
 
-import Control.Monad.IO.Class
+import           Control.Monad.IO.Class
 
-import qualified Data.ByteString as B
+import qualified Data.ByteString        as B
 
-import qualified Data.Text.Encoding as Text
-import qualified Data.Text.IO as Text
+import qualified Data.Text.Encoding     as Text
+import qualified Data.Text.IO           as Text
 
-import qualified Data.Yaml as Y
+import qualified Data.Yaml              as Y
 
-import System.IO (hFlush, stdout)
+import           System.IO              (hFlush, stdout)
 
-import Web.Authenticate.OAuth as OA
-import Web.Twitter.Conduit
+import           Web.Authenticate.OAuth as OA
+import           Web.Twitter.Conduit
 
-import App
-import Types.Services
+import           App
+import           Types.Services
 
 authorize :: String -> App ()
 authorize service = do
@@ -31,7 +31,7 @@ authorize service = do
 
 getAuthorization :: String -> App AppAuth
 getAuthorization "twitter" = authorizeTwitter
-getAuthorization _ = error "Invalid service name"
+getAuthorization _         = error "Invalid service name"
 
 authorizeTwitter :: App AppAuth
 authorizeTwitter =

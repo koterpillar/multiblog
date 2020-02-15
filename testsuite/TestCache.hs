@@ -1,16 +1,16 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module TestCache where
 
-import Control.Concurrent.MVar
-import Control.Monad.State hiding (state)
+import           Control.Concurrent.MVar
+import           Control.Monad.State     hiding (state)
 
-import Cache
+import           Cache
 
-import Test.Framework
+import           Test.Framework
 
 test_cached :: IO ()
 test_cached = do
@@ -29,9 +29,10 @@ test_cached = do
     assertEqual 2 anotherValue
 
 -- Test caching a function that depends on internal state
-newtype TestState = TestState
-    { tsCache :: Cache String Int
-    }
+newtype TestState =
+    TestState
+        { tsCache :: Cache String Int
+        }
 
 instance HasCache String Int TestState where
     getCache = tsCache
@@ -48,11 +49,12 @@ test_withCacheM
     let nextValue' = liftIO nextValue
     flip evalStateT state $
     -- The first call should call the function and get 1
-        do firstValue <- withCacheM "mykey" nextValue'
-           liftIO $ assertEqual 1 firstValue
+     do
+        firstValue <- withCacheM "mykey" nextValue'
+        liftIO $ assertEqual 1 firstValue
            -- Same cache key, this should return 1
-           cachedValue <- withCacheM "mykey" nextValue'
-           liftIO $ assertEqual 1 cachedValue
+        cachedValue <- withCacheM "mykey" nextValue'
+        liftIO $ assertEqual 1 cachedValue
            -- Different cache key
-           anotherValue <- withCacheM "anotherkey" nextValue'
-           liftIO $ assertEqual 2 anotherValue
+        anotherValue <- withCacheM "anotherkey" nextValue'
+        liftIO $ assertEqual 2 anotherValue

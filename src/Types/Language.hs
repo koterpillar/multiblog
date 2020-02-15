@@ -1,29 +1,29 @@
 {-|
 Language-related types.
 -}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Types.Language where
 
-import Control.Monad
-import Control.Monad.Except
+import           Control.Monad
+import           Control.Monad.Except
 
-import qualified Data.Aeson.Types as A
-import Data.Function
-import Data.LanguageCodes
-import Data.List
-import Data.List.Split
-import Data.Map (Map)
-import qualified Data.Map as Map
-import Data.Maybe
-import Data.Text (Text)
-import qualified Data.Text as Text
+import qualified Data.Aeson.Types     as A
+import           Data.Function
+import           Data.LanguageCodes
+import           Data.List
+import           Data.List.Split
+import           Data.Map             (Map)
+import qualified Data.Map             as Map
+import           Data.Maybe
+import           Data.Text            (Text)
+import qualified Data.Text            as Text
 
-import Utils
+import           Utils
 
 type Language = ISO639_1
 
@@ -36,7 +36,7 @@ mapKeysM kfunc = fmap Map.fromList . traverse kvfunc . Map.toList
 
 instance A.FromJSON ISO639_1 where
     parseJSON v@(A.String _) = A.parseJSON v >>= parseLanguageM
-    parseJSON _ = mzero
+    parseJSON _              = mzero
 
 instance A.FromJSONKey ISO639_1 where
     fromJSONKey = A.FromJSONKeyTextParser parseLanguageM
@@ -52,9 +52,11 @@ instance A.FromJSON v => A.FromJSON (LanguageChoices v) where
         LanguageChoices . Map.singleton defaultLanguage <$> A.parseJSON v
     parseJSON _ = mzero
 
-newtype LanguagePreference = LanguagePreference
-    { unLanguagePreference :: LanguageMap Float
-    } deriving (Eq)
+newtype LanguagePreference =
+    LanguagePreference
+        { unLanguagePreference :: LanguageMap Float
+        }
+    deriving (Eq)
 
 defaultLanguage :: Language
 defaultLanguage = EN
@@ -86,17 +88,19 @@ parseLanguage :: MonadError String m => Text -> m Language
 parseLanguage langStr =
     case parseLanguageM langStr :: Maybe Language of
         (Just lang) -> pure lang
-        Nothing -> throwError $ Text.unpack $ langStr <> " is not a valid language code."
+        Nothing ->
+            throwError $
+            Text.unpack $ langStr <> " is not a valid language code."
 
 parseLanguageM :: MonadPlus m => Text -> m Language
 parseLanguageM = parseLanguageStr . Text.unpack
-    where
-        parseLanguageStr [c1, c2] =
-            case fromChars c1 c2 of
-                Just lang -> return lang
-                Nothing -> mzero
-        parseLanguageStr (c1:c2:'-':_) = parseLanguageStr [c1, c2]
-        parseLanguageStr _ = mzero
+  where
+    parseLanguageStr [c1, c2] =
+        case fromChars c1 c2 of
+            Just lang -> return lang
+            Nothing   -> mzero
+    parseLanguageStr (c1:c2:'-':_) = parseLanguageStr [c1, c2]
+    parseLanguageStr _ = mzero
 
 showLanguage :: Language -> Text
 showLanguage = Text.pack . (\(a, b) -> [a, b]) . toChars
@@ -104,7 +108,7 @@ showLanguage = Text.pack . (\(a, b) -> [a, b]) . toChars
 iso3166 :: Language -> Text
 iso3166 EN = "gb"
 iso3166 ZH = "cn"
-iso3166 x = showLanguage x
+iso3166 x  = showLanguage x
 
 -- TODO: Parsec or library
 languageHeader :: Maybe String -> LanguagePreference
@@ -115,7 +119,8 @@ languageHeader (Just str) =
     parsePref pref =
         case splitOn ";q=" pref of
             [lang] -> pairWith 1 <$> parseLanguageM (Text.pack lang)
-            [lang, qvalue] -> pairWith (read qvalue) <$> parseLanguageM (Text.pack lang)
+            [lang, qvalue] ->
+                pairWith (read qvalue) <$> parseLanguageM (Text.pack lang)
             _ -> Nothing
     pairWith y x = (x, y)
 
@@ -126,4 +131,5 @@ instance Show LanguagePreference where
         map (uncurry showPref) . Map.toList . unLanguagePreference
       where
         showPref lang 1 = showLanguage lang
-        showPref lang qvalue = showLanguage lang <> ";q=" <> Text.pack (show qvalue)
+        showPref lang qvalue =
+            showLanguage lang <> ";q=" <> Text.pack (show qvalue)

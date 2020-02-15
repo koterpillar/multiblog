@@ -1,46 +1,50 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 -- Import the application data (articles and meta) from a set of files.
 module Import where
 
-import Control.Lens ((&))
-import Control.Monad
-import Control.Monad.Except
+import           Control.Lens          ((&))
+import           Control.Monad
+import           Control.Monad.Except
 
-import Data.Aeson
-import qualified Data.ByteString as B
-import Data.Default.Class
-import qualified Data.Map as M
-import Data.Maybe
-import Data.Monoid
-import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
-import Data.Time
-import qualified Data.Yaml as Y
+import           Data.Aeson
+import qualified Data.ByteString       as B
+import           Data.Default.Class
+import qualified Data.Map              as M
+import           Data.Maybe
+import           Data.Monoid
+import           Data.Text             (Text)
+import qualified Data.Text             as T
+import qualified Data.Text.Encoding    as T
+import           Data.Time
+import qualified Data.Yaml             as Y
 
-import Text.Pandoc hiding (Meta, readers)
+import           Text.Pandoc           hiding (Meta, readers)
 
-import System.Directory
-import System.FilePath.Posix
+import           System.Directory
+import           System.FilePath.Posix
 
-import Models
-import Types.Content
-import Types.Language
+import           Models
+import           Types.Content
+import           Types.Language
 
 -- | A file read from the content directory
 data SourceFile = SourceFile
-    { sfName :: Text -- ^ File name
+    { sfName    :: Text -- ^ File name
+    -- ^ File contents
     , sfContent :: B.ByteString -- ^ File contents
-    } deriving (Eq, Ord, Show)
+    }
+    deriving (Eq, Ord, Show)
 
 -- | Read directory with a list of files
 data SourceDirectory = SourceDirectory
-    { sdName :: Text -- ^ Directory name
+    { sdName  :: Text -- ^ Directory name
+    -- ^ Files inside
     , sdFiles :: [SourceFile] -- ^ Files inside
-    } deriving (Show)
+    }
+    deriving (Show)
 
 -- | Get file contents by name from a directory
 sdFile :: Text -> SourceDirectory -> Maybe B.ByteString
@@ -50,7 +54,7 @@ sdFile name =
 type ParseT m a = ExceptT String m a
 
 data MetaOptions = MetaOptions
-    { moLayout :: Layout
+    { moLayout     :: Layout
     , moExportSlug :: Maybe Text
     }
 
@@ -96,7 +100,7 @@ parseContent dir = do
                 Just reader -> do
                     lang <- parseLanguage (T.pack fileName)
                     case reader (T.decodeUtf8 $ sfContent file) of
-                        Left err -> throwError $ show err
+                        Left err  -> throwError $ show err
                         Right res -> pure (Just (lang, res))
     pure $ M.fromList content
 
@@ -115,7 +119,7 @@ extractSlugDate name =
         [(day, slugDateRest)] ->
             case slugDateRest of
                 '-':slug -> pure (T.pack slug, atMidnight day)
-                _ -> invalidArticleDirectory name
+                _        -> invalidArticleDirectory name
         _ -> invalidArticleDirectory name
 
 -- | Parse all articles and metas from the contents directory
@@ -165,10 +169,12 @@ buildDir dir =
                 content <- B.readFile file
                 pure
                     SourceFile
-                    {sfName = T.pack $ takeFileName file, sfContent = content}
+                        { sfName = T.pack $ takeFileName file
+                        , sfContent = content
+                        }
         pure
             SourceDirectory
-            {sdName = T.pack $ takeFileName dir, sdFiles = sources}
+                {sdName = T.pack $ takeFileName dir, sdFiles = sources}
   where
     dirPath subdir = dir </> subdir
 
@@ -185,16 +191,16 @@ loadFromDirectory path = do
     crossPost <- decodeOrDefault $ rootFile "cross-posting.yaml"
     pure $
         def
-        { appDirectory = path
-        , appAddress = ""
-        , appArticles = articles
-        , appMeta = metas
-        , appStrings = strings
-        , appLinks = links
-        , appAnalytics = analytics
-        , appServices = services
-        , appCrossPost = crossPost
-        }
+            { appDirectory = path
+            , appAddress = ""
+            , appArticles = articles
+            , appMeta = metas
+            , appStrings = strings
+            , appLinks = links
+            , appAnalytics = analytics
+            , appServices = services
+            , appCrossPost = crossPost
+            }
 
 -- A map of supported file formats and corresponding Pandoc readers
 readers :: M.Map Text (Text -> Either PandocError Pandoc)
@@ -204,11 +210,11 @@ readers =
           , runPandocPure .
             readMarkdown
                 def
-                { readerExtensions =
-                      readerExtensions def &
-                      enableExtension Ext_backtick_code_blocks &
-                      enableExtension Ext_pipe_tables
-                })
+                    { readerExtensions =
+                          readerExtensions def &
+                          enableExtension Ext_backtick_code_blocks &
+                          enableExtension Ext_pipe_tables
+                    })
         ]
 
 readFileOrEmpty :: String -> IO B.ByteString
@@ -225,5 +231,5 @@ decodeOrDefault ::
 decodeOrDefault Nothing = pure def
 decodeOrDefault (Just s) =
     case Y.decodeEither' s of
-        Left err -> throwError $ show err
+        Left err  -> throwError $ show err
         Right res -> pure res

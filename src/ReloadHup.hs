@@ -5,17 +5,16 @@ module ReloadHup
     , Reload
     ) where
 
-import Control.Concurrent
-import Control.Exception
+import           Control.Concurrent
+import           Control.Exception
 
-import Data.Typeable
+import           Data.Typeable
 
-import System.Environment
-import System.Posix.Process
-import System.Posix.Signals
+import           System.Environment
+import           System.Posix.Process
+import           System.Posix.Signals
 
-data Reload =
-    Reload
+data Reload = Reload
     deriving (Show, Typeable)
 
 instance Exception Reload

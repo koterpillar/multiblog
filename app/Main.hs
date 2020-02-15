@@ -1,6 +1,6 @@
 module Main where
 
-import AppMain
+import           AppMain
 
 main :: IO ()
 main = multiblog

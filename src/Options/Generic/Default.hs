@@ -8,12 +8,11 @@ module Options.Generic.Default
     , getRecordPureDefault
     ) where
 
-import Control.Applicative
+import           Control.Applicative
 
-import Options.Generic
+import           Options.Generic
 
-data DefaultArg a
-    = JustArg a
+data DefaultArg a = JustArg a
     | DefaultArg
 
 instance ParseRecord a => ParseRecord (DefaultArg a) where
@@ -27,5 +26,5 @@ getRecordPureDefault :: ParseRecord a => a -> [Text] -> Maybe a
 getRecordPureDefault def args = fmap (defaultArg def) (getRecordPure args)
 
 defaultArg :: a -> DefaultArg a -> a
-defaultArg _ (JustArg a) = a
+defaultArg _ (JustArg a)  = a
 defaultArg def DefaultArg = def

@@ -4,9 +4,9 @@
 
 module Integration.TestArticle where
 
-import Integration.Base
+import           Integration.Base
 
-import Test.Framework
+import           Test.Framework
 
 test_article = do
     article <- makeRequestText $ simpleRequest "/2015/01/01/first-test"

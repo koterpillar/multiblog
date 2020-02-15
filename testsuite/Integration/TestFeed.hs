@@ -3,19 +3,19 @@
 
 module Integration.TestFeed where
 
-import Data.Default.Class
+import           Data.Default.Class
 
-import Data.XML.Types
+import           Data.XML.Types
 
-import Text.Atom.Feed
-import Text.Atom.Feed.Import (elementFeed)
-import Text.Atom.Feed.Validate
+import           Text.Atom.Feed
+import           Text.Atom.Feed.Import   (elementFeed)
+import           Text.Atom.Feed.Validate
 
-import qualified Text.XML as C
+import qualified Text.XML                as C
 
-import Test.Framework
+import           Test.Framework
 
-import Integration.Base
+import           Integration.Base
 
 atomEntry :: Name
 atomEntry = "{http://www.w3.org/2005/Atom}entry"
@@ -25,7 +25,7 @@ test_home = do
     rss <- makeRequestBS $ simpleRequest "/feed/en"
     xml <-
         case C.parseLBS def rss of
-            Left exc -> error $ show exc
+            Left exc  -> error $ show exc
             Right res -> pure res
     let root = documentRoot $ C.toXMLDocument xml
     -- Make sure every entry validates

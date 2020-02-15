@@ -4,13 +4,13 @@
 module Integration.TestMeta where
 
 import qualified Data.ByteString.Lazy as LB
-import Data.Foldable
-import Data.LanguageCodes
-import Data.Text.Encoding (decodeUtf8)
+import           Data.Foldable
+import           Data.LanguageCodes
+import           Data.Text.Encoding   (decodeUtf8)
 
-import Integration.Base
+import           Integration.Base
 
-import Test.Framework
+import           Test.Framework
 
 test_meta :: IO ()
 test_meta = do
@@ -27,11 +27,12 @@ test_meta_pdf = do
         (responseHeader "Content-Disposition" meta_pdf)
 
 test_meta_export_custom_slug :: IO ()
-test_meta_export_custom_slug = for_ ["pdf", "docx"] $ \format -> do
-    meta_pdf <- makeRequest $ simpleRequest $ "/custom-slug." <> format
-    assertEqual
-        (Just $ "inline; filename=\"customized-slug." <> format <> "\"")
-        (decodeUtf8 <$> responseHeader "Content-Disposition" meta_pdf)
+test_meta_export_custom_slug =
+    for_ ["pdf", "docx"] $ \format -> do
+        meta_pdf <- makeRequest $ simpleRequest $ "/custom-slug." <> format
+        assertEqual
+            (Just $ "inline; filename=\"customized-slug." <> format <> "\"")
+            (decodeUtf8 <$> responseHeader "Content-Disposition" meta_pdf)
 
 test_meta_pdf_ru :: IO ()
 test_meta_pdf_ru = do

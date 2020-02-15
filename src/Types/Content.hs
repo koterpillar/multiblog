@@ -1,30 +1,30 @@
 {-|
 Types for the blog content - articles and metas.
 -}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Types.Content where
 
-import Control.Applicative
-import Control.Monad.State
-import Control.Monad.Trans.Except
+import           Control.Applicative
+import           Control.Monad.State
+import           Control.Monad.Trans.Except
 import qualified Control.Monad.Trans.State.Strict as StrictState
 
-import Data.Maybe
-import Data.Text (Text)
-import Data.Time
-import Data.Yaml
+import           Data.Maybe
+import           Data.Text                        (Text)
+import           Data.Time
+import           Data.Yaml
 
-import GHC.Generics (Generic)
+import           GHC.Generics                     (Generic)
 
-import Text.Blaze.Html (Html)
+import           Text.Blaze.Html                  (Html)
 
-import Text.Pandoc hiding (Meta)
-import Text.Pandoc.Highlighting
-import Text.Pandoc.Walk
+import           Text.Pandoc                      hiding (Meta)
+import           Text.Pandoc.Highlighting
+import           Text.Pandoc.Walk
 
-import Types.Language
+import           Types.Language
 
 type LanguageContent = LanguageMap Pandoc
 
@@ -40,10 +40,11 @@ class HasContent a where
 
 -- TODO: Should Article and Meta actually be one type?
 data Article = Article
-    { arSlug :: Text
-    , arContent :: LanguageContent
+    { arSlug     :: Text
+    , arContent  :: LanguageContent
     , arAuthored :: UTCTime
-    } deriving (Eq, Show, Generic)
+    }
+    deriving (Eq, Show, Generic)
 
 instance Ord Article where
     a `compare` b = (arAuthored a, arSlug a) `compare` (arAuthored b, arSlug b)
@@ -55,8 +56,7 @@ instance HasContent Article where
 instance HasSlug Article where
     getSlug = arSlug
 
-data Layout
-    = BaseLayout
+data Layout = BaseLayout
     | PresentationLayout
     deriving (Eq, Show, Generic)
 
@@ -68,11 +68,12 @@ instance FromJSON Layout where
     parseJSON _ = mzero
 
 data Meta = Meta
-    { mtSlug :: Text
-    , mtLayout :: Layout
+    { mtSlug               :: Text
+    , mtLayout             :: Layout
     , mtExportSlugOverride :: Maybe Text
-    , mtContent :: LanguageContent
-    } deriving (Eq, Show, Generic)
+    , mtContent            :: LanguageContent
+    }
+    deriving (Eq, Show, Generic)
 
 mtExportSlug :: Meta -> Text
 mtExportSlug meta = fromMaybe (mtSlug meta) (mtExportSlugOverride meta)
@@ -84,10 +85,13 @@ instance HasContent Meta where
 instance HasSlug Meta where
     getSlug = mtSlug
 
-data Link
-    = MetaLink { lnName :: Text }
-    | ExternalLink { lnUrl :: Text
-                   , lnText :: LanguageString }
+data Link = MetaLink
+    { lnName :: Text
+    }
+    | ExternalLink
+    { lnUrl  :: Text
+    , lnText :: LanguageString
+    }
     deriving (Eq, Show, Generic)
 
 instance FromJSON Link where
@@ -131,7 +135,7 @@ runPandocPure' :: PandocPure a -> a
 runPandocPure' a =
     case runPandocPure a of
         Right res -> res
-        Left err -> error $ show err
+        Left err  -> error $ show err
 
 stripTitle :: Pandoc -> Pandoc
 stripTitle (Pandoc meta blocks) = Pandoc meta blocks'
@@ -156,7 +160,7 @@ langTitle lang =
     fromMaybe "untitled" . listToMaybe . query extractTitle . langContent lang
   where
     extractTitle (Header _ _ title) = [inlineToStr title]
-    extractTitle _ = []
+    extractTitle _                  = []
 
 writeHtml :: PandocMonad m => Pandoc -> m Html
 writeHtml = writeHtml5 def {writerHighlightStyle = Just highlightingStyle}
