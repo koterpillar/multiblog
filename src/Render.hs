@@ -27,13 +27,17 @@ withContentType :: ContentType -> Response -> Response
 withContentType ct = setHeaderBS "Content-Type" (encodeUtf8 ct)
 
 newtype Stylesheet =
-    Stylesheet { unStylesheet :: TL.Text }
+    Stylesheet
+        { unStylesheet :: TL.Text
+        }
 
 instance ToMessage Stylesheet where
     toResponse = withContentType css . toResponse . unStylesheet
 
 newtype JavaScript =
-    JavaScript { unJavaScript :: TL.Text }
+    JavaScript
+        { unJavaScript :: TL.Text
+        }
 
 instance ToMessage JavaScript where
     toResponse = withContentType javaScript . toResponse . unJavaScript
@@ -60,7 +64,8 @@ instance ToMessage content => ToMessage (Export content) where
         withContentType (exContentType export) $ toResponse (exContent export)
       where
         disposition =
-            Text.intercalate "; "
+            Text.intercalate
+                "; "
                 [ if exForceDownload export
                       then "attachment"
                       else "inline"

@@ -3,14 +3,14 @@
 
 module TestViewsExport where
 
-import Views.Export
+import           Views.Export
 
-import Text.Blaze
-import Text.Blaze.Html.Renderer.Text
-import qualified Text.Blaze.Html5 as H
-import qualified Text.Blaze.Html5.Attributes as A
+import           Text.Blaze
+import           Text.Blaze.Html.Renderer.Text
+import qualified Text.Blaze.Html5              as H
+import qualified Text.Blaze.Html5.Attributes   as A
 
-import Test.Framework
+import           Test.Framework
 
 test_fixupHtml :: IO ()
 test_fixupHtml = do

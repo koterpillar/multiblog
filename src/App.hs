@@ -2,36 +2,36 @@
 
 module App where
 
-import Control.Applicative (optional)
-import Control.Monad.Except
-import Control.Monad.Reader
-import Control.Monad.State
+import           Control.Applicative   (optional)
+import           Control.Monad.Except
+import           Control.Monad.Reader
+import           Control.Monad.State
 
 import qualified Data.ByteString.Char8 as B
-import Data.Functor.Identity
-import Data.List
-import Data.Maybe
-import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
-import Data.Time
+import           Data.Functor.Identity
+import           Data.List
+import           Data.Maybe
+import           Data.Text             (Text)
+import qualified Data.Text             as T
+import qualified Data.Text.Encoding    as T
+import           Data.Time
 
-import Happstack.Server
+import           Happstack.Server
 
-import System.Directory
-import System.Environment
-import System.FilePath
+import           System.Directory
+import           System.Environment
+import           System.FilePath
 
-import Cache
-import Import
-import Models
-import Routes
-import Types.Content
-import Types.Language
-import Utils
-import Views
-import Views.Export
-import Views.Feed
+import           Cache
+import           Import
+import           Models
+import           Routes
+import           Types.Content
+import           Types.Language
+import           Utils
+import           Views
+import           Views.Export
+import           Views.Feed
 
 type App = StateT AppCache (ReaderT AppData IO)
 
@@ -57,7 +57,7 @@ siteAddress = do
     return $
         case addr of
             Just realAddr -> (realAddr, True)
-            Nothing -> ("http://localhost:8000", False)
+            Nothing       -> ("http://localhost:8000", False)
 
 -- | Application directory to use
 getAppDirectory :: IO FilePath
@@ -65,7 +65,7 @@ getAppDirectory = do
     val <- lookupEnv "CONTENT_DIRECTORY"
     case val of
         Just contentDir -> return contentDir
-        Nothing -> getCurrentDirectory
+        Nothing         -> getCurrentDirectory
 
 loadAppDefault :: IO AppData
 loadAppDefault = do
@@ -86,22 +86,23 @@ site = do
     let staticDir = appDir </> "static"
     let staticSite = serveDirectory DisableBrowsing ["index.html"] staticDir
     let mainSite = do
-                       method GET
-                       uriRest $ \uri -> case parseURL (T.pack uri) of
-                                             Nothing -> mzero
-                                             Just route -> handler route
+            method GET
+            uriRest $ \uri ->
+                case parseURL (T.pack uri) of
+                    Nothing    -> mzero
+                    Just route -> handler route
     mainSite `mplus` staticSite
 
 handler :: Sitemap -> AppPart Response
 handler route =
     case route of
-        Index -> index
+        Index           -> index
         ArticleView d s -> article d s
-        MetaView s f -> meta s f
-        Feed lang -> feedIndex lang
-        SiteScript -> siteScript
+        MetaView s f    -> meta s f
+        Feed lang       -> feedIndex lang
+        SiteScript      -> siteScript
         PrintStylesheet -> printStylesheet
-        CodeStylesheet -> codeStylesheet
+        CodeStylesheet  -> codeStylesheet
 
 index :: AppPart Response
 index = articleList $ const True
@@ -145,7 +146,7 @@ meta slug format' = do
     language <- languageHeaderM
     m <- askMeta slug
     case format' of
-        Nothing -> metaDisplay language m >>= okResponse
+        Nothing     -> metaDisplay language m >>= okResponse
         Just format -> metaExport format language m >>= okResponse
 
 feedIndex :: Language -> AppPart Response

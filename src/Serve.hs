@@ -3,21 +3,21 @@ Action to serve the blog.
 -}
 module Serve where
 
-import Control.Concurrent.Lifted
-import Control.Exception
-import Control.Monad
-import Control.Monad.Reader
-import Control.Monad.State
+import           Control.Concurrent.Lifted
+import           Control.Exception
+import           Control.Monad
+import           Control.Monad.Reader
+import           Control.Monad.State
 
-import Happstack.Server
+import           Happstack.Server
 
-import Network.Socket
+import           Network.Socket
 
-import System.Environment
+import           System.Environment
 
-import App
-import CrossPost
-import Models
+import           App
+import           CrossPost
+import           Models
 
 crossPostAndServe :: App ()
 crossPostAndServe = do

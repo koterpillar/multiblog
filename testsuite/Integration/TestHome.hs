@@ -3,11 +3,11 @@
 
 module Integration.TestHome where
 
-import Data.LanguageCodes
+import           Data.LanguageCodes
 
-import Test.Framework
+import           Test.Framework
 
-import Integration.Base
+import           Integration.Base
 
 homeRequest :: TestRequest
 homeRequest = simpleRequest "/"

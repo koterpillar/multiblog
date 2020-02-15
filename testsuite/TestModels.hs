@@ -4,22 +4,22 @@
 
 module TestModels where
 
-import Data.LanguageCodes.Arbitrary ()
+import           Data.LanguageCodes.Arbitrary      ()
 
-import qualified Data.Map as M
-import qualified Data.Set as S
+import qualified Data.Map                          as M
+import qualified Data.Set                          as S
 
-import Text.Pandoc.Arbitrary
+import           Text.Pandoc.Arbitrary
 
-import qualified Web.Twitter.Conduit as TW
+import qualified Web.Twitter.Conduit               as TW
 
-import Models
-import Types.Content
-import Types.Services
+import           Models
+import           Types.Content
+import           Types.Services
 
-import Test.Framework
-import Test.QuickCheck.Arbitrary.Generic
-import Test.QuickCheck.Instances ()
+import           Test.Framework
+import           Test.QuickCheck.Arbitrary.Generic
+import           Test.QuickCheck.Instances         ()
 
 instance Arbitrary Article where
     arbitrary = genericArbitrary
@@ -42,9 +42,7 @@ instance Arbitrary TW.OAuth where
         secret <- arbitrary
         return $
             TW.twitterOAuth
-            { TW.oauthConsumerKey = key
-            , TW.oauthConsumerSecret = secret
-            }
+                {TW.oauthConsumerKey = key, TW.oauthConsumerSecret = secret}
 
 instance Arbitrary AppServices where
     arbitrary = genericArbitrary
@@ -65,13 +63,11 @@ fall :: [a] -> (a -> Bool) -> Bool
 fall = flip all
 
 prop_allLanguages_hasEveryArticle app =
-    fall (appArticles app) $
-    \article ->
-         fall (M.keys (arContent article)) $
-         \lang -> S.member lang $ allLanguages app
+    fall (appArticles app) $ \article ->
+        fall (M.keys (arContent article)) $ \lang ->
+            S.member lang $ allLanguages app
 
 prop_allLanguages_hasEveryMeta app =
-    fall (appMeta app) $
-    \meta ->
-         fall (M.keys (mtContent meta)) $
-         \lang -> S.member lang $ allLanguages app
+    fall (appMeta app) $ \meta ->
+        fall (M.keys (mtContent meta)) $ \lang ->
+            S.member lang $ allLanguages app

@@ -1,6 +1,6 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 module Cache
     ( Cache
@@ -11,12 +11,12 @@ module Cache
     , withCacheM
     ) where
 
-import Control.Concurrent.MVar
-import Control.Monad.IO.Class
-import Control.Monad.State
+import           Control.Concurrent.MVar
+import           Control.Monad.IO.Class
+import           Control.Monad.State
 
-import Data.Map (Map)
-import qualified Data.Map as M
+import           Data.Map                (Map)
+import qualified Data.Map                as M
 
 -- Opaque cache type storing values of type v against keys of type k
 newtype Cache k v =

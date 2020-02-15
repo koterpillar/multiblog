@@ -1,35 +1,37 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Models where
 
-import Control.Monad
-import Control.Monad.Reader
+import           Control.Monad
+import           Control.Monad.Reader
 
-import qualified Data.Aeson as A
+import qualified Data.Aeson           as A
 import qualified Data.ByteString.Lazy as LB
-import Data.Default.Class
-import qualified Data.Map as M
-import qualified Data.Set as S
-import Data.Text (Text)
-import qualified Data.Text as T
-import Data.Time
-import Data.Yaml
+import           Data.Default.Class
+import qualified Data.Map             as M
+import qualified Data.Set             as S
+import           Data.Text            (Text)
+import qualified Data.Text            as T
+import           Data.Time
+import           Data.Yaml
 
-import GHC.Generics (Generic)
+import           GHC.Generics         (Generic)
 
-import Cache
-import Types.Content
-import Types.Language
-import Types.Services
-import Utils
+import           Cache
+import           Types.Content
+import           Types.Language
+import           Types.Services
+import           Utils
 
-newtype Analytics = Analytics
-    { anaGoogle :: Maybe String
-    } deriving (Generic, Show)
+newtype Analytics =
+    Analytics
+        { anaGoogle :: Maybe String
+        }
+    deriving (Generic, Show)
 
 instance Default Analytics
 
@@ -38,32 +40,33 @@ instance FromJSON Analytics where
         A.withObject "Object expected" $ \v -> Analytics <$> v .:? "google"
 
 data AppData = AppData
-    { appDirectory :: String
-    , appAddress :: T.Text
+    { appDirectory   :: String
+    , appAddress     :: T.Text
     , appRealAddress :: Bool
-    , appArticles :: [Article]
-    , appMeta :: [Meta]
-    , appStrings :: M.Map Text LanguageString
-    , appLinks :: [Link]
-    , appAnalytics :: Analytics
-    , appServices :: AppServices
-    , appCrossPost :: AppCrossPost
-    } deriving (Generic, Show)
+    , appArticles    :: [Article]
+    , appMeta        :: [Meta]
+    , appStrings     :: M.Map Text LanguageString
+    , appLinks       :: [Link]
+    , appAnalytics   :: Analytics
+    , appServices    :: AppServices
+    , appCrossPost   :: AppCrossPost
+    }
+    deriving (Generic, Show)
 
 instance Default AppData where
     def =
         AppData
-        { appDirectory = def
-        , appAddress = T.empty
-        , appRealAddress = False
-        , appArticles = def
-        , appMeta = def
-        , appStrings = def
-        , appLinks = def
-        , appAnalytics = def
-        , appServices = def
-        , appCrossPost = def
-        }
+            { appDirectory = def
+            , appAddress = T.empty
+            , appRealAddress = False
+            , appArticles = def
+            , appMeta = def
+            , appStrings = def
+            , appLinks = def
+            , appAnalytics = def
+            , appServices = def
+            , appCrossPost = def
+            }
 
 mkDate :: Integer -> Int -> Int -> UTCTime
 mkDate y m d = atMidnight $ fromGregorian y m d
@@ -94,9 +97,10 @@ allLanguages app = S.union articleLangs metaLangs
     contentLangs :: HasContent a => a -> S.Set Language
     contentLangs = S.fromList . M.keys . getContent
 
-newtype AppCache = AppCache
-    { appcachePdf :: Cache (Language, Text) LB.ByteString
-    }
+newtype AppCache =
+    AppCache
+        { appcachePdf :: Cache (Language, Text) LB.ByteString
+        }
 
 instance HasCache (Language, Text) LB.ByteString AppCache where
     getCache = appcachePdf

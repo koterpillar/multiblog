@@ -1,22 +1,21 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module AppMain
     ( multiblog
     ) where
 
-import Control.Monad.IO.Class
+import           Control.Monad.IO.Class
 
-import Options.Generic
-import Options.Generic.Default
+import           Options.Generic
+import           Options.Generic.Default
 
-import App
-import Authorize
-import ReloadHup
-import Serve
+import           App
+import           Authorize
+import           ReloadHup
+import           Serve
 
-data Args
-    = Authorize String
+data Args = Authorize String
     | Main
     deriving (Generic)
 
@@ -31,4 +30,4 @@ multiblog =
             args <- liftIO $ getRecordDefault Main "Multiblog"
             case args of
                 Authorize service -> authorize service
-                Main -> crossPostAndServe
+                Main              -> crossPostAndServe

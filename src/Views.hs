@@ -1,39 +1,39 @@
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module Views where
 
-import qualified Control.Arrow as A
-import Control.Monad
-import Control.Monad.Reader
-import Control.Monad.State
+import qualified Control.Arrow            as A
+import           Control.Monad
+import           Control.Monad.Reader
+import           Control.Monad.State
 
-import Data.Default.Class
-import Data.LanguageCodes
-import qualified Data.Map as M
-import Data.Maybe
-import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.Lazy as TL
-import Data.Time
+import           Data.Default.Class
+import           Data.LanguageCodes
+import qualified Data.Map                 as M
+import           Data.Maybe
+import           Data.Text                (Text)
+import qualified Data.Text                as T
+import qualified Data.Text.Lazy           as TL
+import           Data.Time
 
-import Text.Blaze.Html (Markup, preEscapedToHtml)
-import Text.Hamlet
-import Text.Julius
-import Text.Lucius
-import Text.Pandoc hiding (Meta, Reader)
-import Text.Pandoc.Highlighting
-import Text.Pandoc.Walk
+import           Text.Blaze.Html          (Markup, preEscapedToHtml)
+import           Text.Hamlet
+import           Text.Julius
+import           Text.Lucius
+import           Text.Pandoc              hiding (Meta, Reader)
+import           Text.Pandoc.Highlighting
+import           Text.Pandoc.Walk
 
-import Models
-import Render
-import Routes
-import Types.Content
-import Types.Language
+import           Models
+import           Render
+import           Routes
+import           Types.Content
+import           Types.Language
 
 class Linkable a where
     link :: a -> Sitemap
@@ -48,23 +48,24 @@ instance Linkable Meta where
     link m = MetaView (mtSlug m) Nothing
 
 data PageContent = PageContent
-    { pcTitle :: Maybe Text
-    , pcLayout :: Layout
+    { pcTitle   :: Maybe Text
+    , pcLayout  :: Layout
     , pcContent :: HtmlUrl Sitemap
     }
 
 instance Default PageContent where
     def =
         PageContent
-        {pcTitle = Nothing, pcLayout = BaseLayout, pcContent = mempty}
+            {pcTitle = Nothing, pcLayout = BaseLayout, pcContent = mempty}
 
 type PageNumber = Int
 
 data Paginated a = Paginated
-    { pagePrev :: Maybe PageNumber
+    { pagePrev  :: Maybe PageNumber
     , pageItems :: [a]
-    , pageNext :: Maybe PageNumber
-    } deriving (Eq, Show)
+    , pageNext  :: Maybe PageNumber
+    }
+    deriving (Eq, Show)
 
 pageSize :: Int
 pageSize = 10
@@ -105,8 +106,7 @@ linkTitle lang (MetaLink slug) = do
     meta <- askMeta slug
     pure $ langTitle lang meta
 
-linkDestination ::
-       (MonadReader AppData m, MonadPlus m) => Link -> m Text
+linkDestination :: (MonadReader AppData m, MonadPlus m) => Link -> m Text
 linkDestination (ExternalLink url _) = pure url
 linkDestination (MetaLink slug) = do
     meta <- askMeta slug
@@ -151,9 +151,9 @@ articleDisplay ::
 articleDisplay lang article =
     template lang $
     def
-    { pcTitle = Just $ langTitle lang article
-    , pcContent = $(hamletFile "templates/article.hamlet")
-    }
+        { pcTitle = Just $ langTitle lang article
+        , pcContent = $(hamletFile "templates/article.hamlet")
+        }
 
 metaDisplay ::
        (MonadReader AppData m, MonadPlus m)
@@ -163,10 +163,10 @@ metaDisplay ::
 metaDisplay lang meta =
     template lang $
     def
-    { pcTitle = Just $ langTitle lang meta
-    , pcLayout = mtLayout meta
-    , pcContent = content
-    }
+        { pcTitle = Just $ langTitle lang meta
+        , pcLayout = mtLayout meta
+        , pcContent = content
+        }
   where
     content =
         case mtLayout meta of
@@ -216,10 +216,16 @@ routeURLParams = do
     pure $ \r _ -> address <> routeURL r
 
 renderSiteScript :: MonadReader AppData m => m JavaScript
-renderSiteScript = routeURLParams >>= \r -> pure $ JavaScript $ renderJavascriptUrl r $(juliusFile "templates/site.julius")
+renderSiteScript =
+    routeURLParams >>= \r ->
+        pure $
+        JavaScript $ renderJavascriptUrl r $(juliusFile "templates/site.julius")
 
 renderPrintStylesheet :: MonadReader AppData m => m Stylesheet
-renderPrintStylesheet = routeURLParams >>= \r -> pure $ Stylesheet $ renderCssUrl r $(luciusFile "templates/print.lucius")
+renderPrintStylesheet =
+    routeURLParams >>= \r ->
+        pure $
+        Stylesheet $ renderCssUrl r $(luciusFile "templates/print.lucius")
 
 renderCodeStylesheet :: Stylesheet
 renderCodeStylesheet = Stylesheet $ TL.pack $ styleToCss highlightingStyle

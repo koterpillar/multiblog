@@ -1,53 +1,45 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module Views.Feed where
 
-import Control.Monad.Reader
+import           Control.Monad.Reader
 
-import Data.Default.Class
+import           Data.Default.Class
 
-import Data.Monoid
+import           Data.Monoid
 
-import Data.Time
+import           Data.Time
 
-import qualified Data.Text as Text
+import qualified Data.Text                as Text
 import qualified Data.Text.Lazy
 
-import Data.XML.Types
+import           Data.XML.Types
 
-import Happstack.Server
+import           Happstack.Server
 
-import Text.Atom.Feed
-    ( Date
-    , Entry(..)
-    , EntryContent(..)
-    , Feed(..)
-    , Link(..)
-    , Person(..)
-    , TextContent(..)
-    , nullEntry
-    , nullFeed
-    , nullLink
-    , nullPerson
-    )
-import Text.Atom.Feed.Export (xmlFeed)
+import           Text.Atom.Feed           (Date, Entry (..), EntryContent (..),
+                                           Feed (..), Link (..), Person (..),
+                                           TextContent (..), nullEntry,
+                                           nullFeed, nullLink, nullPerson)
+import           Text.Atom.Feed.Export    (xmlFeed)
 
-import Text.Blaze.Renderer.Text (renderMarkup)
+import           Text.Blaze.Renderer.Text (renderMarkup)
 
-import qualified Text.XML as C
+import qualified Text.XML                 as C
 
-import Models
-import Routes
-import Types.Content
-import Types.Language
-import Views
+import           Models
+import           Routes
+import           Types.Content
+import           Types.Language
+import           Views
 
-newtype AtomFeed = AtomFeed
-    { unAtomFeed :: Feed
-    }
+newtype AtomFeed =
+    AtomFeed
+        { unAtomFeed :: Feed
+        }
 
 instance ToMessage AtomFeed where
     toContentType _ = "application/atom+xml"
@@ -57,11 +49,7 @@ instance ToMessage AtomFeed where
 atomDate :: UTCTime -> Date
 atomDate = (<> "T00:00:00Z") . Text.pack . showGregorian . utctDay
 
-articleEntry ::
-       MonadReader AppData m
-    => Language
-    -> Article
-    -> m Entry
+articleEntry :: MonadReader AppData m => Language -> Article -> m Entry
 articleEntry lang article = do
     let lpref = singleLanguage lang
     articleLink <- linkTo article
@@ -76,16 +64,13 @@ articleEntry lang article = do
             runPandocPure' $ writeHtml $ stripTitle $ langContent lpref article
     return
         entry
-        { entryContent = Just $ HTMLContent $ Data.Text.Lazy.toStrict content
-        , entryLinks = [nullLink articleLink]
-        , entryAuthors = [nullPerson {personName = authorName}]
-        }
+            { entryContent =
+                  Just $ HTMLContent $ Data.Text.Lazy.toStrict content
+            , entryLinks = [nullLink articleLink]
+            , entryAuthors = [nullPerson {personName = authorName}]
+            }
 
-feedDisplay ::
-       MonadReader AppData m
-    => Language
-    -> [Article]
-    -> m Response
+feedDisplay :: MonadReader AppData m => Language -> [Article] -> m Response
 feedDisplay lang articles = do
     siteName <- askLangString (singleLanguage lang) "siteName"
     -- TODO: Web.Routes generate a link without the trailing slash

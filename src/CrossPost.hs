@@ -1,40 +1,41 @@
 {-|
 Action to cross-post the latest article to all external services.
 -}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module CrossPost where
 
-import Control.Lens
-import Control.Monad.IO.Class
-import Control.Monad.Reader
+import           Control.Lens
+import           Control.Monad.IO.Class
+import           Control.Monad.Reader
 
-import qualified Data.Aeson as A
-import Data.Default.Class
-import Data.List
-import Data.Maybe
-import Data.Monoid ((<>))
-import qualified Data.Text as T
+import qualified Data.Aeson                     as A
+import           Data.Default.Class
+import           Data.List
+import           Data.Maybe
+import           Data.Monoid                    ((<>))
+import qualified Data.Text                      as T
 
-import Network.HTTP.Conduit (newManager, tlsManagerSettings)
+import           Network.HTTP.Conduit           (newManager, tlsManagerSettings)
 
-import Web.Twitter.Conduit (OAuth, TWInfo(..), call, twCredential, twOAuth)
-import Web.Twitter.Conduit.Api
-import Web.Twitter.Conduit.Parameters hiding (map)
-import Web.Twitter.Conduit.Request (APIRequest)
-import Web.Twitter.Conduit.Status
-import Web.Twitter.Types
+import           Web.Twitter.Conduit            (OAuth, TWInfo (..), call,
+                                                 twCredential, twOAuth)
+import           Web.Twitter.Conduit.Api
+import           Web.Twitter.Conduit.Parameters hiding (map)
+import           Web.Twitter.Conduit.Request    (APIRequest)
+import           Web.Twitter.Conduit.Status
+import           Web.Twitter.Types
 
-import App
-import Models
-import Routes
-import Types.Content
-import Types.Language
-import Types.Services
-import Views
+import           App
+import           Models
+import           Routes
+import           Types.Content
+import           Types.Language
+import           Types.Services
+import           Views
 
 crossPost :: App ()
 crossPost = do
@@ -42,8 +43,7 @@ crossPost = do
     crossPostTwitter
     liftIO $ putStrLn "All new articles cross-posted."
 
-crossPostTwitter ::
-       (MonadIO m, MonadReader AppData m) => m ()
+crossPostTwitter :: (MonadIO m, MonadReader AppData m) => m ()
 crossPostTwitter = do
     mgr <- liftIO $ newManager tlsManagerSettings
     address <- asks appAddress
@@ -82,9 +82,7 @@ twitterArticleLinks statuses = do
     let urls = mapMaybe relativeUrl $ concatMap statusLinks statuses
     -- Filter out the ones for the article route
     let articleLinks =
-            [ (date, slug)
-            | Just (ArticleView date slug) <- map parseURL urls
-            ]
+            [(date, slug) | Just (ArticleView date slug) <- map parseURL urls]
     -- Get the matched articles
     let articleFilter art = any (\(d, s) -> byDateSlug d s art) articleLinks
     askFiltered articleFilter

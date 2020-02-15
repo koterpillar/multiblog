@@ -1,50 +1,47 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module Views.Export where
 
-import Control.Monad.Reader
-import Control.Monad.State
+import           Control.Monad.Reader
+import           Control.Monad.State
 
-import qualified Data.ByteString.Lazy as LB
+import qualified Data.ByteString.Lazy           as LB
 
-import Data.List.NonEmpty (NonEmpty (..))
-import qualified Data.List.NonEmpty as NE
+import           Data.List.NonEmpty             (NonEmpty (..))
+import qualified Data.List.NonEmpty             as NE
 
-import Data.Text (Text)
-import qualified Data.Text as Text
-import qualified Data.Text.Lazy as TL
-import Data.Text.Lazy.Encoding
+import           Data.Text                      (Text)
+import qualified Data.Text                      as Text
+import qualified Data.Text.Lazy                 as TL
+import           Data.Text.Lazy.Encoding
 
-import System.Exit
-import System.Process (CreateProcess, proc)
-import System.Process.ByteString.Lazy
+import           System.Exit
+import           System.Info
+import           System.Process                 (CreateProcess, proc)
+import           System.Process.ByteString.Lazy
 
-import Text.Blaze.Renderer.Text as TextRenderer
-import Text.HTML.TagSoup
-import Text.Hamlet
-import Text.StringLike
+import           Text.Blaze.Renderer.Text       as TextRenderer
+import           Text.Hamlet
+import           Text.HTML.TagSoup
+import           Text.StringLike
 
-import Text.Pandoc hiding (Meta)
+import           Text.Pandoc                    hiding (Meta)
 
-import Cache
-import Models
-import Render
-import Routes
-import Types.Content
-import Types.Language
-import Views
+import           Cache
+import           Models
+import           Render
+import           Routes
+import           Types.Content
+import           Types.Language
+import           Views
 
 -- Export a meta into one of the supported formats
 metaExport ::
-       ( MonadReader AppData m
-       , MonadState AppCache m
-       , MonadIO m
-       )
+       (MonadReader AppData m, MonadState AppCache m, MonadIO m)
     => PageFormat
     -> LanguagePreference
     -> Meta
@@ -59,11 +56,12 @@ metaExport Docx lang meta = do
         runPandocPure' $ writeDocx def content
 
 metaExportFileName :: PageFormat -> Meta -> Text
-metaExportFileName format meta = Text.intercalate "." [metaName, fileExtension format]
+metaExportFileName format meta =
+    Text.intercalate "." [metaName, fileExtension format]
   where
     metaName = mtExportSlug meta
     fileExtension Docx = "docx"
-    fileExtension Pdf = "pdf"
+    fileExtension Pdf  = "pdf"
 
 -- Export a PDF using wkhtmltopdf
 pdfExport ::
@@ -88,17 +86,16 @@ wkhtmltopdf html =
         (exitCode, output, err) <- readCreateProcessWithExitCode wkhtmlProc html
         let output' = filterWkhtmlWarnings output
         case exitCode of
-            ExitSuccess -> return output'
+            ExitSuccess   -> return output'
             ExitFailure _ -> error $ TL.unpack $ decodeUtf8 err
 
--- wkhtmltopdf, wrapped in xvfb-run as it requires an X display
+-- wkhtmltopdf, wrapped in xvfb-run on Linux as it requires an X display
 wkhtmlProc :: CreateProcess
-#ifdef darwin_HOST_OS
-wkhtmlProc = proc (NE.head wkArgs) (NE.tail wkArgs)
-#else
-wkhtmlProc = proc "xvfb-run" $ "-a" : NE.toList wkArgs
-#endif
+wkhtmlProc = result
   where
+    result
+        | os == "linux" = proc "xvfb-run" $ "-a" : NE.toList wkArgs
+        | otherwise = proc (NE.head wkArgs) (NE.tail wkArgs)
     wkArgs =
         "wkhtmltopdf" :|
         [ "--margin-top"
@@ -126,11 +123,12 @@ filterWkhtmlWarnings output
     dropThisLine = LB.dropWhile isNewline . LB.dropWhile (not . isNewline)
     isNewline 10 = True
     isNewline 13 = True
-    isNewline _ = False
+    isNewline _  = False
 
-data FixupState
-    = Start
-    | Joining { fsLevel :: Int }
+data FixupState = Start
+    | Joining
+    { fsLevel :: Int
+    }
     | JoinEnd
 
 -- wkhtmltopdf doesn't follow page-break-before: avoid. Help it by grouping the
@@ -173,7 +171,7 @@ fixupHtml = renderTags . go Start . parseTags
     isHeader = isHeader' . toString
       where
         isHeader' "h3" = True
-        isHeader' _ = False
+        isHeader' _    = False
     -- Tag to output before a paragraph element run
     joiner_start :: StringLike str => Tag str
     joiner_start =

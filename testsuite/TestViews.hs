@@ -1,21 +1,21 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes        #-}
 
 module TestViews where
 
-import Data.Text (Text)
-import qualified Data.Text as Text
+import           Data.Text                     (Text)
+import qualified Data.Text                     as Text
 import qualified Data.Text.Lazy
 
-import Text.Blaze.Html.Renderer.Text (renderHtml)
-import Text.Pandoc hiding (Meta)
+import           Text.Blaze.Html.Renderer.Text (renderHtml)
+import           Text.Pandoc                   hiding (Meta)
 
-import Routes
-import Types.Content
-import Views
+import           Routes
+import           Types.Content
+import           Views
 
-import Test.Framework
+import           Test.Framework
 
 newtype TestLink =
     TestLink Text
@@ -37,7 +37,8 @@ test_linkedHeader = do
                 ]
     let pandoc = runPandocPure' $ readMarkdown def source
     assertEqual
-        (Text.intercalate "\n"
+        (Text.intercalate
+             "\n"
              [ "<h2><a href=\"http://test\">Header</a></h2>"
              , "<p>Text content</p>"
              , "<h2>Other header</h2>"
