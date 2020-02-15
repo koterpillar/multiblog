@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -21,6 +20,7 @@ import qualified Data.Text.Lazy as TL
 import Data.Text.Lazy.Encoding
 
 import System.Exit
+import System.Info
 import System.Process (CreateProcess, proc)
 import System.Process.ByteString.Lazy
 
@@ -91,14 +91,12 @@ wkhtmltopdf html =
             ExitSuccess -> return output'
             ExitFailure _ -> error $ TL.unpack $ decodeUtf8 err
 
--- wkhtmltopdf, wrapped in xvfb-run as it requires an X display
+-- wkhtmltopdf, wrapped in xvfb-run on Linux as it requires an X display
 wkhtmlProc :: CreateProcess
-#ifdef darwin_HOST_OS
-wkhtmlProc = proc (NE.head wkArgs) (NE.tail wkArgs)
-#else
-wkhtmlProc = proc "xvfb-run" $ "-a" : NE.toList wkArgs
-#endif
+wkhtmlProc = result
   where
+    result | os == "linux" = proc "xvfb-run" $ "-a" : NE.toList wkArgs
+           | otherwise = proc (NE.head wkArgs) (NE.tail wkArgs)
     wkArgs =
         "wkhtmltopdf" :|
         [ "--margin-top"
