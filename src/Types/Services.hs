@@ -49,7 +49,7 @@ instance FromJSON AppServices where
 
 newtype AppAuth =
     AppAuthTwitter TwitterAuth
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
 
 class ToJSON a => ServiceAuth a where
     toAppAuth :: a -> AppAuth
@@ -59,7 +59,7 @@ class ToJSON a => ServiceAuth a where
 data TwitterAuth = TwitterAuth
     { taToken :: BS.ByteString
     , taSecret :: BS.ByteString
-    } deriving (Eq, Show)
+    } deriving (Eq, Show, Generic)
 
 instance ServiceAuth TwitterAuth where
     toAppAuth = AppAuthTwitter
@@ -98,7 +98,7 @@ instance ToJSON AppAuth where
 data CrossPost = CrossPost
     { cpLanguage :: Language
     , cpServiceDetails :: AppAuth
-    } deriving (Eq, Show)
+    } deriving (Eq, Show, Generic)
 
 type AppCrossPost = [CrossPost]
 

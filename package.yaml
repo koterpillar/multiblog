@@ -20,6 +20,7 @@ dependencies:
 - pandoc
 - pandoc-types
 - text
+- time
 - twitter-conduit
 - xml-conduit
 - xml-types
@@ -29,9 +30,9 @@ library:
   dependencies:
   - aeson
   - authenticate-oauth
-  - boomerang
   - directory
   - filepath
+  - here
   - http-conduit
   - lens
   - lifted-base
@@ -42,14 +43,9 @@ library:
   - shakespeare
   - split
   - tagsoup
-  - time
   - transformers
   - twitter-types
   - unix
-  - web-routes
-  - web-routes-boomerang
-  - web-routes-happstack
-  - web-routes-th
 executables:
   multiblog:
     main: Main.hs
@@ -71,7 +67,7 @@ tests:
     - multiblog
     - HTF
     - HUnit
-    - derive
+    - generic-arbitrary
     - QuickCheck
     - quickcheck-instances
 stability: Experimental

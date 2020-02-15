@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module TestLanguage where
 

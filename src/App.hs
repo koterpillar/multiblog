@@ -22,10 +22,6 @@ import System.Directory
 import System.Environment
 import System.FilePath
 
-import Web.Routes
-import Web.Routes.Boomerang (boomerangSiteRouteT)
-import Web.Routes.Happstack
-
 import Cache
 import Import
 import Models
@@ -39,7 +35,7 @@ import Views.Feed
 
 type App = StateT AppCache (ReaderT AppData IO)
 
-type AppPart a = RouteT Sitemap (ServerPartT App) a
+type AppPart a = ServerPartT App a
 
 loadApp ::
        String -- ^ directory to load from
@@ -87,33 +83,19 @@ site :: ServerPartT App Response
 site = do
     address <- lift $ asks appAddress
     appDir <- lift $ asks appDirectory
-    let routedSite = boomerangSiteRouteT handler sitemap
     let staticDir = appDir </> "static"
     let staticSite = serveDirectory DisableBrowsing ["index.html"] staticDir
-    implSite address "" routedSite `mplus` staticSite
-
--- Run an action in application routing context
-runRoute :: RouteT Sitemap m a -> m a
-runRoute act
-    -- Supply a known good URL (root) to run the site,
-    -- producing the result of the given action
- =
-    let (Right res) = runSite "" (boomerangSiteRouteT (const act) sitemap) []
-    in res
-
-parseRoute :: T.Text -> Either String Sitemap
-parseRoute =
-    fmap runIdentity . runSite "" (boomerangSiteRouteT pure sitemap) . segments
-  where
-    segments = decodePathInfo . T.encodeUtf8
+    let mainSite = do
+                       method GET
+                       uriRest $ \uri -> case parseURL (T.pack uri) of
+                                             Nothing -> mzero
+                                             Just route -> handler route
+    mainSite `mplus` staticSite
 
 handler :: Sitemap -> AppPart Response
 handler route =
     case route of
         Index -> index
-        Yearly y -> yearlyIndex y
-        Monthly y m -> monthlyIndex y m
-        Daily d -> dailyIndex d
         ArticleView d s -> article d s
         MetaView s f -> meta s f
         Feed lang -> feedIndex lang
@@ -123,15 +105,6 @@ handler route =
 
 index :: AppPart Response
 index = articleList $ const True
-
-yearlyIndex :: Integer -> AppPart Response
-yearlyIndex = articleList . byYear
-
-monthlyIndex :: Integer -> Int -> AppPart Response
-monthlyIndex year month = articleList $ byYearMonth year month
-
-dailyIndex :: Day -> AppPart Response
-dailyIndex = articleList . byDate
 
 -- Find the most relevant language preference in a request
 -- Includes: explicit GET parameter, cookie and Accept-Language header
@@ -169,12 +142,11 @@ articleList articleFilter = do
 
 meta :: Text -> Maybe PageFormat -> AppPart Response
 meta slug format' = do
-    let format = fromMaybe Html format'
     language <- languageHeaderM
     m <- askMeta slug
-    case format of
-        Html -> metaDisplay language m >>= okResponse
-        _ -> metaExport format language m >>= okResponse
+    case format' of
+        Nothing -> metaDisplay language m >>= okResponse
+        Just format -> metaExport format language m >>= okResponse
 
 feedIndex :: Language -> AppPart Response
 feedIndex language = do
@@ -189,4 +161,4 @@ printStylesheet :: AppPart Response
 printStylesheet = renderPrintStylesheet >>= okResponse
 
 codeStylesheet :: AppPart Response
-codeStylesheet = renderCodeStylesheet >>= okResponse
+codeStylesheet = okResponse renderCodeStylesheet

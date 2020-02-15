@@ -39,8 +39,6 @@ import Text.Blaze.Renderer.Text (renderMarkup)
 
 import qualified Text.XML as C
 
-import Web.Routes
-
 import Models
 import Routes
 import Types.Content
@@ -60,7 +58,7 @@ atomDate :: UTCTime -> Date
 atomDate = (<> "T00:00:00Z") . Text.pack . showGregorian . utctDay
 
 articleEntry ::
-       (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m)
+       MonadReader AppData m
     => Language
     -> Article
     -> m Entry
@@ -84,7 +82,7 @@ articleEntry lang article = do
         }
 
 feedDisplay ::
-       (MonadRoute m, URL m ~ Sitemap, MonadReader AppData m)
+       MonadReader AppData m
     => Language
     -> [Article]
     -> m Response

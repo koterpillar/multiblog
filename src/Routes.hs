@@ -1,6 +1,6 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Routes where
 
@@ -8,30 +8,31 @@ import Prelude hiding ((.))
 
 import Control.Category (Category((.)))
 
+import Data.String.Here (i)
+
+import Data.Char (isDigit)
 import Data.Text (Text)
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import Data.Time
 
-import Text.Boomerang.TH (makeBoomerangs)
+import Debug.Trace
 
-import Web.Routes.Boomerang
+import GHC.Generics
+
+import Text.Read
 
 import Types.Language
 
 data PageFormat
-    = Html
-    | Pdf
+    = Pdf
     | Docx
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Generic)
 
--- TODO: use Boomerang for these
 formatToStr :: PageFormat -> Text
-formatToStr Html = "pdf"
 formatToStr Pdf = "pdf"
 formatToStr Docx = "docx"
 
 strToFormat :: Text -> Maybe PageFormat
-strToFormat "html" = Just Html
 strToFormat "pdf" = Just Pdf
 strToFormat "docx" = Just Docx
 strToFormat _ = Nothing
@@ -40,10 +41,6 @@ type MaybeFormat = Maybe PageFormat
 
 data Sitemap
     = Index
-    | Yearly Integer
-    | Monthly Integer
-              Int
-    | Daily Day
     | ArticleView Day
                   Text
     | MetaView Text
@@ -52,89 +49,57 @@ data Sitemap
     | SiteScript
     | PrintStylesheet
     | CodeStylesheet
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Show, Generic)
 
-makeBoomerangs ''Sitemap
+routeURL :: Sitemap -> Text
+routeURL Index = ""
+routeURL (ArticleView date text) = let (year, month, day) = toGregorian date in [i|/${pad 2 year}-${pad 2 month}-${pad 2 day}/${text}|]
+routeURL (MetaView text Nothing) = [i|/${text}|]
+routeURL (MetaView text (Just format)) = [i|/${text}.${formatToStr format}|]
+routeURL (Feed language) = [i|/feed/${showLanguage language}|]
+routeURL SiteScript = "/assets/site.js"
+routeURL PrintStylesheet = "/assets/print.css"
+routeURL CodeStylesheet = "/assets/code.css"
 
-rDay :: Boomerang TextsError [Text] r (Day :- r)
-rDay = xpure mkDay parseDay . (integer </> int </> int)
-  where
-    mkDay (y :- m :- d :- x) = fromGregorian y m d :- x
-    parseDay (day :- x) =
-        let (y, m, d) = toGregorian day
-        in Just $ y :- m :- d :- x
+pad :: Show a => Int -> a -> Text
+pad len str = let printed = Text.pack (show str)
+                  padding = Text.replicate (len - Text.length printed) "0"
+               in padding <> printed
 
--- TODO: This will error on strings which are not language codes
-rLanguage :: Boomerang TextsError [Text] r (Language :- r)
-rLanguage = xpure mkLang parseLang . anyString
-  where
-    mkLang (str :- x) =
-        let Just lang = parseLanguageM str
-        in lang :- x
-    parseLang (lang :- x) = Just $ showLanguage lang :- x
+splitNonEmpty :: Text -> Text -> [Text]
+splitNonEmpty splitter = filter (not . Text.null) . Text.splitOn splitter
 
-rString :: Boomerang e tok i (Text :- o) -> Boomerang e tok i (String :- o)
-rString = xmaph T.unpack (Just . T.pack)
+readText :: Read a => Text -> Maybe a
+readText = readMaybe . Text.unpack
 
-anyString :: Boomerang TextsError [Text] o (String :- o)
-anyString = rString anyText
-
-rExtension ::
-       Boomerang e tok i (Text :- o)
-    -> Boomerang e tok i (Text :- Maybe Text :- o)
-rExtension = xmap splitExt' (Just . joinExt')
-  where
-    splitExt' :: Text :- o -> Text :- Maybe Text :- o
-    splitExt' (seg :- o) =
-        let (seg', ext) = splitExt seg
-        in seg' :- ext :- o
-    joinExt' :: Text :- Maybe Text :- o -> Text :- o
-    joinExt' (seg :- ext :- o) = joinExt seg ext :- o
-
--- Swap the top 2 components in a Boomerang
-xflip :: Boomerang e tok i (a :- b :- o) -> Boomerang e tok i (b :- a :- o)
-xflip = xmap pflip (Just . pflip)
-  where
-    pflip (a :- b :- o) = b :- a :- o
-
--- Apply a transformation to the second topmost component of a Boomerang
-xmaph2 ::
-       (b -> c)
-    -> (c -> Maybe b)
-    -> Boomerang e tok i (a :- b :- o)
-    -> Boomerang e tok i (a :- c :- o)
-xmaph2 f g = xflip . xmaph f g . xflip
-
--- Split a path component into basename and extension
-splitExt :: Text -> (Text, Maybe Text)
-splitExt segment =
-    case T.splitOn "." segment of
-        [] -> ("", Nothing)
-        [s] -> (s, Nothing)
-        ss -> (T.intercalate "." $ init ss, Just $ last ss)
+parseURL :: Text -> Maybe Sitemap
+parseURL = parseSegments . splitNonEmpty "/" . dropQueryParams
+    where
+        parseSegments [] = Just Index
+        parseSegments [metaText] = case splitNonEmpty "." metaText of
+                                                              [text] -> Just $ MetaView text Nothing
+                                                              [text, formatStr] -> do
+                                                                                    format <- strToFormat formatStr
+                                                                                    pure $ MetaView text (Just format)
+                                                              _ -> Nothing
+        parseSegments [date, articleText] | dateLike date = parseArticle (splitNonEmpty "-" date) articleText
+        parseSegments [year, month, day, articleText] = parseArticle [year, month, day] articleText
+        parseSegments ["assets", "site.js"] = Just SiteScript
+        parseSegments ["assets", "print.css"] = Just PrintStylesheet
+        parseSegments ["assets", "code.css"] = Just CodeStylesheet
+        parseSegments ["feed", lang] = Feed <$> parseLanguageM lang
+        parseSegments _ = Nothing
+        dateLike = Text.all $ \c -> isDigit c || c == '-'
+        parseArticle [yearStr, monthStr, dayStr] text = do
+                                                   year <- readText yearStr
+                                                   month <- readText monthStr
+                                                   day <- readText dayStr
+                                                   date <- fromGregorianValid year month day
+                                                   pure $ ArticleView date text
+        parseArticle _ _ = Nothing
+        dropQueryParams = Text.takeWhile (/= '?')
 
 -- Join a basename and extension together
 joinExt :: Text -> Maybe Text -> Text
 joinExt segment Nothing = segment
 joinExt segment (Just ext) = segment <> "." <> ext
-
--- Convert the second topmost component into a MaybeFormat
-xFormat ::
-       Boomerang e tok i (Text :- Maybe Text :- o)
-    -> Boomerang e tok i (Text :- MaybeFormat :- o)
-xFormat = xmaph2 (strToFormat =<<) (Just . fmap formatToStr)
-
-sitemap :: Boomerang TextsError [Text] r (Sitemap :- r)
-sitemap =
-    mconcat
-        [ rIndex
-        , rYearly . integer
-        , rMonthly . integer </> int
-        , rDaily . rDay
-        , rFeed . "feed" </> rLanguage
-        , rSiteScript . "site.js"
-        , rPrintStylesheet . "print.css"
-        , rCodeStylesheet . "code.css"
-        , rArticleView . rDay </> anyText
-        , rMetaView . xFormat (rExtension anyText)
-        ]

@@ -1,13 +1,14 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Data.LanguageCodes.Arbitrary where
 
-import Prelude hiding (LT)
+import Data.LanguageCodes (ISO639_1(..), fromChars)
 
-import Data.DeriveTH
-import Data.LanguageCodes (ISO639_1(..))
+import Data.Maybe
 
 import Test.QuickCheck
 
-derive makeArbitrary ''ISO639_1
+instance Arbitrary ISO639_1 where
+    arbitrary = elements $ catMaybes $ fromChars <$> letter <*> letter
+        where
+            letter = ['a'..'z']

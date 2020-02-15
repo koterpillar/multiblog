@@ -31,8 +31,6 @@ import Text.StringLike
 
 import Text.Pandoc hiding (Meta)
 
-import Web.Routes
-
 import Cache
 import Models
 import Render
@@ -43,9 +41,7 @@ import Views
 
 -- Export a meta into one of the supported formats
 metaExport ::
-       ( MonadRoute m
-       , URL m ~ Sitemap
-       , MonadReader AppData m
+       ( MonadReader AppData m
        , MonadState AppCache m
        , MonadIO m
        )
@@ -56,7 +52,6 @@ metaExport ::
 -- Pandoc uses TeX to render PDFs, which requires a lot of packages for Unicode
 -- support, etc. Use wkhtmltopdf instead
 metaExport Pdf lang meta = pdfExport lang meta
-metaExport Html _ _ = error "HTML is not an export format"
 metaExport Docx lang meta = do
     let content = langContent lang meta
     pure $
@@ -68,12 +63,11 @@ metaExportFileName format meta = Text.intercalate "." [metaName, fileExtension f
   where
     metaName = mtExportSlug meta
     fileExtension Docx = "docx"
-    fileExtension Html = error "HTML is not an export format"
     fileExtension Pdf = "pdf"
 
 -- Export a PDF using wkhtmltopdf
 pdfExport ::
-       (MonadRoute m, URL m ~ Sitemap, MonadState AppCache m, MonadIO m)
+       (MonadReader AppData m, MonadState AppCache m, MonadIO m)
     => LanguagePreference
     -> Meta
     -> m (Export LB.ByteString)

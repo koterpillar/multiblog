@@ -5,20 +5,6 @@
 
 packages:
 - completed:
-    hackage: boomerang-1.4.5.5@sha256:a6ea7b0cdc82e7d9d8c66bd63047da13453e20acd5e299e92fa8d286f8663041,1951
-    pantry-tree:
-      size: 791
-      sha256: 71b50b11f18cc0e27d040802a8d811caee9066a4bf40dd7e8b44cc57c8133fee
-  original:
-    hackage: boomerang-1.4.5.5
-- completed:
-    hackage: derive-2.6.4@sha256:f697cbe62828b5d777ea148814978940bd8707cb2ad4adff9415fc6139a7c05d,3184
-    pantry-tree:
-      size: 3967
-      sha256: cb33c5025c4629ea5377dd0fc521700cac79f8a88a5d062cfbb0cd7f9f37bcb5
-  original:
-    hackage: derive-2.6.4
-- completed:
     hackage: twitter-conduit-0.3.0@sha256:67b68511fc19563ff4159ae37188ac3db7dbc6603d81f11c6f1c2dd8ec1f5bd8,4318
     pantry-tree:
       size: 2681
@@ -39,27 +25,6 @@ packages:
       sha256: 2b4a738a9ca4f6c98bc82f39b92e09f18e298f524f7121e568582e8f0f4dfe2c
   original:
     hackage: twitter-types-lens-0.7.2
-- completed:
-    hackage: web-routes-boomerang-0.28.4.2@sha256:5885435f8527a056d820630e26f76567d4106c8e13fe67a0bc191149dc9f4242,1060
-    pantry-tree:
-      size: 228
-      sha256: bac758a18c07d100c5a259e4e9c49eea3412c0d8d3b96fa1660a8b07dd97d30f
-  original:
-    hackage: web-routes-boomerang-0.28.4.2
-- completed:
-    hackage: web-routes-happstack-0.23.11@sha256:c61a497a13810c15e3b3a17db4fef05357cbf31a4a56bd73cdfbb9f9ae521b10,1044
-    pantry-tree:
-      size: 228
-      sha256: 37f74334eadaf5380f76f9f42e0da6ff678ab5961f7e72b35bbe28638e069523
-  original:
-    hackage: web-routes-happstack-0.23.11
-- completed:
-    hackage: web-routes-th-0.22.6.3@sha256:9a71de3770de13445bf116b16a5468d12e3dac0b91b8d3546088333a96bd235d,1533
-    pantry-tree:
-      size: 267
-      sha256: d2d7656d3cc35177ae51689dbe849d5c48d339339ba97018921d858f0a2bca0b
-  original:
-    hackage: web-routes-th-0.22.6.3
 snapshots:
 - completed:
     size: 508835
