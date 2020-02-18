@@ -4,6 +4,7 @@
 module Integration.TestFeed where
 
 import           Data.Default.Class
+import           Data.Foldable
 
 import           Data.XML.Types
 
@@ -31,7 +32,8 @@ test_home = do
     -- Make sure every entry validates
     let entryElements = elementChildren root >>= isNamed atomEntry
     assertNotEmpty entryElements
-    assertEqual [] $ flattenT $ mkTree [] $ map validateEntry entryElements
+    forM_ entryElements $ \entryElement ->
+        assertEqual [] $ flattenT $ validateEntry entryElement
     -- Check feed contents
     let Just feed = elementFeed root
     assertEqual "Test site" $ txtToString $ feedTitle feed
