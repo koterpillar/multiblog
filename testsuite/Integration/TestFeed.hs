@@ -44,4 +44,6 @@ test_home = do
     let entry2 = entries !! 1
     assertEqual ["Author Name"] $ map personName $ entryAuthors entry2
     let Just (HTMLContent content) = entryContent entry2
-    assertEqual "<p>This article should appear above the first one.</p>" content
+    -- FIXME: convert the content to XML representation properly
+    assertEqual "<p>This article should appear above the first one.</p>" $
+        show content
