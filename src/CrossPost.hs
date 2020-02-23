@@ -12,7 +12,6 @@ import           Control.Lens
 import           Control.Monad.IO.Class
 import           Control.Monad.Reader
 
-import qualified Data.Aeson                     as A
 import           Data.Default.Class
 import           Data.List
 import           Data.Maybe

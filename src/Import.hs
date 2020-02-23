@@ -14,7 +14,6 @@ import qualified Data.ByteString       as B
 import           Data.Default.Class
 import qualified Data.Map              as M
 import           Data.Maybe
-import           Data.Monoid
 import           Data.Text             (Text)
 import qualified Data.Text             as T
 import qualified Data.Text.Encoding    as T
