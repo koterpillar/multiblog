@@ -9,12 +9,10 @@ import           Control.Monad.Reader
 
 import           Data.Default.Class
 
-import           Data.Monoid
-
 import           Data.Time
 
 import qualified Data.Text                as Text
-import qualified Data.Text.Lazy
+import qualified Data.Text.Lazy           as LazyText
 
 import           Data.XML.Types
 
@@ -27,8 +25,6 @@ import           Text.Atom.Feed           (Date, Entry (..), EntryContent (..),
 import           Text.Atom.Feed.Export    (xmlFeed)
 
 import           Text.Blaze.Renderer.Text (renderMarkup)
-
-import           Text.HTML.DOM            (parseLT)
 
 import qualified Text.XML                 as C
 
@@ -66,9 +62,7 @@ articleEntry lang article = do
             runPandocPure' $ writeHtml $ stripTitle $ langContent lpref article
     return
         entry
-            { entryContent =
-                  Just $
-                  HTMLContent $ documentRoot $ C.toXMLDocument $ parseLT content
+            { entryContent = Just $ HTMLContent $ LazyText.toStrict content
             , entryLinks = [nullLink articleLink]
             , entryAuthors = [nullPerson {personName = authorName}]
             }

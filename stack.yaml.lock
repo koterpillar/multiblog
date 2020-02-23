@@ -32,6 +32,13 @@ packages:
       sha256: 8f9b475ca94cb8394bfce6705433c323494a0b8bfbf284158d5e3a7a8ddd72e6
   original:
     hackage: twitter-types-lens-0.10.0@sha256:c9589b49b92e0ca3f2b0472959d5ca9f26589caa8b3af182fcd9697dda570751,974
+- completed:
+    hackage: feed-1.3.0.0@sha256:cbf6f73ecc07c315a206ddb43ef3935af2d332ea16e3cb4250925c016a478a26,3849
+    pantry-tree:
+      size: 2766
+      sha256: d7ba0c4882f555c541e7d4d36249f0b721cf85ba91e25b3131f04a004360aeba
+  original:
+    hackage: feed-1.3.0.0@sha256:cbf6f73ecc07c315a206ddb43ef3935af2d332ea16e3cb4250925c016a478a26,3849
 snapshots:
 - completed:
     size: 524163
