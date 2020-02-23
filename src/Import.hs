@@ -12,9 +12,9 @@ import           Control.Monad.Except
 import           Data.Aeson
 import qualified Data.ByteString       as B
 import           Data.Default.Class
+import           Data.List             (find)
 import qualified Data.Map              as M
 import           Data.Maybe
-import           Data.Monoid
 import           Data.Text             (Text)
 import qualified Data.Text             as T
 import qualified Data.Text.Encoding    as T
@@ -48,8 +48,7 @@ data SourceDirectory = SourceDirectory
 
 -- | Get file contents by name from a directory
 sdFile :: Text -> SourceDirectory -> Maybe B.ByteString
-sdFile name =
-    fmap sfContent . listToMaybe . filter (\f -> sfName f == name) . sdFiles
+sdFile name = fmap sfContent . find (\f -> sfName f == name) . sdFiles
 
 type ParseT m a = ExceptT String m a
 

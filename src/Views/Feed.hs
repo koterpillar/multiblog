@@ -9,12 +9,10 @@ import           Control.Monad.Reader
 
 import           Data.Default.Class
 
-import           Data.Monoid
-
 import           Data.Time
 
 import qualified Data.Text                as Text
-import qualified Data.Text.Lazy
+import qualified Data.Text.Lazy           as LazyText
 
 import           Data.XML.Types
 
@@ -64,8 +62,7 @@ articleEntry lang article = do
             runPandocPure' $ writeHtml $ stripTitle $ langContent lpref article
     return
         entry
-            { entryContent =
-                  Just $ HTMLContent $ Data.Text.Lazy.toStrict content
+            { entryContent = Just $ HTMLContent $ LazyText.toStrict content
             , entryLinks = [nullLink articleLink]
             , entryAuthors = [nullPerson {personName = authorName}]
             }

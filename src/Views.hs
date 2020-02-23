@@ -7,7 +7,6 @@
 
 module Views where
 
-import qualified Control.Arrow            as A
 import           Control.Monad
 import           Control.Monad.Reader
 import           Control.Monad.State

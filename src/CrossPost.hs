@@ -12,7 +12,6 @@ import           Control.Lens
 import           Control.Monad.IO.Class
 import           Control.Monad.Reader
 
-import qualified Data.Aeson                     as A
 import           Data.Default.Class
 import           Data.List
 import           Data.Maybe
@@ -24,6 +23,7 @@ import           Network.HTTP.Conduit           (newManager, tlsManagerSettings)
 import           Web.Twitter.Conduit            (OAuth, TWInfo (..), call,
                                                  twCredential, twOAuth)
 import           Web.Twitter.Conduit.Api
+import           Web.Twitter.Conduit.Base       (ResponseBodyType)
 import           Web.Twitter.Conduit.Parameters hiding (map)
 import           Web.Twitter.Conduit.Request    (APIRequest)
 import           Web.Twitter.Conduit.Status
@@ -49,7 +49,10 @@ crossPostTwitter = do
     address <- asks appAddress
     _ <-
         withTwitterAuth $ \credLang twInfo -> do
-            let doCall :: (A.FromJSON b, MonadIO m1) => APIRequest a b -> m1 b
+            let doCall ::
+                       (ResponseBodyType b, MonadIO m1)
+                    => APIRequest a b
+                    -> m1 b
                 doCall = liftIO . call twInfo mgr
             -- Get account ID
             accountId <-

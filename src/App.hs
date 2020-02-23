@@ -8,12 +8,10 @@ import           Control.Monad.Reader
 import           Control.Monad.State
 
 import qualified Data.ByteString.Char8 as B
-import           Data.Functor.Identity
 import           Data.List
 import           Data.Maybe
 import           Data.Text             (Text)
 import qualified Data.Text             as T
-import qualified Data.Text.Encoding    as T
 import           Data.Time
 
 import           Happstack.Server
@@ -81,7 +79,6 @@ runApp cache app a = runReaderT (evalStateT a cache) app
 
 site :: ServerPartT App Response
 site = do
-    address <- lift $ asks appAddress
     appDir <- lift $ asks appDirectory
     let staticDir = appDir </> "static"
     let staticSite = serveDirectory DisableBrowsing ["index.html"] staticDir

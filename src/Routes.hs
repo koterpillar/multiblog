@@ -15,8 +15,6 @@ import           Data.Text        (Text)
 import qualified Data.Text        as Text
 import           Data.Time
 
-import           Debug.Trace
-
 import           GHC.Generics
 
 import           Text.Read
