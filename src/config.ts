@@ -1,6 +1,7 @@
 export type Config = {
   port: number;
   realSiteAddress: string | null;
+  directory: string;
 };
 
 export function fromEnvironment(): Config {
@@ -8,7 +9,9 @@ export function fromEnvironment(): Config {
 
   const realSiteAddress = process.env.SITE_ADDRESS || null;
 
-  return { port, realSiteAddress };
+  const directory = process.env.CONTENT_DIRECTORY || process.cwd();
+
+  return { port, realSiteAddress, directory };
 }
 
 export function siteAddress(config: Config): string {
