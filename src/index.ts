@@ -1,14 +1,11 @@
 import express from "express";
 
-// TODO: config module
-if (!process.env.PORT) {
-  process.exit(1);
-}
+import { fromEnvironment, siteAddress } from './config';
 
-const PORT: number = parseInt(process.env.PORT as string, 10);
+const config = fromEnvironment();
 
 const app = express();
 
-app.listen(PORT, () => {
-  console.log(`Serving on port ${PORT}.`);
+app.listen(config.port, () => {
+  console.log(`Serving ${siteAddress(config)} on port ${config.port}.`);
 });
