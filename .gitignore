@@ -1,6 +1,5 @@
+# Application specific
 /content
-/dist
-/.ghci
-/.HTF
-/.stack-work
-/multiblog.cabal
+
+# Node.js
+/node_modules
