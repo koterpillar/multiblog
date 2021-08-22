@@ -9,7 +9,7 @@ import           Control.Monad
 import           Control.Monad.Reader
 import           Control.Monad.State
 
-import           Happstack.Server
+import           Happstack.Server hiding (bindPort)
 
 import           Network.Socket
 
@@ -25,6 +25,15 @@ crossPostAndServe = do
     when isRealAddress $ void $ fork crossPost
     serve
 
+bindPort :: Int -> IO Socket
+bindPort port = do
+    let hints = defaultHints { addrFlags = [AI_NUMERICHOST, AI_NUMERICSERV], addrSocketType = Stream }
+    addr:_ <- getAddrInfo (Just hints) (Just "::") (Just $ show port)
+    sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
+    bind sock (addrAddress addr)
+    listen sock 5
+    pure sock
+
 -- Serve the site contents, handling SIGHUP
 serve :: App ()
 serve = do
@@ -36,7 +45,7 @@ serve = do
     -- Manually bind the socket to close it on exception
     liftIO $
         bracket
-            (bindPort conf)
+            (bindPort lport)
             close
             (\sock -> simpleHTTPWithSocket' (runApp cache app) sock conf site)
 
