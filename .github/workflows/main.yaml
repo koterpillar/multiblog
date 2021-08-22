@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: "0 0 * * 5"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Stack
+        run: stack upgrade || curl -sSL https://get.haskellstack.org/ | sh -s - -f
+      - name: Set up cache
+        uses: actions/cache@v1
+        with:
+          key: stack
+          path: ~/.stack
+      - name: Install dependencies
+        run: |
+          stack --no-terminal --install-ghc test --only-dependencies
+      - name: Test
+        run: |
+          stack --no-terminal test
