@@ -14,6 +14,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install wkhtmltopdf xvfb
       - name: Checkout
         uses: actions/checkout@v2
       - name: Set up Stack
