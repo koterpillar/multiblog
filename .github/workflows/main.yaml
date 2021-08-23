@@ -19,7 +19,9 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install wkhtmltopdf xvfb
+          sudo apt install --yes xvfb wget
+          wget -O wkhtmltox.deb https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.focal_amd64.deb
+          sudo apt install --yes ./wkhtmltox.deb
       - name: Checkout
         uses: actions/checkout@v2
       - name: Set up Stack
