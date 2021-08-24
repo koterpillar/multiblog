@@ -16,6 +16,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Where's my if?
+        run: 'echo ref ${{ github.ref }} if ${{ startsWith(github.ref, 'refs/tags/v') }} && false'
+      - name: I have a ref
+        if: startsWith('refs/tags/v', github.ref)
+        run: 'echo I have a ref'
       - name: Where's my ref?
         run: 'echo ${{ github.ref }} && false'
       - name: Install dependencies
