@@ -50,4 +50,4 @@ serve = do
             (\sock -> simpleHTTPWithSocket' (runApp cache app) sock conf site)
 
 listenPort :: IO Int
-listenPort = maybe 8000 read <$> lookupEnv "LISTEN_PORT"
+listenPort = maybe 8000 read <$> lookupEnv "PORT"

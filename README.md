@@ -14,7 +14,7 @@ Usage
 Running `multiblog` will start an HTTP server for the content found under the
 current directory. The following environment variables can be given:
 
-- `LISTEN_PORT` - the port to listen on, default 8000.
+- `PORT` - the port to listen on, default 8000.
 - `SITE_URL` - the site URL used for the links, default `http://localhost:8000`.
 - `CONTENT_DIRECTORY` - the directory to look for content in instead.
 
