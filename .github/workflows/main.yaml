@@ -16,6 +16,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Where's my ref?
+        run: 'echo ${{ github.ref }} && false'
       - name: Install dependencies
         run: |
           sudo apt update
