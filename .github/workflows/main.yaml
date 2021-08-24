@@ -65,7 +65,7 @@ jobs:
         id: tag
         uses: frabert/replace-string-action@v2.0
         with:
-          pattern: '^refs/tags/v'
+          pattern: '^refs/tags/'
           string: ${{ github.ref }}
           replace-with: ''
       - name: Build and push Docker image
