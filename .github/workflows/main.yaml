@@ -73,6 +73,6 @@ jobs:
         with:
           context: .
           push: true
-          tags:
-            - ghcr.io/koterpillar/multiblog:${{ steps.tag.outputs.replaced }}
-            - ghcr.io/koterpillar/multiblog:latest
+          tags: |
+            ghcr.io/koterpillar/multiblog:${{ steps.tag.outputs.replaced }},
+            ghcr.io/koterpillar/multiblog:latest
