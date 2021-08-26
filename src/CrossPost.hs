@@ -3,6 +3,7 @@ Action to cross-post the latest article to all external services.
 -}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedLabels      #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeFamilies          #-}
 
@@ -58,8 +59,8 @@ crossPostTwitter = do
             accountId <-
                 fmap userId $
                 doCall $
-                accountVerifyCredentials & (includeEntities ?~ False) &
-                (skipStatus ?~ False)
+                accountVerifyCredentials & (#include_entities ?~ False) &
+                (#skip_status ?~ False)
             -- Get existing posts and collect all articles already linked
             existingPosts <- doCall $ userTimeline (UserIdParam accountId)
             existingArticles <- twitterArticleLinks existingPosts

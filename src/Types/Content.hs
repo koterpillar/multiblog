@@ -13,6 +13,7 @@ import qualified Control.Monad.Trans.State.Strict as StrictState
 
 import           Data.Maybe
 import           Data.Text                        (Text)
+import qualified Data.Text                        as Text
 import           Data.Time
 import           Data.Yaml
 
@@ -124,7 +125,7 @@ byDateSlug d s a = byDate d a && bySlug s a
 -- TODO: Might be a better way to do this in Pandoc
 inlineToStr :: [Inline] -> Text
 inlineToStr inline =
-    runPandocPure' $ writePlain def $ Pandoc mempty [Plain inline]
+    Text.strip $ runPandocPure' $ writePlain def $ Pandoc mempty [Plain inline]
 
 runPandocPure :: PandocPure a -> Either PandocError a
 runPandocPure =
