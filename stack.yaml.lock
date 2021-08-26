@@ -5,43 +5,29 @@
 
 packages:
 - completed:
-    hackage: happstack-server-7.5.4@sha256:ec4e33c543da50806cb1af1009a72b65aec96dbb710d95a2174480f84d5202d5,6407
+    hackage: twitter-conduit-0.5.1@sha256:b38dffc6d9dee78a2b7b845ada4a61928eb9a41a76d49afe1273f40afc26da2e,3735
     pantry-tree:
-      size: 3201
-      sha256: 724cacc11a75d1f6d2de8cccf948f345ad6acaaa7f5bd135da1e63bc419a3e05
+      size: 2652
+      sha256: ccc0e775ab710570bca539d70286f4091b290c7b2d725e7baf389ff1bc626396
   original:
-    hackage: happstack-server-7.5.4@sha256:ec4e33c543da50806cb1af1009a72b65aec96dbb710d95a2174480f84d5202d5,6407
+    hackage: twitter-conduit-0.5.1@sha256:b38dffc6d9dee78a2b7b845ada4a61928eb9a41a76d49afe1273f40afc26da2e,3735
 - completed:
-    hackage: twitter-conduit-0.4.0@sha256:fc0af0d860e352dd200562e8d82a2fe546097317f5ca139ac7079cc7a5d18418,3990
-    pantry-tree:
-      size: 2618
-      sha256: 95653047af2e41dd633b336665bfb37662a789756592ee4ce1914111037ac143
-  original:
-    hackage: twitter-conduit-0.4.0@sha256:fc0af0d860e352dd200562e8d82a2fe546097317f5ca139ac7079cc7a5d18418,3990
-- completed:
-    hackage: twitter-types-0.10.0@sha256:335b70b38ea189d9a94b015feafa906d6741eb602541a9d3ce6ca03ad388c405,1568
+    hackage: twitter-types-0.10.1@sha256:5ebed648815b96f54b0b1d3e86b3443d8900a86ce3ab885d71fb8c1ba5aacbc0,1568
     pantry-tree:
       size: 2921
-      sha256: 6c9fe7dc8cbe9af45ab1962ddb1e4c00318da895fb5a3ad5b60abf4795d1115f
+      sha256: 5edadc18ca570a7e53ef3b78415b7df64b429ee4374acfd604ee09a1d3bb10d6
   original:
-    hackage: twitter-types-0.10.0@sha256:335b70b38ea189d9a94b015feafa906d6741eb602541a9d3ce6ca03ad388c405,1568
+    hackage: twitter-types-0.10.1@sha256:5ebed648815b96f54b0b1d3e86b3443d8900a86ce3ab885d71fb8c1ba5aacbc0,1568
 - completed:
-    hackage: twitter-types-lens-0.10.0@sha256:c9589b49b92e0ca3f2b0472959d5ca9f26589caa8b3af182fcd9697dda570751,974
+    hackage: twitter-types-lens-0.10.1@sha256:a67c2eef9de7d80b0993d1e74ca82fde0956ed4ace2587d1a3fedfa88b3c4bd5,954
     pantry-tree:
       size: 295
-      sha256: 8f9b475ca94cb8394bfce6705433c323494a0b8bfbf284158d5e3a7a8ddd72e6
+      sha256: 5b6c7635a88d51c9931ddd9d39d24448e40855b02b42befbfe4fac521411ec9a
   original:
-    hackage: twitter-types-lens-0.10.0@sha256:c9589b49b92e0ca3f2b0472959d5ca9f26589caa8b3af182fcd9697dda570751,974
-- completed:
-    hackage: feed-1.3.0.0@sha256:cbf6f73ecc07c315a206ddb43ef3935af2d332ea16e3cb4250925c016a478a26,3849
-    pantry-tree:
-      size: 2766
-      sha256: d7ba0c4882f555c541e7d4d36249f0b721cf85ba91e25b3131f04a004360aeba
-  original:
-    hackage: feed-1.3.0.0@sha256:cbf6f73ecc07c315a206ddb43ef3935af2d332ea16e3cb4250925c016a478a26,3849
+    hackage: twitter-types-lens-0.10.1@sha256:a67c2eef9de7d80b0993d1e74ca82fde0956ed4ace2587d1a3fedfa88b3c4bd5,954
 snapshots:
 - completed:
-    size: 524163
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/25.yaml
-    sha256: 97548b4e927a8a862d4a203687ca18a3f5d2ae75b4b72c946fb29c17df1a5082
-  original: lts-14.25
+    size: 587113
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/7.yaml
+    sha256: c8617e042150e4bf412d011c234aba6189f789d0cd2bd4f1a1a9ca9a0ef5d042
+  original: lts-18.7

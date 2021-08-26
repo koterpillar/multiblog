@@ -5,7 +5,7 @@ import           Control.Monad
 import qualified Data.Map      as M
 
 -- Read a value or monadically fail
-readM :: (Monad m, Read a) => String -> m a
+readM :: (MonadFail m, Read a) => String -> m a
 readM s =
     case reads s of
         [(v, _)] -> return v

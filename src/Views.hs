@@ -203,7 +203,7 @@ linkedHeader target doc = evalState (walkM linkHeader doc) True
         -- make the first header a link
         let text' =
                 if isFirst
-                    then [Link nullAttr text (T.unpack target, "")]
+                    then [Link nullAttr text (target, "")]
                     else text
         -- remove anchors
         return $ Header n ("", [], []) text'
