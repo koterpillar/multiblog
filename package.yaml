@@ -21,7 +21,6 @@ dependencies:
 - pandoc-types
 - text
 - time
-- twitter-conduit
 - xml-conduit
 - xml-types
 - yaml
@@ -29,7 +28,6 @@ library:
   source-dirs: src
   dependencies:
   - aeson
-  - authenticate-oauth
   - directory
   - filepath
   - here
@@ -37,14 +35,12 @@ library:
   - lens
   - lifted-base
   - network
-  - optparse-generic
   - process
   - process-extras
   - shakespeare
   - split
   - tagsoup
   - transformers
-  - twitter-types
   - unix
 executables:
   multiblog:

@@ -16,7 +16,6 @@ import           Data.LanguageCodes
 import qualified Data.Map                 as M
 import           Data.Maybe
 import           Data.Text                (Text)
-import qualified Data.Text                as T
 import qualified Data.Text.Lazy           as TL
 import           Data.Time
 

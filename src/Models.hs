@@ -24,7 +24,6 @@ import           GHC.Generics         (Generic)
 import           Cache
 import           Types.Content
 import           Types.Language
-import           Types.Services
 import           Utils
 
 newtype Analytics =
@@ -48,8 +47,6 @@ data AppData = AppData
     , appStrings     :: M.Map Text LanguageString
     , appLinks       :: [Link]
     , appAnalytics   :: Analytics
-    , appServices    :: AppServices
-    , appCrossPost   :: AppCrossPost
     }
     deriving (Generic, Show)
 
@@ -64,8 +61,6 @@ instance Default AppData where
             , appStrings = def
             , appLinks = def
             , appAnalytics = def
-            , appServices = def
-            , appCrossPost = def
             }
 
 mkDate :: Integer -> Int -> Int -> UTCTime
@@ -104,9 +99,3 @@ newtype AppCache =
 
 instance HasCache (Language, Text) LB.ByteString AppCache where
     getCache = appcachePdf
-
-instance HasAppServices AppData where
-    getAppServices = appServices
-
-instance HasCrossPosts AppData where
-    getCrossPosts = appCrossPost

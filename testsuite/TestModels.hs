@@ -11,11 +11,8 @@ import qualified Data.Set                          as S
 
 import           Text.Pandoc.Arbitrary
 
-import qualified Web.Twitter.Conduit               as TW
-
 import           Models
 import           Types.Content
-import           Types.Services
 
 import           Test.Framework
 import           Test.QuickCheck.Arbitrary.Generic
@@ -34,26 +31,6 @@ instance Arbitrary Link where
     arbitrary = genericArbitrary
 
 instance Arbitrary Analytics where
-    arbitrary = genericArbitrary
-
-instance Arbitrary TW.OAuth where
-    arbitrary = do
-        key <- arbitrary
-        secret <- arbitrary
-        return $
-            TW.twitterOAuth
-                {TW.oauthConsumerKey = key, TW.oauthConsumerSecret = secret}
-
-instance Arbitrary AppServices where
-    arbitrary = genericArbitrary
-
-instance Arbitrary TwitterAuth where
-    arbitrary = genericArbitrary
-
-instance Arbitrary AppAuth where
-    arbitrary = genericArbitrary
-
-instance Arbitrary CrossPost where
     arbitrary = genericArbitrary
 
 instance Arbitrary AppData where

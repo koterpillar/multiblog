@@ -3,9 +3,7 @@ Action to serve the blog.
 -}
 module Serve where
 
-import           Control.Concurrent.Lifted
 import           Control.Exception
-import           Control.Monad
 import           Control.Monad.Reader
 import           Control.Monad.State
 
@@ -16,19 +14,11 @@ import           Network.Socket
 import           System.Environment
 
 import           App
-import           CrossPost
-import           Models
-
-crossPostAndServe :: App ()
-crossPostAndServe = do
-    isRealAddress <- asks appRealAddress
-    when isRealAddress $ void $ fork crossPost
-    serve
 
 bindPort :: Int -> IO Socket
-bindPort port = do
+bindPort portNumber = do
     let hints = defaultHints { addrFlags = [AI_NUMERICHOST, AI_NUMERICSERV], addrSocketType = Stream }
-    addr:_ <- getAddrInfo (Just hints) (Just "::") (Just $ show port)
+    addr:_ <- getAddrInfo (Just hints) (Just "::") (Just $ show portNumber)
     sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
     bind sock (addrAddress addr)
     listen sock 5

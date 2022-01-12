@@ -58,58 +58,6 @@ or to any external address.
 Google Analytics is supported for the site. The ID must be specified in
 `analytics.yaml`.
 
-### Cross-posting
-
-The blog supports cross-posting the articles to an external service. In order to
-do that, it needs the credentials of both the service and the user on that
-service. The service credentials are provided in `services.yaml` and are
-specific to each service.
-
-The content can be posted to multiple accounts across one or more services.
-Cross-posting settings are specified separately in `cross-posting.yaml`. Each
-entry has the following format:
-
-```yaml
-- service: xxxxxxxx
-  lang: xx
-  # service-specific information
-```
-
-To obtain the authorization for cross-posting to a particular account on a
-service, run `multiblog authorize <service>`.
-
-All new articles are cross-posted to every configured service when running the
-server. An article is considered already posted if a link to it or a _newer_
-article is found in the external service account. Note that the `SITE_URL` must
-be set correctly so that the link in the cross post is valid; articles are not
-posted if it is not set.
-
-The following services are supported:
-
-#### Twitter
-
-The application must be registered
-on [Twitter Application Management](https://apps.twitter.com/) and needs to have
-"Read and Write" permissions. The service credentials are Consumer Key and
-Consumer Secret; in `services.yaml`:
-
-```yaml
-twitter:
-  consumer_key: XXXXXXXXXXXXXXXX
-  consumer_secret: XXXXXXXXXXXXXXXX
-```
-
-For cross-posting to a Twitter account, an OAuth access token and secret must be
-obtained, using `multiblog authorize twitter`, and put into `cross-posting.yaml`
-like this:
-
-```yaml
-- service: twitter
-  lang: en
-  oauth_token: XXXXXXXXXXXXXXXX
-  oauth_token_secret: XXXXXXXXXXXXXXXX
-```
-
 Examples
 --------
 

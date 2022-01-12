@@ -20,7 +20,6 @@ import           Text.Pandoc            hiding (Meta)
 import           Import
 import           Models
 import           Types.Content
-import           Types.Services
 
 import           Test.Framework
 
@@ -174,22 +173,4 @@ test_loadLinks = do
             , ExternalLink
                   "https://2.example.com/"
                   (M.fromList [(EN, "Example 2"), (RU, "Пример 2"), (ZH, "列子2")])
-            ]
-
-test_loadCrossPost = do
-    let crossPosts =
-            Text.encodeUtf8 $
-            Text.unlines
-                [ "- service: twitter"
-                , "  lang: es"
-                , "  oauth_token: ABCDE"
-                , "  oauth_token_secret: FGHIJ"
-                ]
-    decodeThrow crossPosts >>=
-        assertEqual
-            [ CrossPost
-                  { cpLanguage = ES
-                  , cpServiceDetails =
-                        AppAuthTwitter (TwitterAuth "ABCDE" "FGHIJ")
-                  }
             ]

@@ -186,8 +186,6 @@ loadFromDirectory path = do
     strings <- decodeOrDefault $ rootFile "strings.yaml"
     links <- decodeOrDefault $ rootFile "links.yaml"
     analytics <- decodeOrDefault $ rootFile "analytics.yaml"
-    services <- decodeOrDefault $ rootFile "services.yaml"
-    crossPost <- decodeOrDefault $ rootFile "cross-posting.yaml"
     pure $
         def
             { appDirectory = path
@@ -197,8 +195,6 @@ loadFromDirectory path = do
             , appStrings = strings
             , appLinks = links
             , appAnalytics = analytics
-            , appServices = services
-            , appCrossPost = crossPost
             }
 
 -- A map of supported file formats and corresponding Pandoc readers
