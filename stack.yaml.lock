@@ -27,7 +27,7 @@ packages:
     hackage: twitter-types-lens-0.10.1@sha256:a67c2eef9de7d80b0993d1e74ca82fde0956ed4ace2587d1a3fedfa88b3c4bd5,954
 snapshots:
 - completed:
-    size: 587113
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/7.yaml
-    sha256: c8617e042150e4bf412d011c234aba6189f789d0cd2bd4f1a1a9ca9a0ef5d042
-  original: lts-18.7
+    size: 586110
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/21.yaml
+    sha256: ce4fb8d44f3c6c6032060a02e0ebb1bd29937c9a70101c1517b92a87d9515160
+  original: lts-18.21
