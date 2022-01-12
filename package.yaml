@@ -19,6 +19,7 @@ dependencies:
 - mtl
 - pandoc
 - pandoc-types
+- resourcet
 - text
 - time
 - xml-conduit
