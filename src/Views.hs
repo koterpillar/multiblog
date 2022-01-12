@@ -45,11 +45,12 @@ instance Linkable Article where
 instance Linkable Meta where
     link m = MetaView (mtSlug m) Nothing
 
-data PageContent = PageContent
-    { pcTitle   :: Maybe Text
-    , pcLayout  :: Layout
-    , pcContent :: HtmlUrl Sitemap
-    }
+data PageContent =
+    PageContent
+        { pcTitle   :: Maybe Text
+        , pcLayout  :: Layout
+        , pcContent :: HtmlUrl Sitemap
+        }
 
 instance Default PageContent where
     def =
@@ -58,11 +59,12 @@ instance Default PageContent where
 
 type PageNumber = Int
 
-data Paginated a = Paginated
-    { pagePrev  :: Maybe PageNumber
-    , pageItems :: [a]
-    , pageNext  :: Maybe PageNumber
-    }
+data Paginated a =
+    Paginated
+        { pagePrev  :: Maybe PageNumber
+        , pageItems :: [a]
+        , pageNext  :: Maybe PageNumber
+        }
     deriving (Eq, Show)
 
 pageSize :: Int

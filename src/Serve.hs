@@ -7,7 +7,7 @@ import           Control.Exception
 import           Control.Monad.Reader
 import           Control.Monad.State
 
-import           Happstack.Server hiding (bindPort)
+import           Happstack.Server     hiding (bindPort)
 
 import           Network.Socket
 
@@ -17,7 +17,11 @@ import           App
 
 bindPort :: Int -> IO Socket
 bindPort portNumber = do
-    let hints = defaultHints { addrFlags = [AI_NUMERICHOST, AI_NUMERICSERV], addrSocketType = Stream }
+    let hints =
+            defaultHints
+                { addrFlags = [AI_NUMERICHOST, AI_NUMERICSERV]
+                , addrSocketType = Stream
+                }
     addr:_ <- getAddrInfo (Just hints) (Just "::") (Just $ show portNumber)
     sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
     bind sock (addrAddress addr)

@@ -38,16 +38,17 @@ instance FromJSON Analytics where
     parseJSON =
         A.withObject "Object expected" $ \v -> Analytics <$> v .:? "google"
 
-data AppData = AppData
-    { appDirectory   :: String
-    , appAddress     :: T.Text
-    , appRealAddress :: Bool
-    , appArticles    :: [Article]
-    , appMeta        :: [Meta]
-    , appStrings     :: M.Map Text LanguageString
-    , appLinks       :: [Link]
-    , appAnalytics   :: Analytics
-    }
+data AppData =
+    AppData
+        { appDirectory   :: String
+        , appAddress     :: T.Text
+        , appRealAddress :: Bool
+        , appArticles    :: [Article]
+        , appMeta        :: [Meta]
+        , appStrings     :: M.Map Text LanguageString
+        , appLinks       :: [Link]
+        , appAnalytics   :: Analytics
+        }
     deriving (Generic, Show)
 
 instance Default AppData where

@@ -31,19 +31,21 @@ import           Types.Content
 import           Types.Language
 
 -- | A file read from the content directory
-data SourceFile = SourceFile
-    { sfName    :: Text -- ^ File name
+data SourceFile =
+    SourceFile
+        { sfName    :: Text -- ^ File name
     -- ^ File contents
-    , sfContent :: B.ByteString -- ^ File contents
-    }
+        , sfContent :: B.ByteString -- ^ File contents
+        }
     deriving (Eq, Ord, Show)
 
 -- | Read directory with a list of files
-data SourceDirectory = SourceDirectory
-    { sdName  :: Text -- ^ Directory name
+data SourceDirectory =
+    SourceDirectory
+        { sdName  :: Text -- ^ Directory name
     -- ^ Files inside
-    , sdFiles :: [SourceFile] -- ^ Files inside
-    }
+        , sdFiles :: [SourceFile] -- ^ Files inside
+        }
     deriving (Show)
 
 -- | Get file contents by name from a directory
@@ -52,10 +54,11 @@ sdFile name = fmap sfContent . find (\f -> sfName f == name) . sdFiles
 
 type ParseT m a = ExceptT String m a
 
-data MetaOptions = MetaOptions
-    { moLayout     :: Layout
-    , moExportSlug :: Maybe Text
-    }
+data MetaOptions =
+    MetaOptions
+        { moLayout     :: Layout
+        , moExportSlug :: Maybe Text
+        }
 
 instance Default MetaOptions where
     def = MetaOptions {moLayout = BaseLayout, moExportSlug = Nothing}
