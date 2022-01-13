@@ -2,8 +2,6 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE RecordWildCards       #-}
 
 module Models where
 

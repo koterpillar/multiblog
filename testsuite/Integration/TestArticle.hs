@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Integration.TestArticle where
 
 import           Integration.Base

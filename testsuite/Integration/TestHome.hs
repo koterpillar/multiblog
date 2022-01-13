@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Integration.TestHome where
 
 import           Data.LanguageCodes

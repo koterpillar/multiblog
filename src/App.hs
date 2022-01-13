@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module App where
 
 import           Control.Applicative   (optional)

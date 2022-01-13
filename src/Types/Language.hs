@@ -4,7 +4,6 @@ Language-related types.
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Types.Language where

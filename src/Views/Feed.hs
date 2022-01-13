@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TypeFamilies          #-}
 
 module Views.Feed where

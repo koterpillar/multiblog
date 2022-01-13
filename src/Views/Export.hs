@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeFamilies          #-}
 
@@ -25,8 +24,8 @@ import           System.Process                 (CreateProcess, proc)
 import           System.Process.ByteString.Lazy
 
 import           Text.Blaze.Renderer.Text       as TextRenderer
-import           Text.Hamlet
 import           Text.HTML.TagSoup
+import           Text.Hamlet
 import           Text.StringLike
 
 import           Text.Pandoc                    hiding (Meta)
@@ -125,10 +124,11 @@ filterWkhtmlWarnings output
     isNewline 13 = True
     isNewline _  = False
 
-data FixupState = Start
+data FixupState
+    = Start
     | Joining
-    { fsLevel :: Int
-    }
+          { fsLevel :: Int
+          }
     | JoinEnd
 
 -- wkhtmltopdf doesn't follow page-break-before: avoid. Help it by grouping the

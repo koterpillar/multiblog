@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Integration.TestMeta where
 
 import qualified Data.ByteString.Lazy as LB

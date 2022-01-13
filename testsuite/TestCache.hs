@@ -7,6 +7,8 @@ module TestCache where
 import           Control.Concurrent.MVar
 import           Control.Monad.State     hiding (state)
 
+import           Data.Text               (Text)
+
 import           Cache
 
 import           Test.HUnit
@@ -30,10 +32,10 @@ unit_cached = do
 -- Test caching a function that depends on internal state
 newtype TestState =
     TestState
-        { tsCache :: Cache String Int
+        { tsCache :: Cache Text Int
         }
 
-instance HasCache String Int TestState where
+instance HasCache Text Int TestState where
     getCache = tsCache
 
 unit_withCacheM :: IO ()
@@ -43,17 +45,13 @@ unit_withCacheM
     state <- TestState <$> initCache
     -- Test caching a function that depends on internal state
     values <- newMVar [1, 2, 3]
-    let nextValue :: IO Int
-        nextValue = modifyMVar values $ \(v:vs) -> return (vs, v)
-    let nextValue' = liftIO nextValue
-    flip evalStateT state $
-    -- The first call should call the function and get 1
-     do
-        firstValue <- withCacheM "mykey" nextValue'
-        liftIO $ assertEqual "" 1 firstValue
-           -- Same cache key, this should return 1
-        cachedValue <- withCacheM "mykey" nextValue'
-        liftIO $ assertEqual "" 1 cachedValue
-           -- Different cache key
-        anotherValue <- withCacheM "anotherkey" nextValue'
-        liftIO $ assertEqual "" 2 anotherValue
+    let nextValueIO :: IO Int
+        nextValueIO = modifyMVar values $ \(v:vs) -> return (vs, v)
+    let nextValue = liftIO nextValueIO
+    flip evalStateT state $ do
+        firstValue <- withCacheM "mykey" nextValue
+        liftIO $ assertEqual "should call the function" 1 firstValue
+        cachedValue <- withCacheM "mykey" nextValue
+        liftIO $ assertEqual "same cache key" 1 cachedValue
+        anotherValue <- withCacheM "anotherkey" nextValue
+        liftIO $ assertEqual "different cache key" 2 anotherValue

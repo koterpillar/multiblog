@@ -1,6 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
-
 -- Base functions for integration tests
 module Integration.Base where
 

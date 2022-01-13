@@ -1,8 +1,7 @@
 {-|
 Types for the blog content - articles and metas.
 -}
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types.Content where
 

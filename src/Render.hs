@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Render where
 
 import           Data.Text          (Text)
@@ -42,12 +40,13 @@ newtype JavaScript =
 instance ToMessage JavaScript where
     toResponse = withContentType javaScript . toResponse . unJavaScript
 
-data Export content = Export
-    { exContent       :: content
-    , exContentType   :: ContentType
-    , exFileName      :: Text
-    , exForceDownload :: Bool
-    }
+data Export content =
+    Export
+        { exContent       :: content
+        , exContentType   :: ContentType
+        , exFileName      :: Text
+        , exForceDownload :: Bool
+        }
 
 inline :: ContentType -> Text -> content -> Export content
 inline contentType fileName content =

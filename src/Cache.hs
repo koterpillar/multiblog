@@ -1,6 +1,7 @@
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE UndecidableInstances  #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE UndecidableInstances   #-}
 
 module Cache
     ( Cache
@@ -41,7 +42,7 @@ withCache (Cache cache) key action = do
             return val
 
 -- Class for data structures with a cache field
-class HasCache k v a where
+class HasCache k v a | a -> k v where
     getCache :: a -> Cache k v
 
 withCacheM ::

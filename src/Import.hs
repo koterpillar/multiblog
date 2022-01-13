@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings     #-}
 
 -- Import the application data (articles and meta) from a set of files.
 module Import where

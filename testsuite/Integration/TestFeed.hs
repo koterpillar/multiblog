@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Integration.TestFeed where
 
 import           Data.Default.Class

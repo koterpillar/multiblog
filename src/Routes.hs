@@ -1,6 +1,5 @@
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE QuasiQuotes   #-}
 
 module Routes where
 
@@ -21,7 +20,8 @@ import           Text.Read
 
 import           Types.Language
 
-data PageFormat = Pdf
+data PageFormat
+    = Pdf
     | Docx
     deriving (Eq, Ord, Show, Generic)
 
@@ -36,7 +36,8 @@ strToFormat _      = Nothing
 
 type MaybeFormat = Maybe PageFormat
 
-data Sitemap = Index
+data Sitemap
+    = Index
     | ArticleView Day Text
     | MetaView Text MaybeFormat
     | Feed Language

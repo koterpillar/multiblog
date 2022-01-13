@@ -6,6 +6,9 @@ category: Web
 author: Alexey Kotlyarov
 maintainer: a@koterpillar.com
 license: MIT
+default-extensions:
+- OverloadedStrings
+- RecordWildCards
 dependencies:
 - base >=4.7 && <5
 - blaze-html
