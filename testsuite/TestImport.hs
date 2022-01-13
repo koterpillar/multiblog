@@ -27,7 +27,7 @@ unsafeReadMarkdown :: Text -> Pandoc
 unsafeReadMarkdown = runPandocPure' . readMarkdown def
 
 modifyAllContent :: HasContent a => (Pandoc -> Pandoc) -> a -> a
-modifyAllContent f = modifyContent (M.map f)
+modifyAllContent = modifyContent . fmap
 
 modifyAppData ::
        (forall a. HasContent a =>
@@ -46,7 +46,7 @@ defaultMeta =
         { mtSlug = ""
         , mtLayout = BaseLayout
         , mtExportSlugOverride = Nothing
-        , mtContent = M.empty
+        , mtContent = Map.empty
         }
 
 test_loadMeta = do
@@ -64,7 +64,7 @@ test_loadMeta = do
              defaultMeta
                  { mtSlug = "about"
                  , mtContent =
-                       M.fromList
+                       Map.fromList
                            [ (EN, unsafeReadMarkdown "This is meta")
                            , (RU, unsafeReadMarkdown "Это мета")
                            ]
@@ -87,7 +87,7 @@ test_loadMetaPresentationLayout = do
                  { mtSlug = "talk"
                  , mtLayout = PresentationLayout
                  , mtContent =
-                       M.fromList [(EN, unsafeReadMarkdown "Talk content")]
+                       Map.fromList [(EN, unsafeReadMarkdown "Talk content")]
                  })
         result
 
@@ -107,7 +107,7 @@ test_loadMetaExportSlug = do
                  { mtSlug = "resume"
                  , mtExportSlugOverride = Just "MyName"
                  , mtContent =
-                       M.fromList [(EN, unsafeReadMarkdown "Resume content")]
+                       Map.fromList [(EN, unsafeReadMarkdown "Resume content")]
                  })
         result
 
@@ -127,7 +127,7 @@ test_loadArticle = do
                  { arSlug = "article-one"
                  , arAuthored = mkDate 2015 03 01
                  , arContent =
-                       M.fromList
+                       Map.fromList
                            [ (EN, unsafeReadMarkdown "Article One")
                            , (RU, unsafeReadMarkdown "Статья Один")
                            ]
@@ -146,10 +146,10 @@ test_loadStrings = do
                 ]
     decodeThrow strings >>=
         assertEqual
-            (M.fromList
-                 [ ("title", M.fromList [(EN, "Title"), (RU, "Заголовок")])
-                 , ("about", M.fromList [(ZH, "关于")])
-                 ] :: M.Map String LanguageString)
+            (Map.fromList
+                 [ ("title", Map.fromList [(EN, "Title"), (RU, "Заголовок")])
+                 , ("about", Map.fromList [(ZH, "关于")])
+                 ] :: Map.Map String LanguageString)
 
 test_loadLinks = do
     let links =
@@ -169,8 +169,9 @@ test_loadLinks = do
             [ MetaLink "about"
             , ExternalLink
                   "https://1.example.com/"
-                  (M.fromList [(EN, "Example 1")])
+                  (Map.fromList [(EN, "Example 1")])
             , ExternalLink
                   "https://2.example.com/"
-                  (M.fromList [(EN, "Example 2"), (RU, "Пример 2"), (ZH, "列子2")])
+                  (Map.fromList
+                       [(EN, "Example 2"), (RU, "Пример 2"), (ZH, "列子2")])
             ]

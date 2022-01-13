@@ -41,10 +41,10 @@ fall = flip all
 
 prop_allLanguages_hasEveryArticle app =
     fall (appArticles app) $ \article ->
-        fall (M.keys (arContent article)) $ \lang ->
-            S.member lang $ allLanguages app
+        fall (Map.keys (arContent article)) $ \lang ->
+            Set.member lang $ allLanguages app
 
 prop_allLanguages_hasEveryMeta app =
     fall (appMeta app) $ \meta ->
-        fall (M.keys (mtContent meta)) $ \lang ->
-            S.member lang $ allLanguages app
+        fall (Map.keys (mtContent meta)) $ \lang ->
+            Set.member lang $ allLanguages app

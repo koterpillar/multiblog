@@ -29,6 +29,7 @@ import           Data.ByteString         (ByteString)
 import qualified Data.ByteString.Lazy    as LB
 import           Data.Char
 import           Data.List
+import           Data.Map                (Map)
 import qualified Data.Map                as Map
 import           Data.Text               (Text)
 import qualified Data.Text               as Text
@@ -45,12 +46,12 @@ import           Types.Language
 data TestRequest =
     TestRequest
         { trUri     :: Text
-        , trHeaders :: M.Map Text Text
-        , trCookies :: M.Map Text Text
+        , trHeaders :: Map Text Text
+        , trCookies :: Map Text Text
         }
 
 simpleRequest :: Text -> TestRequest
-simpleRequest uri = TestRequest uri M.empty M.empty
+simpleRequest uri = TestRequest uri Map.empty Map.empty
 
 testAddress :: Text
 testAddress = "http://test"
@@ -67,7 +68,7 @@ makeRequestBS :: TestRequest -> IO LB.ByteString
 makeRequestBS req = makeRequest req >>= responseContent
 
 makeRequestText :: TestRequest -> IO Text
-makeRequestText = fmap (T.decodeUtf8 . LB.toStrict) . makeRequestBS
+makeRequestText = fmap (Text.decodeUtf8 . LB.toStrict) . makeRequestBS
 
 assertContains :: (Eq a, Show a) => [a] -> [a] -> Assertion
 assertContains needle haystack =
@@ -88,14 +89,14 @@ assertTextContains needle haystack =
     subAssert $
     assertBoolVerbose
         (show needle ++ " not found in:\n" ++ show haystack)
-        (needle `T.isInfixOf` haystack)
+        (needle `Text.isInfixOf` haystack)
 
 assertTextNotContains :: Text -> Text -> Assertion
 assertTextNotContains needle haystack =
     subAssert $
     assertBoolVerbose
         (show needle ++ " found in:\n" ++ show haystack)
-        (not $ needle `T.isInfixOf` haystack)
+        (not $ needle `Text.isInfixOf` haystack)
 
 assertContainsBefore :: (Eq a, Show a) => [a] -> [a] -> [a] -> Assertion
 assertContainsBefore first second haystack =
@@ -112,8 +113,8 @@ assertTextContainsBefore first second haystack =
     assertBoolVerbose
         (show first ++
          " does not precede " ++ show second ++ " in:\n" ++ show haystack)
-        (second `T.isInfixOf`
-         head (dropWhile (first `T.isInfixOf`) $ T.tails haystack))
+        (second `Text.isInfixOf`
+         head (dropWhile (first `Text.isInfixOf`) $ Text.tails haystack))
 
 -- Create a request with a specified URL
 -- Happstack doesn't make it easy
@@ -126,9 +127,9 @@ mkRequest TestRequest {..} = do
         Request
             { rqSecure = False
             , rqMethod = GET
-            , rqPaths = map T.unpack $ filter (/= "") $ T.splitOn "/" rUri
-            , rqUri = T.unpack trUri
-            , rqQuery = T.unpack $ "?" <> rParams
+            , rqPaths = map Text.unpack $ filter (/= "") $ Text.splitOn "/" rUri
+            , rqUri = Text.unpack trUri
+            , rqQuery = Text.unpack $ "?" <> rParams
             , rqInputsQuery = splitParams rParams
             , rqInputsBody = inputsBody
             , rqCookies = cookies
@@ -140,43 +141,45 @@ mkRequest TestRequest {..} = do
   where
     splitUriParam :: Text -> (Text, Text)
     splitUriParam rPath =
-        case T.splitOn "?" rPath of
+        case Text.splitOn "?" rPath of
             [rUri]          -> (rUri, "")
             [rUri, rParams] -> (rUri, rParams)
             _               -> error "path should have 1 or 0 '?'"
     splitParams :: Text -> [(String, Input)]
     splitParams =
-        map (mkParamTuple . T.splitOn "=") . filter (/= "") . T.splitOn "&"
+        map (mkParamTuple . Text.splitOn "=") .
+        filter (/= "") . Text.splitOn "&"
     mkParamTuple :: [Text] -> (String, Input)
-    mkParamTuple [k, v] = (T.unpack k, mkInputValue v)
-    mkParamTuple [k] = (T.unpack k, mkInputValue "")
+    mkParamTuple [k, v] = (Text.unpack k, mkInputValue v)
+    mkParamTuple [k] = (Text.unpack k, mkInputValue "")
     mkParamTuple _ = error "mkParamTuple should have 1 or 2 element list input"
     mkInputValue str =
         Input
-            { inputValue = Right (LB.fromStrict $ T.encodeUtf8 str)
+            { inputValue = Right (LB.fromStrict $ Text.encodeUtf8 str)
             , inputFilename = Nothing
             , inputContentType =
                   ContentType
                       {ctType = "text", ctSubtype = "plain", ctParameters = []}
             }
     cookies =
-        M.toList $
-        M.mapWithKey mkCookie $ M.mapKeys T.unpack $ M.map T.unpack trCookies
+        Map.toList $
+        Map.mapWithKey mkCookie $
+        Map.mapKeys Text.unpack $ Map.map Text.unpack trCookies
     headers =
-        M.fromList $
+        Map.fromList $
         map makeHeader $
-        M.toList $ M.mapKeys T.unpack $ M.map T.unpack trHeaders
+        Map.toList $ Map.mapKeys Text.unpack $ Map.map Text.unpack trHeaders
     makeHeader (name, value) = (name', HeaderPair name' [value'])
       where
-        name' = T.encodeUtf8 $ T.pack $ map toLower name
-        value' = T.encodeUtf8 $ T.pack value
+        name' = Text.encodeUtf8 $ Text.pack $ map toLower name
+        value' = Text.encodeUtf8 $ Text.pack value
 
 -- Add an Accept-Language header to a request
 withLang :: LanguagePreference -> TestRequest -> TestRequest
 withLang lang req = req {trHeaders = newHeaders}
   where
-    newHeaders = M.insert "Accept-Language" pref (trHeaders req)
-    pref = T.pack $ show lang
+    newHeaders = Map.insert "Accept-Language" pref (trHeaders req)
+    pref = Text.pack $ show lang
 
 withLang1 :: Language -> TestRequest -> TestRequest
 withLang1 = withLang . singleLanguage
@@ -184,7 +187,7 @@ withLang1 = withLang . singleLanguage
 -- Add a language cookie to a request
 withLangCookie :: Language -> TestRequest -> TestRequest
 withLangCookie lang req =
-    req {trCookies = M.insert "lang" (showLanguage lang) (trCookies req)}
+    req {trCookies = Map.insert "lang" (showLanguage lang) (trCookies req)}
 
 -- Extract contents from a response
 responseContent :: Response -> IO LB.ByteString

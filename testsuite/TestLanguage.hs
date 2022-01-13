@@ -14,14 +14,15 @@ import           Types.Language
 import           Test.Framework
 
 mkPreference :: [(Language, Float)] -> LanguagePreference
-mkPreference = LanguagePreference . M.fromList
+mkPreference = LanguagePreference . Map.fromList
 
 test_matchLanguageFunc :: IO ()
 test_matchLanguageFunc = do
-    let values = M.fromList [(EN, "English"), (RU, "Russian"), (ZH, "Chinese")]
+    let values =
+            Map.fromList [(EN, "English"), (RU, "Russian"), (ZH, "Chinese")]
     assertEqual
         (Nothing :: Maybe String)
-        (matchLanguage (mkPreference [(RU, 1)]) M.empty)
+        (matchLanguage (mkPreference [(RU, 1)]) Map.empty)
     assertEqual (Just "Russian") (matchLanguage (mkPreference [(RU, 1)]) values)
 
 test_languageHeader :: IO ()
@@ -58,10 +59,10 @@ prop_showLanguageHeader m = languageHeader (Just (show m)) == m
 prop_mapKeysM :: [(String, String)] -> Bool
 prop_mapKeysM l = mapKeysM Just m == Just m
   where
-    m = M.fromList l
+    m = Map.fromList l
 
 prop_bestLanguage :: LanguagePreference -> Bool
-prop_bestLanguage lp = M.null m || all (<= bestValue) (M.elems m)
+prop_bestLanguage lp = Map.null m || all (<= bestValue) (Map.elems m)
   where
-    Just bestValue = M.lookup (bestLanguage lp) m
+    Just bestValue = Map.lookup (bestLanguage lp) m
     m = unLanguagePreference lp
