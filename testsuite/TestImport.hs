@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
-{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes        #-}
 
@@ -21,7 +19,7 @@ import           Import
 import           Models
 import           Types.Content
 
-import           Test.Framework
+import           Test.HUnit
 
 unsafeReadMarkdown :: Text -> Pandoc
 unsafeReadMarkdown = runPandocPure' . readMarkdown def
@@ -41,6 +39,7 @@ testSource :: Text -> Text -> SourceFile
 testSource name content =
     SourceFile {sfName = name, sfContent = Text.encodeUtf8 content}
 
+defaultMeta :: Meta
 defaultMeta =
     Meta
         { mtSlug = ""
@@ -49,7 +48,8 @@ defaultMeta =
         , mtContent = Map.empty
         }
 
-test_loadMeta = do
+unit_loadMeta :: IO ()
+unit_loadMeta = do
     let directory =
             SourceDirectory
                 { sdName = "about"
@@ -60,6 +60,7 @@ test_loadMeta = do
                 }
     let (Identity result) = runExceptT $ parseMeta directory
     assertEqual
+        ""
         (Right
              defaultMeta
                  { mtSlug = "about"
@@ -71,7 +72,8 @@ test_loadMeta = do
                  })
         result
 
-test_loadMetaPresentationLayout = do
+unit_loadMetaPresentationLayout :: IO ()
+unit_loadMetaPresentationLayout = do
     let directory =
             SourceDirectory
                 { sdName = "talk"
@@ -82,6 +84,7 @@ test_loadMetaPresentationLayout = do
                 }
     let (Identity result) = runExceptT $ parseMeta directory
     assertEqual
+        ""
         (Right
              defaultMeta
                  { mtSlug = "talk"
@@ -91,7 +94,8 @@ test_loadMetaPresentationLayout = do
                  })
         result
 
-test_loadMetaExportSlug = do
+unit_loadMetaExportSlug :: IO ()
+unit_loadMetaExportSlug = do
     let directory =
             SourceDirectory
                 { sdName = "resume"
@@ -102,6 +106,7 @@ test_loadMetaExportSlug = do
                 }
     let (Identity result) = runExceptT $ parseMeta directory
     assertEqual
+        ""
         (Right
              defaultMeta
                  { mtSlug = "resume"
@@ -111,7 +116,8 @@ test_loadMetaExportSlug = do
                  })
         result
 
-test_loadArticle = do
+unit_loadArticle :: IO ()
+unit_loadArticle = do
     let directory =
             SourceDirectory
                 { sdName = "2015-03-01-article-one"
@@ -122,6 +128,7 @@ test_loadArticle = do
                 }
     let (Identity result) = runExceptT $ parseArticle directory
     assertEqual
+        ""
         (Right
              Article
                  { arSlug = "article-one"
@@ -134,7 +141,8 @@ test_loadArticle = do
                  })
         result
 
-test_loadStrings = do
+unit_loadStrings :: IO ()
+unit_loadStrings = do
     let strings =
             Text.encodeUtf8 $
             Text.unlines
@@ -146,12 +154,14 @@ test_loadStrings = do
                 ]
     decodeThrow strings >>=
         assertEqual
+            ""
             (Map.fromList
                  [ ("title", Map.fromList [(EN, "Title"), (RU, "Заголовок")])
                  , ("about", Map.fromList [(ZH, "关于")])
                  ] :: Map.Map String LanguageString)
 
-test_loadLinks = do
+unit_loadLinks :: IO ()
+unit_loadLinks = do
     let links =
             Text.encodeUtf8 $
             Text.unlines
@@ -166,6 +176,7 @@ test_loadLinks = do
                 ]
     decodeThrow links >>=
         assertEqual
+            ""
             [ MetaLink "about"
             , ExternalLink
                   "https://1.example.com/"

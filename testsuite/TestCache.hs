@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -10,23 +9,23 @@ import           Control.Monad.State     hiding (state)
 
 import           Cache
 
-import           Test.Framework
+import           Test.HUnit
 
-test_cached :: IO ()
-test_cached = do
+unit_cached :: IO ()
+unit_cached = do
     values <- newMVar [1, 2, 3]
     let nextValue :: IO Int
         nextValue = modifyMVar values $ \(v:vs) -> return (vs, v)
     cache <- initCache :: IO (Cache String Int)
     -- The first call should call the function and get 1
     firstValue <- withCache cache "mykey" nextValue
-    assertEqual 1 firstValue
+    assertEqual "" 1 firstValue
     -- Same cache key, this should return 1
     cachedValue <- withCache cache "mykey" nextValue
-    assertEqual 1 cachedValue
+    assertEqual "" 1 cachedValue
     -- Different cache key
     anotherValue <- withCache cache "anotherkey" nextValue
-    assertEqual 2 anotherValue
+    assertEqual "" 2 anotherValue
 
 -- Test caching a function that depends on internal state
 newtype TestState =
@@ -37,8 +36,8 @@ newtype TestState =
 instance HasCache String Int TestState where
     getCache = tsCache
 
-test_withCacheM :: IO ()
-test_withCacheM
+unit_withCacheM :: IO ()
+unit_withCacheM
 -- Test using cache via a monad
  = do
     state <- TestState <$> initCache
@@ -51,10 +50,10 @@ test_withCacheM
     -- The first call should call the function and get 1
      do
         firstValue <- withCacheM "mykey" nextValue'
-        liftIO $ assertEqual 1 firstValue
+        liftIO $ assertEqual "" 1 firstValue
            -- Same cache key, this should return 1
         cachedValue <- withCacheM "mykey" nextValue'
-        liftIO $ assertEqual 1 cachedValue
+        liftIO $ assertEqual "" 1 cachedValue
            -- Different cache key
         anotherValue <- withCacheM "anotherkey" nextValue'
-        liftIO $ assertEqual 2 anotherValue
+        liftIO $ assertEqual "" 2 anotherValue

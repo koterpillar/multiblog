@@ -1,33 +1,15 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
 -- Base functions for integration tests
-module Integration.Base
-    ( TestRequest
-    , makeRequest
-    , makeRequestBS
-    , makeRequestText
-    , simpleRequest
-    , assertContains
-    , assertContainsBefore
-    , assertNotContains
-    , assertTextContains
-    , assertTextContainsBefore
-    , assertTextNotContains
-    , responseContent
-    , responseHeader
-    , testAddress
-    , withLang
-    , withLang1
-    , withLangCookie
-    ) where
+module Integration.Base where
 
 import           Control.Concurrent.MVar
 
 import           Data.ByteString         (ByteString)
 import qualified Data.ByteString.Lazy    as LB
 import           Data.Char
+import           Data.Function           (on)
 import           Data.List
 import           Data.Map                (Map)
 import qualified Data.Map                as Map
@@ -37,8 +19,8 @@ import qualified Data.Text.Encoding      as Text
 
 import           Happstack.Server
 
-import           Test.Framework
 import           Test.HUnit
+import           Test.Hspec.Expectations
 
 import           App
 import           Types.Language
@@ -70,51 +52,27 @@ makeRequestBS req = makeRequest req >>= responseContent
 makeRequestText :: TestRequest -> IO Text
 makeRequestText = fmap (Text.decodeUtf8 . LB.toStrict) . makeRequestBS
 
-assertContains :: (Eq a, Show a) => [a] -> [a] -> Assertion
-assertContains needle haystack =
-    subAssert $
-    assertBoolVerbose
-        (show needle ++ " not found in:\n" ++ show haystack)
-        (needle `isInfixOf` haystack)
+shouldContainText :: HasCallStack => Text -> Text -> Expectation
+shouldContainText = shouldContain `on` Text.unpack
 
-assertNotContains :: (Eq a, Show a) => [a] -> [a] -> Assertion
-assertNotContains needle haystack =
-    subAssert $
-    assertBoolVerbose
-        (show needle ++ " found in:\n" ++ show haystack)
-        (not $ needle `isInfixOf` haystack)
+shouldNotContainText :: HasCallStack => Text -> Text -> Expectation
+shouldNotContainText = shouldNotContain `on` Text.unpack
 
-assertTextContains :: Text -> Text -> Assertion
-assertTextContains needle haystack =
-    subAssert $
-    assertBoolVerbose
-        (show needle ++ " not found in:\n" ++ show haystack)
-        (needle `Text.isInfixOf` haystack)
-
-assertTextNotContains :: Text -> Text -> Assertion
-assertTextNotContains needle haystack =
-    subAssert $
-    assertBoolVerbose
-        (show needle ++ " found in:\n" ++ show haystack)
-        (not $ needle `Text.isInfixOf` haystack)
-
-assertContainsBefore :: (Eq a, Show a) => [a] -> [a] -> [a] -> Assertion
+assertContainsBefore ::
+       (HasCallStack, Eq a, Show a) => [a] -> [a] -> [a] -> Assertion
 assertContainsBefore first second haystack =
-    subAssert $
-    assertBoolVerbose
+    assertBool
         (show first ++
          " does not precede " ++ show second ++ " in:\n" ++ show haystack)
         (second `isInfixOf`
          head (dropWhile (first `isInfixOf`) $ tails haystack))
 
-assertTextContainsBefore :: Text -> Text -> Text -> Assertion
+assertTextContainsBefore :: HasCallStack => Text -> Text -> Text -> Assertion
 assertTextContainsBefore first second haystack =
-    subAssert $
-    assertBoolVerbose
-        (show first ++
-         " does not precede " ++ show second ++ " in:\n" ++ show haystack)
-        (second `Text.isInfixOf`
-         head (dropWhile (first `Text.isInfixOf`) $ Text.tails haystack))
+    assertContainsBefore
+        (Text.unpack first)
+        (Text.unpack second)
+        (Text.unpack haystack)
 
 -- Create a request with a specified URL
 -- Happstack doesn't make it easy

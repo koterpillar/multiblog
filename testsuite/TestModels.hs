@@ -1,6 +1,4 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 module TestModels where
 
@@ -9,14 +7,16 @@ import           Data.LanguageCodes.Arbitrary      ()
 import qualified Data.Map                          as Map
 import qualified Data.Set                          as Set
 
-import           Text.Pandoc.Arbitrary
+import           Text.Pandoc                       hiding (Meta)
 
 import           Models
 import           Types.Content
 
-import           Test.Framework
 import           Test.QuickCheck.Arbitrary.Generic
 import           Test.QuickCheck.Instances         ()
+
+instance Arbitrary Pandoc where
+    arbitrary = pure $ Pandoc nullMeta []
 
 instance Arbitrary Article where
     arbitrary = genericArbitrary
@@ -39,12 +39,12 @@ instance Arbitrary AppData where
 fall :: [a] -> (a -> Bool) -> Bool
 fall = flip all
 
+prop_allLanguages_hasEveryArticle :: AppData -> Bool
 prop_allLanguages_hasEveryArticle app =
     fall (appArticles app) $ \article ->
-        fall (Map.keys (arContent article)) $ \lang ->
-            Set.member lang $ allLanguages app
+        Map.keysSet (arContent article) `Set.isSubsetOf` allLanguages app
 
+prop_allLanguages_hasEveryMeta :: AppData -> Bool
 prop_allLanguages_hasEveryMeta app =
     fall (appMeta app) $ \meta ->
-        fall (Map.keys (mtContent meta)) $ \lang ->
-            Set.member lang $ allLanguages app
+        Map.keysSet (mtContent meta) `Set.isSubsetOf` allLanguages app

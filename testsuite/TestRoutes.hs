@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module TestRoutes where
@@ -13,7 +13,7 @@ import           Data.Time.Calendar
 
 import           Routes
 
-import           Test.Framework
+import           Test.HUnit
 import           Test.QuickCheck
 import           Test.QuickCheck.Arbitrary.Generic
 import           Test.QuickCheck.Instances         ()
@@ -36,23 +36,28 @@ instance Arbitrary Sitemap where
             , pure CodeStylesheet
             ]
 
-test_index_URL = do
-    assertEqual "" (routeURL Index)
-    assertEqual (Just Index) $ parseURL "/"
+unit_index_URL :: IO ()
+unit_index_URL = do
+    assertEqual "" "" (routeURL Index)
+    assertEqual "" (Just Index) $ parseURL "/"
 
-test_article_URL = do
+unit_article_URL :: IO ()
+unit_article_URL = do
     let testArticle = ArticleView (fromGregorian 2020 01 01) "test"
-    assertEqual "/2020-01-01/test" (routeURL testArticle)
-    assertEqual (Just testArticle) (parseURL "/2020/01/01/test")
-    assertEqual (Just testArticle) (parseURL "/2020-01-01/test/")
+    assertEqual "" "/2020-01-01/test" (routeURL testArticle)
+    assertEqual "" (Just testArticle) (parseURL "/2020/01/01/test")
+    assertEqual "" (Just testArticle) (parseURL "/2020-01-01/test/")
 
-test_meta_URL = do
-    assertEqual "/meta" (routeURL $ MetaView "meta" Nothing)
-    assertEqual (Just $ MetaView "meta" Nothing) (parseURL "/meta/")
-    assertEqual "/meta.pdf" (routeURL $ MetaView "meta" (Just Pdf))
+unit_meta_URL :: IO ()
+unit_meta_URL = do
+    assertEqual "" "/meta" (routeURL $ MetaView "meta" Nothing)
+    assertEqual "" (Just $ MetaView "meta" Nothing) (parseURL "/meta/")
+    assertEqual "" "/meta.pdf" (routeURL $ MetaView "meta" (Just Pdf))
 
-test_feed_URL = assertEqual "/feed/en" (routeURL $ Feed EN)
+unit_feed_URL :: IO ()
+unit_feed_URL = assertEqual "" "/feed/en" (routeURL $ Feed EN)
 
+prop_routeURL_parseURL :: Sitemap -> Bool
 prop_routeURL_parseURL route =
     let url = routeURL route
      in parseURL url == Just route
