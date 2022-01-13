@@ -18,6 +18,7 @@ import           Data.Maybe
 import           Data.Text                (Text)
 import qualified Data.Text.Lazy           as TL
 import           Data.Time
+import           Data.Time.Format.ISO8601
 
 import           Text.Blaze.Html          (Markup, preEscapedToHtml)
 import           Text.Hamlet
@@ -45,9 +46,19 @@ instance Linkable Article where
 instance Linkable Meta where
     link m = MetaView (mtSlug m) Nothing
 
+data OGType
+    = OGWebsite
+    | OGArticle
+          { ogaPublished :: UTCTime
+          }
+
+instance Default OGType where
+    def = OGWebsite
+
 data PageContent =
     PageContent
         { pcTitle   :: Maybe Text
+        , pcType    :: OGType -- ^ https://ogp.me/#types
         , pcLayout  :: Layout
         , pcContent :: HtmlUrl Sitemap
         }
@@ -55,7 +66,7 @@ data PageContent =
 instance Default PageContent where
     def =
         PageContent
-            {pcTitle = Nothing, pcLayout = BaseLayout, pcContent = mempty}
+            {pcTitle = def, pcType = def, pcLayout = def, pcContent = mempty}
 
 type PageNumber = Int
 
@@ -102,15 +113,11 @@ linkTitle ::
     -> m Text
 linkTitle lang (ExternalLink url titles) =
     pure $ fromMaybe url $ matchLanguage lang titles
-linkTitle lang (MetaLink slug) = do
-    meta <- askMeta slug
-    pure $ langTitle lang meta
+linkTitle lang (MetaLink slug) = langTitle lang <$> askMeta slug
 
 linkDestination :: (MonadReader AppData m, MonadPlus m) => Link -> m Text
 linkDestination (ExternalLink url _) = pure url
-linkDestination (MetaLink slug) = do
-    meta <- askMeta slug
-    linkTo meta
+linkDestination (MetaLink slug)      = askMeta slug >>= linkTo
 
 template ::
        (MonadReader AppData m, MonadPlus m)
@@ -152,6 +159,7 @@ articleDisplay lang article =
     template lang $
     def
         { pcTitle = Just $ langTitle lang article
+        , pcType = OGArticle {ogaPublished = arAuthored article}
         , pcContent = $(hamletFile "templates/article.hamlet")
         }
 

@@ -11,6 +11,7 @@ import           Control.Monad.State
 import           Control.Monad.Trans.Except
 import qualified Control.Monad.Trans.State.Strict as StrictState
 
+import           Data.Default.Class
 import           Data.Maybe
 import           Data.Text                        (Text)
 import qualified Data.Text                        as Text
@@ -40,11 +41,12 @@ class HasContent a where
     modifyContent :: (LanguageContent -> LanguageContent) -> a -> a
 
 -- TODO: Should Article and Meta actually be one type?
-data Article = Article
-    { arSlug     :: Text
-    , arContent  :: LanguageContent
-    , arAuthored :: UTCTime
-    }
+data Article =
+    Article
+        { arSlug     :: Text
+        , arContent  :: LanguageContent
+        , arAuthored :: UTCTime
+        }
     deriving (Eq, Show, Generic)
 
 instance Ord Article where
@@ -57,9 +59,13 @@ instance HasContent Article where
 instance HasSlug Article where
     getSlug = arSlug
 
-data Layout = BaseLayout
+data Layout
+    = BaseLayout
     | PresentationLayout
     deriving (Eq, Show, Generic)
+
+instance Default Layout where
+    def = BaseLayout
 
 instance FromJSON Layout where
     parseJSON (String v)
@@ -68,12 +74,13 @@ instance FromJSON Layout where
         | otherwise = mzero
     parseJSON _ = mzero
 
-data Meta = Meta
-    { mtSlug               :: Text
-    , mtLayout             :: Layout
-    , mtExportSlugOverride :: Maybe Text
-    , mtContent            :: LanguageContent
-    }
+data Meta =
+    Meta
+        { mtSlug               :: Text
+        , mtLayout             :: Layout
+        , mtExportSlugOverride :: Maybe Text
+        , mtContent            :: LanguageContent
+        }
     deriving (Eq, Show, Generic)
 
 mtExportSlug :: Meta -> Text
@@ -86,13 +93,14 @@ instance HasContent Meta where
 instance HasSlug Meta where
     getSlug = mtSlug
 
-data Link = MetaLink
-    { lnName :: Text
-    }
+data Link
+    = MetaLink
+          { lnName :: Text
+          }
     | ExternalLink
-    { lnUrl  :: Text
-    , lnText :: LanguageString
-    }
+          { lnUrl  :: Text
+          , lnText :: LanguageString
+          }
     deriving (Eq, Show, Generic)
 
 instance FromJSON Link where
