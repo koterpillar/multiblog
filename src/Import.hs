@@ -35,7 +35,6 @@ import           Types.Language
 data SourceFile =
     SourceFile
         { sfName    :: Text -- ^ File name
-    -- ^ File contents
         , sfContent :: B.ByteString -- ^ File contents
         }
     deriving (Eq, Ord, Show)
@@ -44,7 +43,6 @@ data SourceFile =
 data SourceDirectory =
     SourceDirectory
         { sdName  :: Text -- ^ Directory name
-    -- ^ Files inside
         , sdFiles :: [SourceFile] -- ^ Files inside
         }
     deriving (Show)
@@ -189,7 +187,7 @@ loadFromDirectory path = do
     let rootFile name = sdFile name root
     strings <- decodeOrDefault $ rootFile "strings.yaml"
     links <- decodeOrDefault $ rootFile "links.yaml"
-    analytics <- decodeOrDefault $ rootFile "analytics.yaml"
+    settings <- decodeOrDefault $ rootFile "settings.yaml"
     pure $
         def
             { appDirectory = path
@@ -198,7 +196,7 @@ loadFromDirectory path = do
             , appMeta = metas
             , appStrings = strings
             , appLinks = links
-            , appAnalytics = analytics
+            , appSettings = settings
             }
 
 -- A map of supported file formats and corresponding Pandoc readers

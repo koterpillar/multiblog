@@ -3,14 +3,17 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Models where
 
 import           Control.Monad
 import           Control.Monad.Reader
 
-import qualified Data.Aeson           as A
+import qualified Data.Aeson           as Aeson
+import qualified Data.Aeson.TH        as Aeson
 import qualified Data.ByteString.Lazy as LB
+import           Data.Char
 import           Data.Default.Class
 import           Data.Map             (Map)
 import qualified Data.Map             as Map
@@ -18,7 +21,6 @@ import           Data.Set             (Set)
 import qualified Data.Set             as Set
 import           Data.Text            (Text)
 import           Data.Time
-import           Data.Yaml
 
 import           GHC.Generics         (Generic)
 
@@ -35,9 +37,21 @@ newtype Analytics =
 
 instance Default Analytics
 
-instance FromJSON Analytics where
-    parseJSON =
-        A.withObject "Object expected" $ \v -> Analytics <$> v .:? "google"
+Aeson.deriveFromJSON
+    Aeson.defaultOptions {Aeson.fieldLabelModifier = map toLower . drop 3}
+    ''Analytics
+
+newtype AppSettings =
+    AppSettings
+        { asAnalytics :: Analytics
+        }
+    deriving (Generic, Show)
+
+instance Default AppSettings
+
+Aeson.deriveFromJSON
+    Aeson.defaultOptions {Aeson.fieldLabelModifier = map toLower . drop 2}
+    ''AppSettings
 
 data AppData =
     AppData
@@ -48,7 +62,7 @@ data AppData =
         , appMeta        :: [Meta]
         , appStrings     :: Map Text LanguageString
         , appLinks       :: [Link]
-        , appAnalytics   :: Analytics
+        , appSettings    :: AppSettings
         }
     deriving (Generic, Show)
 
@@ -62,7 +76,7 @@ instance Default AppData where
             , appMeta = def
             , appStrings = def
             , appLinks = def
-            , appAnalytics = def
+            , appSettings = def
             }
 
 mkDate :: Integer -> Int -> Int -> UTCTime
@@ -92,7 +106,7 @@ allLanguages app = Set.union articleLangs metaLangs
     allContentLangs :: HasContent a => [a] -> Set Language
     allContentLangs = Set.unions . map contentLangs
     contentLangs :: HasContent a => a -> Set Language
-    contentLangs = Set.fromList . Map.keys . getContent
+    contentLangs = Map.keysSet . getContent
 
 newtype AppCache =
     AppCache

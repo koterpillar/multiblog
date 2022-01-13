@@ -33,6 +33,9 @@ instance Arbitrary Link where
 instance Arbitrary Analytics where
     arbitrary = genericArbitrary
 
+instance Arbitrary AppSettings where
+    arbitrary = genericArbitrary
+
 instance Arbitrary AppData where
     arbitrary = genericArbitrary
 

@@ -56,7 +56,7 @@ or to any external address.
 ### Analytics
 
 Google Analytics is supported for the site. The ID must be specified in
-`analytics.yaml`.
+`settings.yaml`.
 
 Examples
 --------
