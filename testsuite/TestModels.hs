@@ -8,7 +8,7 @@ import           Data.LanguageCodes.Arbitrary      ()
 import qualified Data.Map                          as Map
 import qualified Data.Set                          as Set
 
-import           Text.Pandoc.Arbitrary
+import           Text.Pandoc.Arbitrary             ()
 
 import           Models
 import           Types.Content

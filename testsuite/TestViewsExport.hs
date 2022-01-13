@@ -9,8 +9,10 @@ import           Text.Blaze.Html.Renderer.Text
 import qualified Text.Blaze.Html5              as H
 import qualified Text.Blaze.Html5.Attributes   as A
 
-test_fixupHtml :: IO ()
-test_fixupHtml = do
+import           Test.HUnit
+
+unit_fixupHtml :: IO ()
+unit_fixupHtml = do
     let section1 = do
             H.h3 "Section 1"
             H.p "Div 1, p 1"
@@ -43,4 +45,4 @@ test_fixupHtml = do
                     H.div ! A.class_ "grouped" $ section1
                     H.div ! A.class_ "grouped" $ section2
                     H.div ! A.class_ "grouped" $ section3
-    assertEqual expected (fixupHtml html)
+    assertEqual "" expected (fixupHtml html)

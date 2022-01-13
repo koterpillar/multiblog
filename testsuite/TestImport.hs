@@ -48,7 +48,7 @@ defaultMeta =
         , mtContent = Map.empty
         }
 
-test_loadMeta = do
+unit_loadMeta = do
     let directory =
             SourceDirectory
                 { sdName = "about"
@@ -71,7 +71,7 @@ test_loadMeta = do
                  })
         result
 
-test_loadMetaPresentationLayout = do
+unit_loadMetaPresentationLayout = do
     let directory =
             SourceDirectory
                 { sdName = "talk"
@@ -92,7 +92,7 @@ test_loadMetaPresentationLayout = do
                  })
         result
 
-test_loadMetaExportSlug = do
+unit_loadMetaExportSlug = do
     let directory =
             SourceDirectory
                 { sdName = "resume"
@@ -113,7 +113,7 @@ test_loadMetaExportSlug = do
                  })
         result
 
-test_loadArticle = do
+unit_loadArticle = do
     let directory =
             SourceDirectory
                 { sdName = "2015-03-01-article-one"
@@ -137,7 +137,7 @@ test_loadArticle = do
                  })
         result
 
-test_loadStrings = do
+unit_loadStrings = do
     let strings =
             Text.encodeUtf8 $
             Text.unlines
@@ -155,7 +155,7 @@ test_loadStrings = do
                  , ("about", Map.fromList [(ZH, "关于")])
                  ] :: Map.Map String LanguageString)
 
-test_loadLinks = do
+unit_loadLinks = do
     let links =
             Text.encodeUtf8 $
             Text.unlines

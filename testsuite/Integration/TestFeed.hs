@@ -20,8 +20,8 @@ import           Test.Hspec
 atomEntry :: Name
 atomEntry = "{http://www.w3.org/2005/Atom}entry"
 
-test_home :: IO ()
-test_home = do
+unit_home :: IO ()
+unit_home = do
     rss <- makeRequestBS $ simpleRequest "/feed/en"
     xml <-
         case C.parseLBS def rss of

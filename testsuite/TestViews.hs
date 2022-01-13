@@ -14,14 +14,16 @@ import           Routes
 import           Types.Content
 import           Views
 
+import           Test.HUnit
+
 newtype TestLink =
     TestLink Text
 
 instance Linkable TestLink where
     link (TestLink dest) = MetaView dest Nothing
 
-test_linkedHeader :: IO ()
-test_linkedHeader = do
+unit_linkedHeader :: IO ()
+unit_linkedHeader = do
     let source =
             Text.unlines
                 [ "Header"
@@ -34,6 +36,7 @@ test_linkedHeader = do
                 ]
     let pandoc = runPandocPure' $ readMarkdown def source
     assertEqual
+        ""
         (Text.intercalate
              "\n"
              [ "<h2><a href=\"http://test\">Header</a></h2>"
@@ -44,8 +47,8 @@ test_linkedHeader = do
         renderHtml $
         runPandocPure' $ writeHtml $ linkedHeader "http://test" pandoc
 
-test_paginated :: IO ()
-test_paginated = do
+unit_paginated :: IO ()
+unit_paginated = do
     let pages = [1 .. 100] :: [Integer]
-    assertEqual (Paginated Nothing [1, 2, 3] (Just 2)) (paginate 3 1 pages)
-    assertEqual (Paginated (Just 1) [4, 5, 6] (Just 3)) (paginate 3 2 pages)
+    assertEqual "" (Paginated Nothing [1, 2, 3] (Just 2)) (paginate 3 1 pages)
+    assertEqual "" (Paginated (Just 1) [4, 5, 6] (Just 3)) (paginate 3 2 pages)

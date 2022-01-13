@@ -11,8 +11,8 @@ import           Cache
 
 import           Test.HUnit
 
-test_cached :: IO ()
-test_cached = do
+unit_cached :: IO ()
+unit_cached = do
     values <- newMVar [1, 2, 3]
     let nextValue :: IO Int
         nextValue = modifyMVar values $ \(v:vs) -> return (vs, v)
@@ -36,8 +36,8 @@ newtype TestState =
 instance HasCache String Int TestState where
     getCache = tsCache
 
-test_withCacheM :: IO ()
-test_withCacheM
+unit_withCacheM :: IO ()
+unit_withCacheM
 -- Test using cache via a monad
  = do
     state <- TestState <$> initCache
