@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes        #-}
 
@@ -40,6 +39,7 @@ testSource :: Text -> Text -> SourceFile
 testSource name content =
     SourceFile {sfName = name, sfContent = Text.encodeUtf8 content}
 
+defaultMeta :: Meta
 defaultMeta =
     Meta
         { mtSlug = ""
@@ -48,6 +48,7 @@ defaultMeta =
         , mtContent = Map.empty
         }
 
+unit_loadMeta :: IO ()
 unit_loadMeta = do
     let directory =
             SourceDirectory
@@ -71,6 +72,7 @@ unit_loadMeta = do
                  })
         result
 
+unit_loadMetaPresentationLayout :: IO ()
 unit_loadMetaPresentationLayout = do
     let directory =
             SourceDirectory
@@ -92,6 +94,7 @@ unit_loadMetaPresentationLayout = do
                  })
         result
 
+unit_loadMetaExportSlug :: IO ()
 unit_loadMetaExportSlug = do
     let directory =
             SourceDirectory
@@ -113,6 +116,7 @@ unit_loadMetaExportSlug = do
                  })
         result
 
+unit_loadArticle :: IO ()
 unit_loadArticle = do
     let directory =
             SourceDirectory
@@ -137,6 +141,7 @@ unit_loadArticle = do
                  })
         result
 
+unit_loadStrings :: IO ()
 unit_loadStrings = do
     let strings =
             Text.encodeUtf8 $
@@ -155,6 +160,7 @@ unit_loadStrings = do
                  , ("about", Map.fromList [(ZH, "关于")])
                  ] :: Map.Map String LanguageString)
 
+unit_loadLinks :: IO ()
 unit_loadLinks = do
     let links =
             Text.encodeUtf8 $
