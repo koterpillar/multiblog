@@ -3,15 +3,14 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE RecordWildCards       #-}
 
 module Models where
 
 import           Control.Monad
 import           Control.Monad.Reader
 
-import qualified Data.Aeson           as Aeson
-import qualified Data.Aeson.TH        as Aeson
+import           Data.Aeson
 import qualified Data.ByteString.Lazy as LB
 import           Data.Char
 import           Data.Default.Class
@@ -31,27 +30,45 @@ import           Utils
 
 newtype Analytics =
     Analytics
-        { anaGoogle :: Maybe String
+        { anaGoogle :: Maybe Text
         }
     deriving (Generic, Show)
 
 instance Default Analytics
 
-Aeson.deriveFromJSON
-    Aeson.defaultOptions {Aeson.fieldLabelModifier = map toLower . drop 3}
-    ''Analytics
+instance FromJSON Analytics where
+    parseJSON =
+        genericParseJSON
+            defaultOptions {fieldLabelModifier = map toLower . drop 3}
 
-newtype AppSettings =
+newtype Services =
+    Services
+        { aseTwitter :: Maybe Text
+        }
+    deriving (Generic, Show)
+
+instance Default Services
+
+instance FromJSON Services where
+    parseJSON =
+        genericParseJSON
+            defaultOptions {fieldLabelModifier = map toLower . drop 3}
+
+data AppSettings =
     AppSettings
         { asAnalytics :: Analytics
+        , asServices  :: Services
         }
     deriving (Generic, Show)
 
 instance Default AppSettings
 
-Aeson.deriveFromJSON
-    Aeson.defaultOptions {Aeson.fieldLabelModifier = map toLower . drop 2}
-    ''AppSettings
+instance FromJSON AppSettings where
+    parseJSON =
+        withObject "AppSettings" $ \o -> do
+            asAnalytics <- o .:? "analytics" .!= def
+            asServices <- o .:? "services" .!= def
+            pure AppSettings {..}
 
 data AppData =
     AppData
