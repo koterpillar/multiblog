@@ -29,10 +29,10 @@ import           Data.ByteString         (ByteString)
 import qualified Data.ByteString.Lazy    as LB
 import           Data.Char
 import           Data.List
-import qualified Data.Map                as M
+import qualified Data.Map                as Map
 import           Data.Text               (Text)
-import qualified Data.Text               as T
-import qualified Data.Text.Encoding      as T
+import qualified Data.Text               as Text
+import qualified Data.Text.Encoding      as Text
 
 import           Happstack.Server
 
@@ -42,16 +42,17 @@ import           Test.HUnit
 import           App
 import           Types.Language
 
-data TestRequest = TestRequest
-    { trUri     :: Text
-    , trHeaders :: M.Map Text Text
-    , trCookies :: M.Map Text Text
-    }
+data TestRequest =
+    TestRequest
+        { trUri     :: Text
+        , trHeaders :: M.Map Text Text
+        , trCookies :: M.Map Text Text
+        }
 
 simpleRequest :: Text -> TestRequest
 simpleRequest uri = TestRequest uri M.empty M.empty
 
-testAddress :: T.Text
+testAddress :: Text
 testAddress = "http://test"
 
 -- | Make a request to the application

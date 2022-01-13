@@ -13,7 +13,7 @@ import           Control.Monad.State
 
 import           Data.Default.Class
 import           Data.LanguageCodes
-import qualified Data.Map                 as M
+import qualified Data.Map                 as Map
 import           Data.Maybe
 import           Data.Text                (Text)
 import qualified Data.Text.Lazy           as TL
@@ -89,7 +89,7 @@ askLangStringFn ::
        MonadReader AppData m => LanguagePreference -> m (Text -> Text)
 askLangStringFn lang = do
     strings <- asks appStrings
-    let fn str = fromMaybe str $ M.lookup str strings >>= matchLanguage lang
+    let fn str = fromMaybe str $ Map.lookup str strings >>= matchLanguage lang
     pure fn
 
 askLangString :: MonadReader AppData m => LanguagePreference -> Text -> m Text

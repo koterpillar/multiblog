@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module AppMain
     ( multiblog
     ) where

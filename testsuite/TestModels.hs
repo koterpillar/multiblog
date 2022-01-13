@@ -6,8 +6,8 @@ module TestModels where
 
 import           Data.LanguageCodes.Arbitrary      ()
 
-import qualified Data.Map                          as M
-import qualified Data.Set                          as S
+import qualified Data.Map                          as Map
+import qualified Data.Set                          as Set
 
 import           Text.Pandoc.Arbitrary
 

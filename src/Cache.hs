@@ -16,7 +16,7 @@ import           Control.Monad.IO.Class
 import           Control.Monad.State
 
 import           Data.Map                (Map)
-import qualified Data.Map                as M
+import qualified Data.Map                as Map
 
 -- Opaque cache type storing values of type v against keys of type k
 newtype Cache k v =
@@ -27,13 +27,13 @@ instance Show (Cache k v) where
 
 -- Initialize an empty cache
 initCache :: MonadIO m => m (Cache k v)
-initCache = fmap Cache $ liftIO $ newMVar M.empty
+initCache = fmap Cache $ liftIO $ newMVar Map.empty
 
 -- Cache the result of monadic action under a certain key
 withCache :: (MonadIO m, Ord k) => Cache k v -> k -> m v -> m v
 withCache (Cache cache) key action = do
     values <- liftIO $ readMVar cache
-    case M.lookup key values of
+    case Map.lookup key values of
         Just val -> return val
         Nothing -> do
             val <- action
@@ -52,4 +52,4 @@ withCacheM key action = do
 
 -- Insert the new value only if there's not an existing one
 insertIfMissing :: Ord k => k -> v -> Map k v -> Map k v
-insertIfMissing = M.insertWith (flip const)
+insertIfMissing = Map.insertWith (flip const)

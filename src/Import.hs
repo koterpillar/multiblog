@@ -13,13 +13,14 @@ import           Data.Aeson
 import qualified Data.ByteString       as B
 import           Data.Default.Class
 import           Data.List             (find)
-import qualified Data.Map              as M
+import           Data.Map              (Map)
+import qualified Data.Map              as Map
 import           Data.Maybe
 import           Data.Text             (Text)
-import qualified Data.Text             as T
-import qualified Data.Text.Encoding    as T
+import qualified Data.Text             as Text
+import qualified Data.Text.Encoding    as Text
 import           Data.Time
-import qualified Data.Yaml             as Y
+import qualified Data.Yaml             as Yaml
 
 import           Text.Pandoc           hiding (Meta, readers)
 
@@ -96,19 +97,19 @@ parseContent dir = do
     content <-
         fmap catMaybes $
         forM (sdFiles dir) $ \file -> do
-            let (fileName, ext) = splitExtension $ T.unpack $ sfName file
-            case M.lookup (T.pack $ tail ext) readers of
+            let (fileName, ext) = splitExtension $ Text.unpack $ sfName file
+            case Map.lookup (Text.pack $ tail ext) readers of
                 Nothing -> pure Nothing
                 Just reader -> do
-                    lang <- parseLanguage (T.pack fileName)
-                    case reader (T.decodeUtf8 $ sfContent file) of
+                    lang <- parseLanguage (Text.pack fileName)
+                    case reader (Text.decodeUtf8 $ sfContent file) of
                         Left err  -> throwError $ show err
                         Right res -> pure (Just (lang, res))
-    pure $ M.fromList content
+    pure $ Map.fromList content
 
 invalidArticleDirectory :: Monad m => Text -> ParseT m a
 invalidArticleDirectory dir =
-    throwError $ T.unpack $ "Invalid article directory name format: " <> dir
+    throwError $ Text.unpack $ "Invalid article directory name format: " <> dir
 
 invalidFilePath :: Monad m => FilePath -> ParseT m a
 invalidFilePath path =
@@ -117,10 +118,10 @@ invalidFilePath path =
 -- | Get slug and date from a directory path
 extractSlugDate :: Monad m => Text -> ParseT m (Text, UTCTime)
 extractSlugDate name =
-    case reads (T.unpack name) of
+    case reads (Text.unpack name) of
         [(day, slugDateRest)] ->
             case slugDateRest of
-                '-':slug -> pure (T.pack slug, atMidnight day)
+                '-':slug -> pure (Text.pack slug, atMidnight day)
                 _        -> invalidArticleDirectory name
         _ -> invalidArticleDirectory name
 
@@ -171,12 +172,12 @@ buildDir dir =
                 content <- B.readFile file
                 pure
                     SourceFile
-                        { sfName = T.pack $ takeFileName file
+                        { sfName = Text.pack $ takeFileName file
                         , sfContent = content
                         }
         pure
             SourceDirectory
-                {sdName = T.pack $ takeFileName dir, sdFiles = sources}
+                {sdName = Text.pack $ takeFileName dir, sdFiles = sources}
   where
     dirPath subdir = dir </> subdir
 
@@ -201,9 +202,9 @@ loadFromDirectory path = do
             }
 
 -- A map of supported file formats and corresponding Pandoc readers
-readers :: M.Map Text (Text -> Either PandocError Pandoc)
+readers :: Map Text (Text -> Either PandocError Pandoc)
 readers =
-    M.fromList
+    Map.fromList
         [ ( "md"
           , runPandocPure .
             readMarkdown
@@ -228,6 +229,6 @@ decodeOrDefault ::
        (Default a, FromJSON a, Monad m) => Maybe B.ByteString -> ParseT m a
 decodeOrDefault Nothing = pure def
 decodeOrDefault (Just s) =
-    case Y.decodeEither' s of
+    case Yaml.decodeEither' s of
         Left err  -> throwError $ show err
         Right res -> pure res

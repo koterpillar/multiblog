@@ -7,7 +7,7 @@ module TestLanguage where
 import           Data.LanguageCodes
 import           Data.LanguageCodes.Arbitrary ()
 
-import qualified Data.Map                     as M
+import qualified Data.Map                     as Map
 
 import           Types.Language
 

@@ -11,7 +11,7 @@ import qualified Data.ByteString.Char8 as B
 import           Data.List
 import           Data.Maybe
 import           Data.Text             (Text)
-import qualified Data.Text             as T
+import qualified Data.Text             as Text
 import           Data.Time
 
 import           Happstack.Server
@@ -37,7 +37,7 @@ type AppPart a = ServerPartT App a
 
 loadApp ::
        String -- ^ directory to load from
-    -> T.Text -- ^ site address
+    -> Text -- ^ site address
     -> Bool -- ^ whether the address was explicitly specified
     -> IO AppData
 loadApp dataDirectory address isRealAddress = do
@@ -49,9 +49,9 @@ loadApp dataDirectory address isRealAddress = do
                 appState {appAddress = address, appRealAddress = isRealAddress}
 
 -- | Application address, and whether it's specified explicitly
-siteAddress :: IO (T.Text, Bool)
+siteAddress :: IO (Text, Bool)
 siteAddress = do
-    addr <- fmap T.pack <$> lookupEnv "SITE_URL"
+    addr <- fmap Text.pack <$> lookupEnv "SITE_URL"
     return $
         case addr of
             Just realAddr -> (realAddr, True)
@@ -85,7 +85,7 @@ site = do
     let mainSite = do
             method GET
             uriRest $ \uri ->
-                case parseURL (T.pack uri) of
+                case parseURL (Text.pack uri) of
                     Nothing    -> mzero
                     Just route -> handler route
     mainSite `mplus` staticSite

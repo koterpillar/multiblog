@@ -9,7 +9,7 @@ import           Control.Monad.Except
 import           Control.Monad.Identity
 
 import           Data.LanguageCodes
-import qualified Data.Map               as M
+import qualified Data.Map               as Map
 import           Data.Text              (Text)
 import qualified Data.Text              as Text
 import qualified Data.Text.Encoding     as Text

@@ -2,7 +2,7 @@ module Utils where
 
 import           Control.Monad
 
-import qualified Data.Map      as M
+import qualified Data.Map      as Map
 
 -- Read a value or monadically fail
 readM :: (MonadFail m, Read a) => String -> m a
@@ -24,6 +24,7 @@ reverseCompare = flip compare
 
 -- Group items by a function
 groupBy :: Ord k => (a -> k) -> [a] -> [[a]]
-groupBy key = M.elems . foldr (uncurry (M.insertWith (++)) . addKey) M.empty
+groupBy key =
+    Map.elems . foldr (uncurry (Map.insertWith (++)) . addKey) Map.empty
   where
     addKey v = (key v, [v])

@@ -12,10 +12,11 @@ import           Control.Monad.Reader
 import qualified Data.Aeson           as A
 import qualified Data.ByteString.Lazy as LB
 import           Data.Default.Class
-import qualified Data.Map             as M
-import qualified Data.Set             as S
+import           Data.Map             (Map)
+import qualified Data.Map             as Map
+import           Data.Set             (Set)
+import qualified Data.Set             as Set
 import           Data.Text            (Text)
-import qualified Data.Text            as T
 import           Data.Time
 import           Data.Yaml
 
@@ -41,11 +42,11 @@ instance FromJSON Analytics where
 data AppData =
     AppData
         { appDirectory   :: String
-        , appAddress     :: T.Text
+        , appAddress     :: Text
         , appRealAddress :: Bool
         , appArticles    :: [Article]
         , appMeta        :: [Meta]
-        , appStrings     :: M.Map Text LanguageString
+        , appStrings     :: Map Text LanguageString
         , appLinks       :: [Link]
         , appAnalytics   :: Analytics
         }
@@ -55,7 +56,7 @@ instance Default AppData where
     def =
         AppData
             { appDirectory = def
-            , appAddress = T.empty
+            , appAddress = mempty
             , appRealAddress = False
             , appArticles = def
             , appMeta = def
@@ -83,15 +84,15 @@ askMeta :: (MonadReader AppData m, MonadPlus m) => Text -> m Meta
 askMeta slug = onlyOne $ asks $ filter (bySlug slug) . appMeta
 
 -- Find all languages used on the site
-allLanguages :: AppData -> S.Set Language
-allLanguages app = S.union articleLangs metaLangs
+allLanguages :: AppData -> Set Language
+allLanguages app = Set.union articleLangs metaLangs
   where
     articleLangs = allContentLangs $ appArticles app
     metaLangs = allContentLangs $ appMeta app
-    allContentLangs :: HasContent a => [a] -> S.Set Language
-    allContentLangs = S.unions . map contentLangs
-    contentLangs :: HasContent a => a -> S.Set Language
-    contentLangs = S.fromList . M.keys . getContent
+    allContentLangs :: HasContent a => [a] -> Set Language
+    allContentLangs = Set.unions . map contentLangs
+    contentLangs :: HasContent a => a -> Set Language
+    contentLangs = Set.fromList . Map.keys . getContent
 
 newtype AppCache =
     AppCache
