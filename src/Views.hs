@@ -57,16 +57,22 @@ instance Default OGType where
 
 data PageContent =
     PageContent
-        { pcTitle   :: Maybe Text
+        { pcURL     :: Text
+        , pcTitle   :: Maybe Text
         , pcType    :: OGType -- ^ https://ogp.me/#types
         , pcLayout  :: Layout
         , pcContent :: HtmlUrl Sitemap
         }
 
-instance Default PageContent where
-    def =
-        PageContent
-            {pcTitle = def, pcType = def, pcLayout = def, pcContent = mempty}
+mkPageContent :: Text -> PageContent
+mkPageContent url =
+    PageContent
+        { pcURL = url
+        , pcTitle = def
+        , pcType = def
+        , pcLayout = def
+        , pcContent = mempty
+        }
 
 type PageNumber = Int
 
@@ -146,41 +152,44 @@ articleListDisplay ::
     -> Paginated Article
     -> m Markup
 articleListDisplay lang articles = do
+    url <- linkTo Index
     articlesContent <- mapM (linkedContent lang) (pageItems articles)
     langString <- askLangStringFn lang
-    template lang $ def {pcContent = $(hamletFile "templates/list.hamlet")}
+    template lang $
+        (mkPageContent url) {pcContent = $(hamletFile "templates/list.hamlet")}
 
 articleDisplay ::
        (MonadReader AppData m, MonadPlus m)
     => LanguagePreference
     -> Article
     -> m Markup
-articleDisplay lang article =
+articleDisplay lang article = do
+    url <- linkTo article
     template lang $
-    def
-        { pcTitle = Just $ langTitle lang article
-        , pcType = OGArticle {ogaPublished = arAuthored article}
-        , pcContent = $(hamletFile "templates/article.hamlet")
-        }
+        (mkPageContent url)
+            { pcTitle = Just $ langTitle lang article
+            , pcType = OGArticle {ogaPublished = arAuthored article}
+            , pcContent = $(hamletFile "templates/article.hamlet")
+            }
 
 metaDisplay ::
        (MonadReader AppData m, MonadPlus m)
     => LanguagePreference
     -> Meta
     -> m Markup
-metaDisplay lang meta =
+metaDisplay lang meta = do
+    url <- linkTo meta
+    let content =
+            case mtLayout meta of
+                BaseLayout -> $(hamletFile "templates/meta.hamlet")
+                PresentationLayout ->
+                    $(hamletFile "templates/meta_presentation.hamlet")
     template lang $
-    def
-        { pcTitle = Just $ langTitle lang meta
-        , pcLayout = mtLayout meta
-        , pcContent = content
-        }
-  where
-    content =
-        case mtLayout meta of
-            BaseLayout -> $(hamletFile "templates/meta.hamlet")
-            PresentationLayout ->
-                $(hamletFile "templates/meta_presentation.hamlet")
+        (mkPageContent url)
+            { pcTitle = Just $ langTitle lang meta
+            , pcLayout = mtLayout meta
+            , pcContent = content
+            }
 
 -- Generate a link to some content
 linkTo :: (MonadReader AppData m, Linkable a) => a -> m Text

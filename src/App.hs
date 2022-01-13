@@ -93,16 +93,13 @@ site = do
 handler :: Sitemap -> AppPart Response
 handler route =
     case route of
-        Index           -> index
+        Index           -> articleList
         ArticleView d s -> article d s
         MetaView s f    -> meta s f
         Feed lang       -> feedIndex lang
         SiteScript      -> siteScript
         PrintStylesheet -> printStylesheet
         CodeStylesheet  -> codeStylesheet
-
-index :: AppPart Response
-index = articleList $ const True
 
 -- Find the most relevant language preference in a request
 -- Includes: explicit GET parameter, cookie and Accept-Language header
@@ -126,12 +123,12 @@ okResponse = ok . toResponse
 article :: Day -> Text -> AppPart Response
 article date slug = do
     language <- languageHeaderM
-    a <- onlyOne $ lift $ askFiltered $ byDateSlug date slug
+    a <- lift $ askOne $ byDateSlug date slug
     articleDisplay language a >>= okResponse
 
-articleList :: (Article -> Bool) -> AppPart Response
-articleList articleFilter = do
-    articles <- lift $ askFiltered articleFilter
+articleList :: AppPart Response
+articleList = do
+    articles <- lift $ askFiltered $ const True
     let sorted = sortBy reverseCompare articles
     page <- pageNumber
     let paginated = paginate pageSize page sorted
