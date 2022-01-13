@@ -20,6 +20,8 @@ import           Import
 import           Models
 import           Types.Content
 
+import           Test.HUnit
+
 unsafeReadMarkdown :: Text -> Pandoc
 unsafeReadMarkdown = runPandocPure' . readMarkdown def
 
@@ -57,6 +59,7 @@ test_loadMeta = do
                 }
     let (Identity result) = runExceptT $ parseMeta directory
     assertEqual
+        ""
         (Right
              defaultMeta
                  { mtSlug = "about"
@@ -79,6 +82,7 @@ test_loadMetaPresentationLayout = do
                 }
     let (Identity result) = runExceptT $ parseMeta directory
     assertEqual
+        ""
         (Right
              defaultMeta
                  { mtSlug = "talk"
@@ -99,6 +103,7 @@ test_loadMetaExportSlug = do
                 }
     let (Identity result) = runExceptT $ parseMeta directory
     assertEqual
+        ""
         (Right
              defaultMeta
                  { mtSlug = "resume"
@@ -119,6 +124,7 @@ test_loadArticle = do
                 }
     let (Identity result) = runExceptT $ parseArticle directory
     assertEqual
+        ""
         (Right
              Article
                  { arSlug = "article-one"
@@ -143,6 +149,7 @@ test_loadStrings = do
                 ]
     decodeThrow strings >>=
         assertEqual
+            ""
             (Map.fromList
                  [ ("title", Map.fromList [(EN, "Title"), (RU, "Заголовок")])
                  , ("about", Map.fromList [(ZH, "关于")])
@@ -163,6 +170,7 @@ test_loadLinks = do
                 ]
     decodeThrow links >>=
         assertEqual
+            ""
             [ MetaLink "about"
             , ExternalLink
                   "https://1.example.com/"

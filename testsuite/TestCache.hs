@@ -9,7 +9,7 @@ import           Control.Monad.State     hiding (state)
 
 import           Cache
 
-import           Test.Tasty.HUnit
+import           Test.HUnit
 
 test_cached :: IO ()
 test_cached = do
@@ -19,13 +19,13 @@ test_cached = do
     cache <- initCache :: IO (Cache String Int)
     -- The first call should call the function and get 1
     firstValue <- withCache cache "mykey" nextValue
-    assertEqual 1 firstValue
+    assertEqual "" 1 firstValue
     -- Same cache key, this should return 1
     cachedValue <- withCache cache "mykey" nextValue
-    assertEqual 1 cachedValue
+    assertEqual "" 1 cachedValue
     -- Different cache key
     anotherValue <- withCache cache "anotherkey" nextValue
-    assertEqual 2 anotherValue
+    assertEqual "" 2 anotherValue
 
 -- Test caching a function that depends on internal state
 newtype TestState =
@@ -50,10 +50,10 @@ test_withCacheM
     -- The first call should call the function and get 1
      do
         firstValue <- withCacheM "mykey" nextValue'
-        liftIO $ assertEqual 1 firstValue
+        liftIO $ assertEqual "" 1 firstValue
            -- Same cache key, this should return 1
         cachedValue <- withCacheM "mykey" nextValue'
-        liftIO $ assertEqual 1 cachedValue
+        liftIO $ assertEqual "" 1 cachedValue
            -- Different cache key
         anotherValue <- withCacheM "anotherkey" nextValue'
-        liftIO $ assertEqual 2 anotherValue
+        liftIO $ assertEqual "" 2 anotherValue
