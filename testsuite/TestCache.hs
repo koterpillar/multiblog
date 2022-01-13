@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -10,7 +9,7 @@ import           Control.Monad.State     hiding (state)
 
 import           Cache
 
-import           Test.Framework
+import           Test.Tasty.HUnit
 
 test_cached :: IO ()
 test_cached = do

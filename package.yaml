@@ -61,10 +61,14 @@ tests:
     source-dirs:
     - testsuite
     dependencies:
-    - multiblog
-    - HTF
-    - HUnit
     - generic-arbitrary
+    - hspec
+    - hspec-expectations
+    - HUnit
+    - multiblog
+    - tasty
+    - tasty-hspec
+    - tasty-discover
     - QuickCheck
     - quickcheck-instances
 stability: Experimental

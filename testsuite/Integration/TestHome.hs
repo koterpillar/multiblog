@@ -1,11 +1,8 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Integration.TestHome where
 
 import           Data.LanguageCodes
-
-import           Test.Framework
 
 import           Integration.Base
 

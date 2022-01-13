@@ -1,11 +1,8 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Integration.TestStatic where
 
 import           Integration.Base
-
-import           Test.Framework
 
 test_static = do
     resp <- makeRequestBS $ simpleRequest "/some-verification-file.html"

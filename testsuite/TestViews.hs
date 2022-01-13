@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes        #-}
 
@@ -14,8 +13,6 @@ import           Text.Pandoc                   hiding (Meta)
 import           Routes
 import           Types.Content
 import           Views
-
-import           Test.Framework
 
 newtype TestLink =
     TestLink Text

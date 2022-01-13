@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module TestRoutes where
@@ -13,7 +12,6 @@ import           Data.Time.Calendar
 
 import           Routes
 
-import           Test.Framework
 import           Test.QuickCheck
 import           Test.QuickCheck.Arbitrary.Generic
 import           Test.QuickCheck.Instances         ()

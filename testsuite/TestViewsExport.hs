@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module TestViewsExport where
@@ -9,8 +8,6 @@ import           Text.Blaze
 import           Text.Blaze.Html.Renderer.Text
 import qualified Text.Blaze.Html5              as H
 import qualified Text.Blaze.Html5.Attributes   as A
-
-import           Test.Framework
 
 test_fixupHtml :: IO ()
 test_fixupHtml = do

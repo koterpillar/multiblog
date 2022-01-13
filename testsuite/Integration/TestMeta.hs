@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Integration.TestMeta where
@@ -9,8 +8,6 @@ import           Data.LanguageCodes
 import           Data.Text.Encoding   (decodeUtf8)
 
 import           Integration.Base
-
-import           Test.Framework
 
 test_meta :: IO ()
 test_meta = do

@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -10,8 +9,6 @@ import           Data.LanguageCodes.Arbitrary ()
 import qualified Data.Map                     as Map
 
 import           Types.Language
-
-import           Test.Framework
 
 mkPreference :: [(Language, Float)] -> LanguagePreference
 mkPreference = LanguagePreference . Map.fromList

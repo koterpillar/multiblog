@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
@@ -14,7 +13,6 @@ import           Text.Pandoc.Arbitrary
 import           Models
 import           Types.Content
 
-import           Test.Framework
 import           Test.QuickCheck.Arbitrary.Generic
 import           Test.QuickCheck.Instances         ()
 

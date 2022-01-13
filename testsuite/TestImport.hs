@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -F -pgmF htfpp #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes        #-}
@@ -20,8 +19,6 @@ import           Text.Pandoc            hiding (Meta)
 import           Import
 import           Models
 import           Types.Content
-
-import           Test.Framework
 
 unsafeReadMarkdown :: Text -> Pandoc
 unsafeReadMarkdown = runPandocPure' . readMarkdown def
