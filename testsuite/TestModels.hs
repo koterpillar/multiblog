@@ -42,11 +42,9 @@ fall = flip all
 prop_allLanguages_hasEveryArticle :: AppData -> Bool
 prop_allLanguages_hasEveryArticle app =
     fall (appArticles app) $ \article ->
-        fall (Map.keys (arContent article)) $ \lang ->
-            Set.member lang $ allLanguages app
+        Map.keysSet (arContent article) `Set.isSubsetOf` allLanguages app
 
 prop_allLanguages_hasEveryMeta :: AppData -> Bool
 prop_allLanguages_hasEveryMeta app =
     fall (appMeta app) $ \meta ->
-        fall (Map.keys (mtContent meta)) $ \lang ->
-            Set.member lang $ allLanguages app
+        Map.keysSet (mtContent meta) `Set.isSubsetOf` allLanguages app
