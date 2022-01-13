@@ -7,7 +7,15 @@ author: Alexey Kotlyarov
 maintainer: a@koterpillar.com
 license: MIT
 default-extensions:
+- DeriveDataTypeable
+- DeriveGeneric
+- FlexibleContexts
+- FlexibleInstances
+- FunctionalDependencies
+- MultiParamTypeClasses
 - OverloadedStrings
+- QuasiQuotes
+- RankNTypes
 - RecordWildCards
 dependencies:
 - base >=4.7 && <5

@@ -1,5 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
-
 module TestImport where
 
 import           Control.Monad.Except

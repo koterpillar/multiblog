@@ -1,5 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
-
 module TestViews where
 
 import           Data.Text                     (Text)

@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-
 module ReloadHup
     ( reloadHup
     , Reload
@@ -14,7 +12,8 @@ import           System.Environment
 import           System.Posix.Process
 import           System.Posix.Signals
 
-data Reload = Reload
+data Reload =
+    Reload
     deriving (Show, Typeable)
 
 instance Exception Reload

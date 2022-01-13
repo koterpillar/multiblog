@@ -1,8 +1,6 @@
 {-|
 Types for the blog content - articles and metas.
 -}
-{-# LANGUAGE DeriveGeneric #-}
-
 module Types.Content where
 
 import           Control.Applicative
