@@ -134,7 +134,7 @@ template lang page = do
             return (title, destination)
     allLangs <- asks allLanguages
     langString <- askLangStringFn lang
-    settings <- asks appSettings
+    AppSettings {..} <- asks appSettings
     let analytics = $(hamletFile "templates/analytics.hamlet")
     case pcLayout page of
         BaseLayout -> render $(hamletFile "templates/base.hamlet")
