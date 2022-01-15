@@ -9,6 +9,7 @@ import           Control.Monad
 import           Control.Monad.Except
 
 import qualified Data.Aeson.Types     as A
+import           Data.Char            (chr, ord)
 import           Data.Function
 import           Data.LanguageCodes
 import           Data.List
@@ -105,6 +106,12 @@ iso3166 :: Language -> Text
 iso3166 EN = "gb"
 iso3166 ZH = "cn"
 iso3166 x  = showLanguage x
+
+emoji :: Language -> Text
+emoji = Text.map ris . iso3166
+    -- https://en.wikipedia.org/wiki/Regional_indicator_symbol
+  where
+    ris c = chr $ 0x1f1e6 + ord c - ord 'a'
 
 -- TODO: Parsec or library
 languageHeader :: Maybe String -> LanguagePreference

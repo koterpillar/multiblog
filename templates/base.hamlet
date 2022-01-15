@@ -22,7 +22,6 @@ $doctype 5
     <meta property="og:url" content="#{pcURL page}">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
-    <link rel="stylesheet" href="https://github.com/downloads/lafeber/world-flags-sprite/flags16.css">
     <link rel="stylesheet" href=@{CodeStylesheet}>
     <link rel="alternate" type="application/atom+xml" href="@{Feed $ bestLanguage lang}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -35,14 +34,13 @@ $doctype 5
         <div .col-md-2>
           <div .dropdown .f16>
             <button #chooseLangButton type=button data-toggle=dropdown title=#{langString "choose-language"} aria-haspopup="true" aria-expanded="false">
-              <span .flag.#{iso3166 $ bestLanguage lang} title=#{language $ bestLanguage lang}>
+              #{emoji $ bestLanguage lang} #{language $ bestLanguage lang}
               <span .caret>
             <ul .dropdown-menu role="menu" aria-labelledby="chooseLangButton">
               $forall lang <- allLangs
                 <li>
                   <a href="#" .switch-language data-lang="#{showLanguage lang}">
-                    <span .flag.#{iso3166 lang}>
-                    #{language lang}
+                    #{emoji lang} #{language lang}
       <div .row>
         <div .col-md-8 .col-md-push-4>
           ^{pcContent page}
