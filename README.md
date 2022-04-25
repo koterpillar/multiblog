@@ -1,5 +1,4 @@
-Multiblog
-=========
+# Multiblog
 
 This is a quasi-static blog engine supporting rendering in multiple languages
 based on the user agent language.
@@ -8,8 +7,7 @@ It is currently not generic enough to be used for anything other than a
 personal blog, but the goal is to fully separate the appearance control from
 the engine.
 
-Usage
------
+## Usage
 
 Running `multiblog` will start an HTTP server for the content found under the
 current directory. The following environment variables can be given:
@@ -53,8 +51,7 @@ following structure: string - language - translation.
 The sidebar links are specified in `links.yaml`. They can point either to metas
 or to any external address.
 
-Examples
---------
+## Examples
 
 All the examples assume `https://blog.example.com/` to be the root address of
 the blog.
