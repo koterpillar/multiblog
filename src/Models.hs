@@ -21,19 +21,6 @@ import           Types.Content
 import           Types.Language
 import           Utils
 
-newtype Analytics =
-    Analytics
-        { anaGoogle :: Maybe Text
-        }
-    deriving (Generic, Show)
-
-instance Default Analytics
-
-instance FromJSON Analytics where
-    parseJSON =
-        genericParseJSON
-            defaultOptions {fieldLabelModifier = map toLower . drop 3}
-
 newtype Services =
     Services
         { aseTwitter :: Maybe Text
@@ -49,8 +36,7 @@ instance FromJSON Services where
 
 data AppSettings =
     AppSettings
-        { asAnalytics :: Analytics
-        , asServices  :: Services
+        { asServices  :: Services
         }
     deriving (Generic, Show)
 
@@ -59,7 +45,6 @@ instance Default AppSettings
 instance FromJSON AppSettings where
     parseJSON =
         withObject "AppSettings" $ \o -> do
-            asAnalytics <- o .:? "analytics" .!= def
             asServices <- o .:? "services" .!= def
             pure AppSettings {..}
 

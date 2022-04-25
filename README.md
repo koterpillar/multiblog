@@ -53,11 +53,6 @@ following structure: string - language - translation.
 The sidebar links are specified in `links.yaml`. They can point either to metas
 or to any external address.
 
-### Analytics
-
-Google Analytics is supported for the site. The ID must be specified in
-`settings.yaml`.
-
 Examples
 --------
 
@@ -128,12 +123,4 @@ An example of links file, `links.yaml`:
     ru: Яндекс
 - url: https://www.github.com
   text: GitHub
-```
-
-### Analytics
-
-An example of the analytics file, `analytics.yaml`:
-
-```yaml
-google: UA-12345678-9
 ```

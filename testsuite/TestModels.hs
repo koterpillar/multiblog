@@ -30,9 +30,6 @@ instance Arbitrary Meta where
 instance Arbitrary Link where
     arbitrary = genericArbitrary
 
-instance Arbitrary Analytics where
-    arbitrary = genericArbitrary
-
 instance Arbitrary Services where
     arbitrary = genericArbitrary
 

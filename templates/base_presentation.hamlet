@@ -43,7 +43,6 @@ $doctype 5
         font-size: 1em;
       }
     <link rel="stylesheet" href=@{CodeStylesheet}>
-    ^{analytics}
   <body>
     <div .reveal>
       <div .slides>
