@@ -10,6 +10,7 @@ import           Data.Default.Class
 import           Data.LanguageCodes
 import qualified Data.Map                 as Map
 import           Data.Maybe
+import           Data.String.Here         (i)
 import           Data.Text                (Text)
 import qualified Data.Text.Lazy           as TL
 import           Data.Time
@@ -244,3 +245,12 @@ renderCodeStylesheet = Stylesheet $ TL.pack $ styleToCss highlightingStyle
 -- | Presentation can only render the pipe tables. Disable the other kinds
 presentationOptions :: WriterOptions
 presentationOptions = def {writerSlideLevel = Just 1}
+
+cdn :: Text -> Text -> Text -> Text
+cdn package version asset = [i|https://cdn.jsdelivr.net/npm/${package}@${version}/${asset}|]
+
+revealCdn :: Text -> Text
+revealCdn = cdn "reveal.js" "4" . ("dist/" <>)
+
+bootstrapCdn :: Text -> Text
+bootstrapCdn = cdn "bootstrap" "3" . ("dist/" <>)

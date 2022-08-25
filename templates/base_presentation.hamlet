@@ -7,8 +7,8 @@ $doctype 5
         #{title} - #{langString "siteName"}
       $nothing
         #{langString "siteName"}
-    <link rel="stylesheet" href="https://revealjs.com/css/reveal.css">
-    <link rel="stylesheet" href="https://revealjs.com/css/theme/white.css">
+    <link rel="stylesheet" href="#{revealCdn "reveal.css"}">
+    <link rel="stylesheet" href="#{revealCdn "theme/white.css"}">
     <style type="text/css">
       .reveal {
         font-size: 24px;
@@ -47,8 +47,7 @@ $doctype 5
     <div .reveal>
       <div .slides>
         ^{pcContent page}
-    <script src="https://revealjs.com/lib/js/head.min.js">
-    <script src="https://revealjs.com/js/reveal.js">
+    <script src="#{revealCdn "reveal.js"}">
     <script>
       Reveal.initialize({
         width: "100%",
