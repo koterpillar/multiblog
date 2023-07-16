@@ -16,14 +16,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install --yes xvfb wget
-          wget -O wkhtmltox.deb https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-3/wkhtmltox_0.12.6-3.jammy_amd64.deb
-          sudo apt install --yes ./wkhtmltox.deb
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Install system dependencies
+        run: sudo ./install-deps
       - name: Set up Stack
         run: stack upgrade || curl -sSL https://get.haskellstack.org/ | sh -s - -f
       - name: Set up cache
