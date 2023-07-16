@@ -17,13 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install system dependencies
         run: sudo ./install-deps
       - name: Set up Stack
         run: stack upgrade || curl -sSL https://get.haskellstack.org/ | sh -s - -f
       - name: Set up cache
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
           key: stack
           path: ~/.stack
@@ -40,11 +40,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Stack
         run: stack upgrade || curl -sSL https://get.haskellstack.org/ | sh -s - -f
       - name: Set up cache
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
           key: stack
           path: ~/.stack
@@ -52,7 +52,7 @@ jobs:
         run: |
           stack --no-terminal build --copy-bins --local-bin-path .
       - name: Log in to the Container registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -65,7 +65,7 @@ jobs:
           string: ${{ github.ref }}
           replace-with: ''
       - name: Build and push Docker image
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        uses: docker/build-push-action@v4
         with:
           context: .
           push: true
