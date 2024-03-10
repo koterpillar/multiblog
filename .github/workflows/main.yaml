@@ -23,7 +23,7 @@ jobs:
       - name: Set up Stack
         run: stack upgrade || curl -sSL https://get.haskellstack.org/ | sh -s - -f
       - name: Set up cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           key: stack
           path: ~/.stack
@@ -44,7 +44,7 @@ jobs:
       - name: Set up Stack
         run: stack upgrade || curl -sSL https://get.haskellstack.org/ | sh -s - -f
       - name: Set up cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           key: stack
           path: ~/.stack
