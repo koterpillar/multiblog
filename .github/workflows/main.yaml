@@ -59,7 +59,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Calculate Docker tag
         id: tag
-        uses: frabert/replace-string-action@v2.0
+        uses: frabert/replace-string-action@v2.5
         with:
           pattern: '^refs/tags/'
           string: ${{ github.ref }}
