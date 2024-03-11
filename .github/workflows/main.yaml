@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install system dependencies
         run: sudo ./install-deps
       - name: Set up Stack
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Stack
         run: stack upgrade || curl -sSL https://get.haskellstack.org/ | sh -s - -f
       - name: Set up cache
