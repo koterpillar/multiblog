@@ -1,0 +1,17 @@
+{
+  "branches": ["main"],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@codedependant/semantic-release-docker",
+      {
+        "dockerRegistry": "ghcr.io",
+        "dockerProject": "koterpillar",
+        "dockerImage": "multiblog",
+        "dockerTags": ["latest", "{{version}}"]
+      }
+    ],
+    "@semantic-release/github"
+  ]
+}
