@@ -13,19 +13,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Install system dependencies
         run: sudo ./install-deps
-      - name: Set up Stack
+      - name: Build
         uses: freckle/stack-action@v5
-      - name: Set up cache
-        uses: actions/cache@v4
         with:
-          key: stack
-          path: ~/.stack
-      - name: Install dependencies
-        run: |
-          stack --no-terminal --install-ghc test --only-dependencies
-      - name: Test
-        run: |
-          stack --no-terminal test
+          stack-build-arguments: --fast
 
   publish:
     needs:
