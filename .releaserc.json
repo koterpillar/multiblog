@@ -8,8 +8,7 @@
       {
         "dockerRegistry": "ghcr.io",
         "dockerProject": "koterpillar",
-        "dockerImage": "multiblog",
-        "dockerTags": ["latest", "{{version}}"]
+        "dockerImage": "multiblog"
       }
     ],
     "@semantic-release/github"
