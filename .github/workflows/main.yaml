@@ -13,10 +13,17 @@ jobs:
         uses: actions/checkout@v4
       - name: Install system dependencies
         run: sudo ./install-deps
-      - name: Build
+      - name: Build and test
         uses: freckle/stack-action@v5
         with:
           stack-build-arguments: --fast
+      - name: Build executable
+        run: stack --no-terminal build --fast --copy-bins --local-bin-path .
+      - name: Store executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: executable
+          path: multiblog
 
   publish:
     needs:
@@ -33,6 +40,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Download executable
+        uses: actions/download-artifact@v4
+        with:
+          name: executable
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
