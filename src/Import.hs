@@ -4,6 +4,7 @@ module Import where
 import           Control.Lens          ((&))
 import           Control.Monad
 import           Control.Monad.Except
+import           Control.Monad.IO.Class
 
 import           Data.Aeson
 import qualified Data.ByteString       as B
