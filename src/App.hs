@@ -1,6 +1,7 @@
 module App where
 
 import           Control.Applicative   (optional)
+import           Control.Monad
 import           Control.Monad.Except
 import           Control.Monad.Reader
 import           Control.Monad.State

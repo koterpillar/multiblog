@@ -4,6 +4,7 @@ Types for the blog content - articles and metas.
 module Types.Content where
 
 import           Control.Applicative
+import           Control.Monad
 import           Control.Monad.State
 import           Control.Monad.Trans.Except
 import qualified Control.Monad.Trans.State.Strict as StrictState
