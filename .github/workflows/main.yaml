@@ -16,7 +16,7 @@ jobs:
       - name: Build and test
         uses: freckle/stack-action@v5
         with:
-          stack-build-arguments: --fast
+          stack-build-arguments: --fast --lock-file error-on-write
       - name: Build executable
         run: stack --no-terminal build --fast --copy-bins --local-bin-path .
       - name: Store executable
