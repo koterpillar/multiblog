@@ -1,0 +1,59 @@
+$doctype 5
+<html lang="#{showLanguage $ bestLanguage lang}">
+  <head>
+    <meta charset="utf-8">
+    <title>
+      $maybe title <- pcTitle page
+        #{title} - #{langString "siteName"}
+      $nothing
+        #{langString "siteName"}
+    <link rel="stylesheet" href="#{revealCdn "reveal.css"}">
+    <link rel="stylesheet" href="#{revealCdn "theme/white.css"}">
+    <style type="text/css">
+      .reveal {
+        font-size: 24px;
+      }
+
+      .reveal h1,
+      .reveal h2,
+      .reveal h3,
+      .reveal h4,
+      .reveal h5,
+      .reveal h6 {
+        text-transform: none;
+      }
+
+      .reveal h1 {
+        font-size: 4.5em;
+      }
+
+      .reveal h2 {
+        font-size: 2.9em;
+      }
+
+      .reveal h3 {
+        font-size: 2.3em;
+      }
+
+      .reveal h4 {
+        font-size: 1.8em;
+      }
+
+      .reveal pre {
+        font-size: 1em;
+      }
+    <link rel="stylesheet" href=@{CodeStylesheet}>
+  <body>
+    <div .reveal>
+      <div .slides>
+        ^{pcContent page}
+    <script src="#{revealCdn "reveal.js"}">
+    <script>
+      Reveal.initialize({
+        width: "100%",
+        height: "100%",
+        margin: 0.2,
+        minScale: 1,
+        maxScale: 1,
+        history: true,
+      });

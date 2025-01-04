@@ -1,0 +1,81 @@
+name: multiblog
+version: '0.1'
+synopsis: Blog engine for koterpillar.com
+description: Static blog engine with multilingual support
+category: Web
+author: Alexey Kotlyarov
+maintainer: a@koterpillar.com
+license: MIT
+language: GHC2021
+default-extensions:
+- FunctionalDependencies
+- OverloadedStrings
+- QuasiQuotes
+- RecordWildCards
+dependencies:
+- base >=4.7 && <5
+- blaze-html
+- blaze-markup
+- bytestring
+- containers
+- data-default-class
+- feed
+- happstack-server
+- iso639
+- mtl
+- pandoc
+- pandoc-types
+- resourcet
+- text
+- time
+- xml-conduit
+- xml-types
+- yaml
+library:
+  source-dirs: src
+  dependencies:
+  - aeson
+  - directory
+  - filepath
+  - here
+  - http-conduit
+  - lens
+  - lifted-base
+  - network
+  - process
+  - process-extras
+  - shakespeare
+  - split
+  - tagsoup
+  - transformers
+  - unix
+executables:
+  multiblog:
+    main: Main.hs
+    source-dirs: app
+    dependencies:
+    - multiblog
+    ghc-options:
+    - -Wall
+    - -Werror
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+tests:
+  tests:
+    main: TestMain.hs
+    source-dirs:
+    - testsuite
+    dependencies:
+    - generic-arbitrary
+    - hspec
+    - hspec-expectations
+    - HUnit
+    - multiblog
+    - tasty
+    - tasty-hunit
+    - tasty-discover
+    - tasty-quickcheck
+    - QuickCheck
+    - quickcheck-instances
+stability: Experimental

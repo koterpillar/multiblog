@@ -1,0 +1,13 @@
+$maybe prev <- pagePrev articles
+  <ul class=pagination>
+    <li class=page-item>
+      <a class=page-link href="?page=#{prev}">
+          #{langString "prevPage"}
+$forall article <- articlesContent
+  <div>
+    #{runPandocPure' $ writeHtml article}
+$maybe next <- pageNext articles
+  <ul class=pagination>
+    <li class=page-item>
+      <a class=page-link href="?page=#{next}">
+        #{langString "nextPage"}

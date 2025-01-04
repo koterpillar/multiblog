@@ -1,0 +1,7 @@
+html, body {
+  font-family: 'Noto Serif', serif;
+}
+
+.grouped {
+  page-break-inside: avoid;
+}

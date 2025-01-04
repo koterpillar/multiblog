@@ -1,0 +1,1 @@
+<p>#{runPandocPure' $ writeHtml $ langContent lang meta}
