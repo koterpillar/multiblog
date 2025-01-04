@@ -1,0 +1,7 @@
+$(document).ready(function () {
+  $('.switch-language').click(function (event) {
+    document.cookie = "lang=" + $(this).attr('data-lang') + ";" + document.cookie;
+    document.location.reload();
+    event.preventDefault();
+  });
+});

@@ -1,0 +1,57 @@
+name: CI
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install system dependencies
+        run: sudo ./install-deps
+      - name: Build and test
+        uses: freckle/stack-action@v5
+        with:
+          stack-build-arguments: --fast --lock-file error-on-write
+      - name: Build executable
+        run: stack --no-terminal build --fast --copy-bins --local-bin-path .
+      - name: Store executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: executable
+          path: multiblog
+
+  publish:
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Download executable
+        uses: actions/download-artifact@v4
+        with:
+          name: executable
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCKER_REGISTRY_USER: ${{ github.actor }}
+          DOCKER_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx \
+            --package @codedependant/semantic-release-docker@4 \
+            --package semantic-release@18 \
+            semantic-release
