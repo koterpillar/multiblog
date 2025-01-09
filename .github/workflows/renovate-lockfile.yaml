@@ -31,3 +31,5 @@ jobs:
           fi
       - name: Trigger build
         run: gh workflow run CI --ref ${{ github.ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
