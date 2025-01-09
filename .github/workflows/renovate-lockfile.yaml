@@ -29,3 +29,5 @@ jobs:
             git commit -m "chore(deps): update lockfile"
             git push
           fi
+      - name: Trigger build
+        run: gh workflow run CI
