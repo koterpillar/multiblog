@@ -30,4 +30,4 @@ jobs:
             git push
           fi
       - name: Trigger build
-        run: gh workflow run CI
+        run: gh workflow run CI --ref ${{ github.ref }}
