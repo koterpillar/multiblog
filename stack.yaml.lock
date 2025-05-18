@@ -13,7 +13,7 @@ packages:
     hackage: feed-1.3.2.1@sha256:be3e09df396a205edfaffd6f60f2e8ff6531e360e0f6f56a25f3f662e76413c6,4721
 snapshots:
 - completed:
-    sha256: f8c8f95e57e436cee7c053b6f424e2c07a1020304a5583f3568cd9521443c340
-    size: 683838
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/23/22.yaml
-  original: lts-23.22
+    sha256: 5e44cb81460cd2f90011ab6868958d58bde10f63babf4847a56118450b51221e
+    size: 683836
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/23/23.yaml
+  original: lts-23.23
