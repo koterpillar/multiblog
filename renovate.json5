@@ -11,8 +11,8 @@
       semanticCommitType: "fix",
     },
     {
-      matchPackageNames: ["node"],
-      versioning: "docker"
-    }
-  ]
+      matchPackageNames: ["actions/node-versions"],
+      extractVersion: "^(?<version>v\\d+)",
+    },
+  ],
 }
