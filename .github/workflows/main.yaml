@@ -52,6 +52,6 @@ jobs:
           DOCKER_REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npx \
-            --package @codedependant/semantic-release-docker@4 \
+            --package @codedependant/semantic-release-docker@5 \
             --package semantic-release@24 \
             semantic-release
