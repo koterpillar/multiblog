@@ -53,5 +53,5 @@ jobs:
         run: |
           npx \
             --package @codedependant/semantic-release-docker@4 \
-            --package semantic-release@18 \
+            --package semantic-release@24 \
             semantic-release
