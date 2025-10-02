@@ -5,6 +5,15 @@
     ":automergeMinor",
     "github>koterpillar/renovate-haskell:default.json5",
   ],
+  customManagers: [
+    {
+      customType: "regex",
+      managerFilePatterns: [".github/workflows/build.yml"],
+      matchStrings: ["--package (?<depName>[^@]+)@(?<currentValue>\\d+)"],
+      datasourceTemplate: "npm",
+      extractVersionTemplate: "^(?<version>v\\d+)",
+    },
+  ],
   packageRules: [
     {
       matchFileNames: ["Dockerfile"],
