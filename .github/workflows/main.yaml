@@ -20,7 +20,7 @@ jobs:
       - name: Build executable
         run: stack --no-terminal build --fast --copy-bins --local-bin-path .
       - name: Store executable
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: executable
           path: multiblog
@@ -42,7 +42,7 @@ jobs:
         with:
           node-version: 22
       - name: Download executable
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: executable
       - name: Release
