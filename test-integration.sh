@@ -50,6 +50,9 @@ export PORT
 export CONTENT_DIRECTORY="$CONTENT_DIR"
 export SITE_URL="http://localhost:$PORT"
 
+PDF_HEADERS=""
+PDF_BODY=""
+
 # Start the server in the background
 if [ -n "$DOCKER_IMAGE" ]; then
     CONTAINER_NAME="multiblog-it-${PORT}-$$"
@@ -71,6 +74,9 @@ cleanup() {
         docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
     else
         kill "$SERVER_PID" 2>/dev/null || true
+    fi
+    if [ -n "$PDF_HEADERS" ] || [ -n "$PDF_BODY" ]; then
+        rm -f "$PDF_HEADERS" "$PDF_BODY" 2>/dev/null || true
     fi
 }
 trap cleanup EXIT
@@ -120,5 +126,33 @@ check_contains     "another article listed"       "Another article"        "$BOD
 check_contains     "next page link present"       "Next page"              "$BODY"
 check_not_contains "previous page absent on p1"   "Previous page"          "$BODY"
 check_not_contains "early article not on page 1"  "Very early article"     "$BODY"
+
+PDF_HEADERS="$(mktemp)"
+PDF_BODY="$(mktemp)"
+if curl -sf -D "$PDF_HEADERS" -o "$PDF_BODY" "http://localhost:$PORT/meta.pdf" >/dev/null 2>&1; then
+    if head -c 4 "$PDF_BODY" | grep -q '^%PDF$'; then
+        echo "PASS: pdf magic bytes"
+    else
+        echo "FAIL: pdf magic bytes (expected: %PDF)"
+        FAIL=1
+    fi
+else
+    echo "FAIL: pdf endpoint request"
+    FAIL=1
+fi
+
+if grep -qi '^Content-Type: application/pdf' "$PDF_HEADERS"; then
+    echo "PASS: pdf content-type"
+else
+    echo "FAIL: pdf content-type (expected: application/pdf)"
+    FAIL=1
+fi
+
+if grep -qi '^Content-Disposition: inline; filename="meta.pdf"' "$PDF_HEADERS"; then
+    echo "PASS: pdf content-disposition"
+else
+    echo "FAIL: pdf content-disposition (expected inline meta.pdf)"
+    FAIL=1
+fi
 
 exit $FAIL
