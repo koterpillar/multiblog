@@ -19,6 +19,10 @@ jobs:
           stack-build-arguments: --fast --lock-file error-on-write
       - name: Build executable
         run: stack --no-terminal build --fast --copy-bins --local-bin-path .
+      - name: Integration test
+        run: |
+          docker build -t multiblog-integration-test .
+          ./test-integration.sh --docker multiblog-integration-test
       - name: Store executable
         uses: actions/upload-artifact@v7
         with:
